@@ -1,5 +1,6 @@
 # OS
 .DS_Store
+._*
 
 # Extension build output
 /app/.output/
