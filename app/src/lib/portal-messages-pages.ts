@@ -4,7 +4,12 @@
 
 import { MSG } from '../shared/constants';
 import type { NewsListItem, PortalCapturedMessage } from '../shared/types';
-import { isKinoMessagePayload, isNewsListItem, isRecord, type KinoMessagePayload } from './portal-messages-home';
+import {
+  isKinoMessagePayload,
+  isNewsListItem,
+  isRecord,
+  type KinoMessagePayload,
+} from './portal-messages-home';
 
 // ─── 共通ユーティリティ ───────────────────────────────────────────────────────
 
@@ -28,7 +33,7 @@ export type { NewsListItem } from '../shared/types';
 
 export interface NewsListPortalState {
   kinoData: KinoMessagePayload | null;
-  raw:      NewsListItem[] | null;
+  raw: NewsListItem[] | null;
 }
 
 export function nendoFromDeliveredNewsUrl(href: string): string {
@@ -50,7 +55,7 @@ export function reduceNewsListPortalMessage(
     return { ...prev, kinoData: msg.data };
   }
   if (msg.type === MSG.deliveredNews) {
-    const reqUrl    = String(msg.requestUrl ?? '');
+    const reqUrl = String(msg.requestUrl ?? '');
     const respNendo = nendoFromDeliveredNewsUrl(reqUrl);
     if (respNendo && respNendo !== pendingNendo.current) return prev;
     pendingNendo.current = null;
@@ -65,13 +70,13 @@ export function reduceNewsListPortalMessage(
 // ─── お知らせ詳細 ─────────────────────────────────────────────────────────
 
 export interface NewsDetailPayload {
-  id?:              unknown;
-  title?:           string;
-  newsDate?:        string;
-  sender?:          string;
-  category?:        string;
-  importanceCd?:    string;
-  naiyo?:           string;
+  id?: unknown;
+  title?: string;
+  newsDate?: string;
+  sender?: string;
+  category?: string;
+  importanceCd?: string;
+  naiyo?: string;
   attachmentFiles?: unknown[];
 }
 
@@ -93,10 +98,13 @@ export type SurveyRow = Record<string, unknown>;
 
 export interface SurveyPortalState {
   kinoData: KinoMessagePayload | null;
-  raw:      SurveyRow[] | null;
+  raw: SurveyRow[] | null;
 }
 
-export function reduceSurveyPortalMessage(prev: SurveyPortalState, msg: PortalCapturedMessage): SurveyPortalState {
+export function reduceSurveyPortalMessage(
+  prev: SurveyPortalState,
+  msg: PortalCapturedMessage,
+): SurveyPortalState {
   if (msg.type === MSG.kinoMessage && msg.data !== undefined && isKinoMessagePayload(msg.data)) {
     return { ...prev, kinoData: msg.data };
   }
@@ -111,12 +119,12 @@ export function reduceSurveyPortalMessage(prev: SurveyPortalState, msg: PortalCa
 export type KyukoRow = Record<string, unknown>;
 
 export interface KyukoPortalState {
-  kinoData:    KinoMessagePayload | null;
-  kkRaw:       KyukoRow[] | null;
-  hkRaw:       KyukoRow[] | null;
-  kcRaw:       KyukoRow[] | null;
-  rishuToken:  string;
-  rishuReady:  boolean;
+  kinoData: KinoMessagePayload | null;
+  kkRaw: KyukoRow[] | null;
+  hkRaw: KyukoRow[] | null;
+  kcRaw: KyukoRow[] | null;
+  rishuToken: string;
+  rishuReady: boolean;
 }
 
 function firstRishuToken(items: KyukoRow[]): string {
@@ -134,7 +142,10 @@ function withRishuBootstrap(prev: KyukoPortalState, items: KyukoRow[]): Partial<
   return { rishuToken: tok, rishuReady: true };
 }
 
-export function reduceKyukoPortalMessage(prev: KyukoPortalState, msg: PortalCapturedMessage): KyukoPortalState {
+export function reduceKyukoPortalMessage(
+  prev: KyukoPortalState,
+  msg: PortalCapturedMessage,
+): KyukoPortalState {
   if (msg.type === MSG.kinoMessage && msg.data !== undefined && isKinoMessagePayload(msg.data)) {
     return { ...prev, kinoData: msg.data };
   }
@@ -154,10 +165,10 @@ export function reduceKyukoPortalMessage(prev: KyukoPortalState, msg: PortalCapt
 }
 
 export const initialKyukoPortalState = (): KyukoPortalState => ({
-  kinoData:   null,
-  kkRaw:      null,
-  hkRaw:      null,
-  kcRaw:      null,
+  kinoData: null,
+  kkRaw: null,
+  hkRaw: null,
+  kcRaw: null,
   rishuToken: '',
   rishuReady: false,
 });

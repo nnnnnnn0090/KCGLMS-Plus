@@ -41,6 +41,12 @@ describe('portal-sync-compact', () => {
     expect(decoded?.storage[SK.home2WebMailOverlay]).toBe(true);
   });
 
+  it('rejects malformed compact payload metadata', () => {
+    expect(decodePortalSyncCompactPayload('{"v":4,"u":-1,"s":{}}')).toBeNull();
+    expect(decodePortalSyncCompactPayload('{"v":4,"u":1,"s":[]}')).toBeNull();
+    expect(decodePortalSyncCompactPayload('{"v":4,"u":1,"s":"bad"}')).toBeNull();
+  });
+
   it('expands compact storage back to long keys', () => {
     const expanded = expandPortalSyncStorage({
       t: 'dark',
@@ -50,5 +56,46 @@ describe('portal-sync-compact', () => {
     expect(expanded[SK.theme]).toBe('dark');
     expect(expanded[SK.calendarWeekStart]).toBe('sunday');
     expect(expanded[SK.clientUserId]).toBe('550e8400-e29b-41d4-a716-446655440000');
+  });
+
+  it('round-trips custom cal events and band collapse', () => {
+    const events = {
+      schemaVersion: 1 as const,
+      events: [
+        {
+          id: 'custom-ev-1',
+          title: 'バイト',
+          kind: 'recurring' as const,
+          weekday: 1 as const,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+    };
+    const compact = compactPortalSyncStorage({
+      [SK.customCalEvents]: events,
+      [SK.customCalBandCollapsed]: true,
+    });
+    expect(compact.ce).toEqual([
+      ['custom-ev-1', 'バイト', 1, 0, 0, 0, 0, 1_767_225_600, 1_767_225_600],
+    ]);
+    expect(compact.ceb).toBe(1);
+    const expanded = expandPortalSyncStorage(compact);
+    expect(expanded[SK.customCalEvents]).toEqual(events);
+    expect(expanded[SK.customCalBandCollapsed]).toBe(true);
+  });
+
+  it('round-trips ui font preference', () => {
+    const json = encodePortalSyncCompactPayload(1_700_000_000_000, {
+      [SK.theme]: 'dark',
+      [SK.font]: 'zen-maru-gothic',
+    });
+    const decoded = decodePortalSyncCompactPayload(json);
+    expect(decoded?.storage[SK.font]).toBe('zen-maru-gothic');
+
+    expect(compactPortalSyncStorage({ [SK.font]: 'zen-maru-gothic' })).toEqual({ fn: 'z' });
+    expect(compactPortalSyncStorage({ [SK.font]: 'noto-sans-jp' })).toEqual({ fn: 'n' });
+    expect(compactPortalSyncStorage({ [SK.font]: 'default' }).fn).toBeUndefined();
+    expect(expandPortalSyncStorage({ fn: 'b' })[SK.font]).toBe('biz-udpgothic');
   });
 });

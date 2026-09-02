@@ -5,8 +5,7 @@
 
 import { PORTAL_ORIGIN } from '../../shared/constants';
 
-const SYLLABUS_BASE =
-  `${PORTAL_ORIGIN}/Gakusei/web/Syllabus/WebSyllabusSansho/UI/WSL_SyllabusSansho.aspx`;
+const SYLLABUS_BASE = `${PORTAL_ORIGIN}/Gakusei/web/Syllabus/WebSyllabusSansho/UI/WSL_SyllabusSansho.aspx`;
 
 const PERIOD_TIMES: Record<number, string> = {
   1: '09:30 ~ 11:00',
@@ -19,9 +18,9 @@ const PERIOD_TIMES: Record<number, string> = {
 // ─── ツールチップ解析 ─────────────────────────────────────────────────────
 
 export function parseKogiMeta(tooltip: string): { period: string; room: string } {
-  const t       = String(tooltip ?? '');
+  const t = String(tooltip ?? '');
   const periodM = t.match(/時限[：:]\s*(\d+)/);
-  const roomM   = t.match(/教室[：:]\s*([^<\r\n]+)/);
+  const roomM = t.match(/教室[：:]\s*([^<\r\n]+)/);
   return { period: periodM ? periodM[1] : '', room: roomM ? roomM[1].trim() : '' };
 }
 
@@ -51,12 +50,15 @@ export function kogiPeriodNum(ev: { tooltip?: string; title?: string }): number 
 
 function parseKozaCode(tooltip: string, tipPlain: string): string {
   const re = /(?:講義コード|コード)\s*[：:]\s*([^\s<\r\n]+)/;
-  const fromHtml  = String(tooltip  ?? '').match(re);
+  const fromHtml = String(tooltip ?? '').match(re);
   if (fromHtml) return fromHtml[1].trim();
   const fromPlain = String(tipPlain ?? '').match(re);
   if (fromPlain) return fromPlain[1].trim();
   // 3 行目を講義コードとしてフォールバック
-  const lines = String(tipPlain ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+  const lines = String(tipPlain ?? '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
   if (lines.length >= 3) {
     const labeled = lines[2].match(/^(?:講義コード|コード)\s*[：:]\s*(.+)$/);
     return (labeled ? labeled[1] : lines[2]).trim();
@@ -99,5 +101,7 @@ export function findKingLmsUrl(
     }
     return false;
   });
-  return String(withPeriod.length >= 1 ? withPeriod[0].externalAccessUrl : candidates[0].externalAccessUrl);
+  return String(
+    withPeriod.length >= 1 ? withPeriod[0].externalAccessUrl : candidates[0].externalAccessUrl,
+  );
 }

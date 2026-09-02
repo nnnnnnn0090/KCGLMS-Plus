@@ -10,7 +10,7 @@ interface KinoPanelProps {
 }
 
 export function KinoPanel({ data }: KinoPanelProps) {
-  const title   = data ? String(data.title ?? '').trim() : '';
+  const title = data ? String(data.title ?? '').trim() : '';
   const message = data ? String(data.message ?? '').trim() : '';
   if (!title || !message) return null;
 

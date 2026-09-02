@@ -5,6 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 export default tseslint.config(
   {
     ignores: [
+      '**/._*',
       'node_modules/**',
       '.output/**',
       '.wxt/**',
@@ -28,10 +29,7 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'error',
       'no-empty': ['error', { allowEmptyCatch: false }],
       complexity: ['warn', 15],
-      'max-lines': [
-        'warn',
-        { max: 400, skipBlankLines: true, skipComments: true },
-      ],
+      'max-lines': ['warn', { max: 400, skipBlankLines: true, skipComments: true }],
     },
   },
   {

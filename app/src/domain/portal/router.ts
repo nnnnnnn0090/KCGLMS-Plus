@@ -7,7 +7,7 @@ import { PORTAL_HOSTNAME } from '../../contract/origins';
 import { normalizePortalPathname } from './portal-location-url';
 
 export interface PortalRoute {
-  page:      PageType;
+  page: PageType;
   detailId?: string;
 }
 
@@ -18,8 +18,8 @@ export function matchPortalRoute(): PortalRoute | null {
   if (location.hostname !== PORTAL_HOSTNAME) return null;
   const path = normalizePortalPathname(location.pathname);
 
-  if (path === '/portal')              return { page: PAGE.HOME };
-  if (path === '/portal/News')         return { page: PAGE.NEWS };
+  if (path === '/portal') return { page: PAGE.HOME };
+  if (path === '/portal/News') return { page: PAGE.NEWS };
   if (path === '/portal/KyukoHokoEtc') return { page: PAGE.KYUKO };
   if (path === '/portal/Questionnaire') return { page: PAGE.SURVEY };
 

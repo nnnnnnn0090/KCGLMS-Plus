@@ -27,39 +27,39 @@ export const DEVELOPER_NOTICE_LANG_IDS = [
 export type DeveloperNoticeLang = (typeof DEVELOPER_NOTICE_LANG_IDS)[number];
 
 const SUFFIX: Record<DeveloperNoticeLang, string | null> = {
-  ja:    null,
-  en:    'en',
-  zh:    'zh',
+  ja: null,
+  en: 'en',
+  zh: 'zh',
   zh_TW: 'zh_TW',
-  ko:    'ko',
-  vi:    'vi',
-  ne:    'ne',
-  id:    'id',
-  th:    'th',
+  ko: 'ko',
+  vi: 'vi',
+  ne: 'ne',
+  id: 'id',
+  th: 'th',
 };
 
 export const DEVELOPER_NOTICE_SELECT_LABEL: Record<DeveloperNoticeLang, string> = {
-  ja:    '日本語',
-  en:    'English',
-  zh:    '简体中文',
+  ja: '日本語',
+  en: 'English',
+  zh: '简体中文',
   zh_TW: '繁體中文',
-  ko:    '한국어',
-  vi:    'Tiếng Việt',
-  ne:    'नेपाली',
-  id:    'Bahasa Indonesia',
-  th:    'ไทย',
+  ko: '한국어',
+  vi: 'Tiếng Việt',
+  ne: 'नेपाली',
+  id: 'Bahasa Indonesia',
+  th: 'ไทย',
 };
 
 export const DEVELOPER_NOTICE_TITLE_FALLBACK: Record<DeveloperNoticeLang, string> = {
-  ja:    '開発者からのお知らせ',
-  en:    'Developer notice',
-  zh:    '开发者通知',
+  ja: '開発者からのお知らせ',
+  en: 'Developer notice',
+  zh: '开发者通知',
   zh_TW: '擴充功能通知',
-  ko:    '개발자 안내',
-  vi:    'Thông báo',
-  ne:    'सूचना',
-  id:    'Pemberitahuan',
-  th:    'ประกาศ',
+  ko: '개발자 안내',
+  vi: 'Thông báo',
+  ne: 'सूचना',
+  id: 'Pemberitahuan',
+  th: 'ประกาศ',
 };
 
 export interface DeveloperNoticeI18n {
@@ -118,10 +118,12 @@ export async function fetchDeveloperNoticeJson(): Promise<Response> {
   });
 }
 
-export function parseDeveloperNoticeJson(json: Record<string, unknown>): DeveloperNoticeI18n | null {
-  let titleJa   = str(json.title);
+export function parseDeveloperNoticeJson(
+  json: Record<string, unknown>,
+): DeveloperNoticeI18n | null {
+  let titleJa = str(json.title);
   let messageJa = rawMessage(json, 'ja');
-  let hasJa     = titleJa.length > 0 || messageJa.length > 0;
+  let hasJa = titleJa.length > 0 || messageJa.length > 0;
 
   let hasSecondaryRaw = false;
   for (const id of DEVELOPER_NOTICE_LANG_IDS) {
@@ -138,7 +140,7 @@ export function parseDeveloperNoticeJson(json: Record<string, unknown>): Develop
       const tr = rawTitle(json, id);
       const mr = rawMessage(json, id);
       if (tr || mr) {
-        titleJa   = tr || titleJa;
+        titleJa = tr || titleJa;
         messageJa = mr || messageJa;
         break;
       }
@@ -156,7 +158,7 @@ export function parseDeveloperNoticeJson(json: Record<string, unknown>): Develop
     const tr = rawTitle(json, id);
     const mr = rawMessage(json, id);
     byLang[id] = {
-      title:   tr || titleJa,
+      title: tr || titleJa,
       message: mr || messageJa,
     };
   }
@@ -204,15 +206,15 @@ export type DeveloperSurveyAnswers = Record<string, string | string[]>;
 type SurveyRaw = Record<string, unknown>;
 
 const LANG_SUFFIX: Record<AppLanguage, string | null> = {
-  ja:    null,
-  en:    'en',
-  zh:    'zh',
+  ja: null,
+  en: 'en',
+  zh: 'zh',
   zh_TW: 'zh_TW',
-  ko:    'ko',
-  vi:    'vi',
-  ne:    'ne',
-  id:    'id',
-  th:    'th',
+  ko: 'ko',
+  vi: 'vi',
+  ne: 'ne',
+  id: 'id',
+  th: 'th',
 };
 
 const QUESTION_TYPES = new Set<DeveloperSurveyQuestionType>([
@@ -254,7 +256,10 @@ function normalizeOptions(raw: unknown, language: AppLanguage): DeveloperSurveyO
   return out;
 }
 
-export function normalizeDeveloperSurvey(raw: unknown, language: AppLanguage): DeveloperSurvey | null {
+export function normalizeDeveloperSurvey(
+  raw: unknown,
+  language: AppLanguage,
+): DeveloperSurvey | null {
   if (!raw || typeof raw !== 'object') return null;
   const obj = raw as SurveyRaw;
   if (!bool(obj.enabled)) return null;

@@ -5,7 +5,6 @@
  * biko は 200 文字制限のため、暗号化済みペイロードをチャンク分割して複数行に載せる。
  */
 
-import type { Settings } from '../domain/settings';
 import { SK } from '../contract/storage-keys';
 import { PORTAL_HOSTNAME } from '../contract/origins';
 import {
@@ -14,30 +13,16 @@ import {
   PORTAL_SYNCED_STORAGE_KEYS,
 } from '../contract/portal-synced-storage';
 import { storageClient } from '../platform/storage/client';
+import { chromeStorageClient } from '../platform/storage/chrome-storage-client';
+import { parseSyncViaMyLinks } from '../platform/storage/parsers';
 import {
   decidePortalSyncBootstrap,
   markPortalSyncCacheClean,
   PORTAL_SYNC_CACHE_META_KEY,
   readPortalSyncCache,
   replacePortalSyncCache,
+  type PortalSyncCacheMeta,
 } from '../platform/storage/portal-sync-cache';
-import {
-  EMPTY_CUSTOM_THEMES,
-  parseCustomThemeCollection,
-  type StoredCustomThemeCollection,
-} from '../domain/themes/custom-themes';
-import type { CalendarWeekStart } from '../lib/date';
-import { parseCalendarWeekStart } from '../lib/date';
-import { DEFAULT_LANGUAGE, normalizeLanguage, type AppLanguage } from '../i18n/messages';
-import {
-  decodePortalSyncCompactPayload,
-  encodePortalSyncCompactPayload,
-} from '../lib/portal-sync-compact';
-import {
-  decryptPortalSyncPayload,
-  encryptPortalSyncPayload,
-  isEncryptedPortalSyncWire,
-} from '../lib/portal-sync-crypto';
 import { ensureClientUserIdInMemory, normalizeClientUserId } from '../lib/client-user-id';
 import {
   fetchPortalUserLinks,
@@ -45,6 +30,15 @@ import {
   savePortalUserLinks,
   type PortalUserLink,
 } from './user-html-link';
+import {
+  customThemesFromPortalStorage,
+  decodePortalSettingsPayloadWire,
+  defaultPortalSettingsStorage,
+  encodePortalSettingsPayloadWire,
+  settingsFromPortalStorage,
+  type PortalExtensionSnapshot,
+  type PortalSettingsSnapshot,
+} from './portal-settings-payload';
 
 /** マイリンク UI に表示しない設定用マーカー */
 export const PORTAL_SETTINGS_MARKER_PREFIX = '__KCGLMS::';
@@ -55,62 +49,41 @@ export const PORTAL_SETTINGS_BIKO_MAX = 200;
 /** チャンク分割時の安全マージン */
 export const PORTAL_SETTINGS_CHUNK_MAX = 190;
 
+/** マイリンクの同期用レコードを増やしすぎないための上限 */
+export const PORTAL_SETTINGS_MARKER_MAX = 64;
+
 const PORTAL_SETTINGS_URL_PREFIX = 'https://home.kcg.ac.jp/portal/_kcglms/';
 
-const PORTAL_EXTENSION_PAYLOAD_VERSION = 3 as const;
-const PORTAL_SETTINGS_PAYLOAD_VERSION = 2 as const;
-
 export { PORTAL_SYNCED_STORAGE_KEYS, isPortalSyncedStorageKey };
-
-export interface PortalExtensionSnapshot {
-  updatedAt: number;
-  storage: Record<string, unknown>;
-}
-
-/** @deprecated settings コンテキスト互換 */
-export interface PortalSettingsSnapshot {
-  updatedAt: number;
-  settings: Settings;
-  customThemes: StoredCustomThemeCollection;
-}
-
-interface PortalExtensionPayloadV3 {
-  version: typeof PORTAL_EXTENSION_PAYLOAD_VERSION;
-  updatedAt: number;
-  storage: Record<string, unknown>;
-}
-
-interface PortalSettingsPayloadV2 {
-  version: typeof PORTAL_SETTINGS_PAYLOAD_VERSION;
-  updatedAt: number;
-  settings: Settings;
-  customThemes: StoredCustomThemeCollection;
-}
-
-interface PortalSettingsPayloadLegacyV1 {
-  v: 1;
-  u: number;
-  s: {
-    t: string;
-    h: 0 | 1;
-    k: 0 | 1;
-    c: 0 | 1;
-    a: 0 | 1;
-    w2: 0 | 1;
-    cp: 0 | 1;
-    w: CalendarWeekStart;
-    l: AppLanguage;
-  };
-  ct: StoredCustomThemeCollection;
-}
+export type { PortalExtensionSnapshot, PortalSettingsSnapshot };
 
 let suppressPortalSync = false;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let listenerInstalled = false;
 let bootstrapPromise: Promise<void> | null = null;
 let portalSyncReady = false;
+/** マイリンク同期トグル（未設定は true）。schedule の同期判定用 */
+let myLinksSyncEnabledCache = true;
+let myLinksSyncPreferenceInitialized = false;
+let myLinksSyncTransition: Promise<void> = Promise.resolve();
+/** マイリンクへの書き込みを直列化し、同期停止時の削除を最後に確定させる。 */
+let portalSyncMutationQueue: Promise<void> = Promise.resolve();
+/**
+ * 同期オフ／マーカー削除のたびに進める。
+ * 進行中の upload が削除後にマーカーを書き戻さないようにする。
+ */
+let portalSyncWriteEpoch = 0;
 
 const PORTAL_EXTENSION_SAVE_DELAY_MS = 800;
+
+function enqueuePortalSyncMutation<T>(mutation: () => Promise<T>): Promise<T> {
+  const result = portalSyncMutationQueue.then(mutation, mutation);
+  portalSyncMutationQueue = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
+}
 
 export function isPortalSettingsMarkerLink(link: Pick<PortalUserLink, 'midashi' | 'url'>): boolean {
   return (
@@ -119,18 +92,109 @@ export function isPortalSettingsMarkerLink(link: Pick<PortalUserLink, 'midashi' 
   );
 }
 
-function canSyncPortalExtension(): boolean {
+function isOnPortalHost(): boolean {
   return typeof location !== 'undefined' && location.hostname === PORTAL_HOSTNAME;
+}
+
+async function readMyLinksSyncEnabled(): Promise<boolean> {
+  const snap = await chromeStorageClient.get(SK.syncViaMyLinks);
+  return parseSyncViaMyLinks(snap[SK.syncViaMyLinks]);
+}
+
+function canSyncPortalExtension(): boolean {
+  return isOnPortalHost() && myLinksSyncPreferenceInitialized && myLinksSyncEnabledCache;
+}
+
+async function clearDirtyWithoutUpload(expectedEpoch: number): Promise<void> {
+  const cache = await readPortalSyncCache();
+  if (expectedEpoch !== portalSyncWriteEpoch || myLinksSyncEnabledCache) return;
+  if (!cache.meta.dirty) return;
+  await chromeStorageClient.set({
+    [PORTAL_SYNC_CACHE_META_KEY]: {
+      ...cache.meta,
+      version: 1,
+      dirty: false,
+    } satisfies PortalSyncCacheMeta,
+  });
+}
+
+async function markLocalCacheForSyncResume(expectedEpoch: number): Promise<boolean> {
+  const cache = await readPortalSyncCache();
+  if (expectedEpoch !== portalSyncWriteEpoch || !myLinksSyncEnabledCache) return false;
+  await chromeStorageClient.set({
+    [PORTAL_SYNC_CACHE_META_KEY]: {
+      ...cache.meta,
+      version: 1,
+      updatedAt: Math.max(Date.now(), cache.meta.updatedAt + 1),
+      dirty: true,
+    } satisfies PortalSyncCacheMeta,
+  });
+  return expectedEpoch === portalSyncWriteEpoch && myLinksSyncEnabledCache;
+}
+
+async function applyPortalMyLinksSyncEnabled(enabled: boolean): Promise<void> {
+  if (myLinksSyncPreferenceInitialized && myLinksSyncEnabledCache === enabled) {
+    return myLinksSyncTransition;
+  }
+
+  const resumesLocalCache = myLinksSyncPreferenceInitialized && !myLinksSyncEnabledCache && enabled;
+  myLinksSyncPreferenceInitialized = true;
+  myLinksSyncEnabledCache = enabled;
+  const writeEpoch = ++portalSyncWriteEpoch;
+  portalSyncReady = false;
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+
+  myLinksSyncTransition = (async () => {
+    if (!enabled) {
+      await clearDirtyWithoutUpload(writeEpoch);
+      if (isOnPortalHost() && writeEpoch === portalSyncWriteEpoch) {
+        await removePortalExtensionSyncFromMyLinks();
+      }
+      return;
+    }
+
+    if (!isOnPortalHost() || writeEpoch !== portalSyncWriteEpoch) return;
+    installPortalExtensionSyncListener();
+    if (resumesLocalCache && !(await markLocalCacheForSyncResume(writeEpoch))) return;
+    const ready = await reconcilePortalExtensionCache(
+      fetchPortalExtensionSnapshot,
+      savePortalExtensionSnapshot,
+    );
+    if (!myLinksSyncEnabledCache || writeEpoch !== portalSyncWriteEpoch) {
+      await removePortalExtensionSyncFromMyLinks();
+      return;
+    }
+    portalSyncReady = ready;
+    if (ready) {
+      const cache = await readPortalSyncCache();
+      if (cache.meta.dirty && myLinksSyncEnabledCache && writeEpoch === portalSyncWriteEpoch) {
+        schedulePortalExtensionSync();
+      }
+    }
+  })();
+
+  return myLinksSyncTransition;
+}
+
+/**
+ * マイリンク同期の有効/無効を切り替える（端末ローカル設定）。
+ * 無効化時はポータル上の同期用マーカーも削除（soft-delete）する。
+ * 再有効化すると、残っていなければ新規に同期データが作られる。
+ */
+export async function setPortalMyLinksSyncEnabled(enabled: boolean): Promise<void> {
+  await chromeStorageClient.set({ [SK.syncViaMyLinks]: enabled });
+  await applyPortalMyLinksSyncEnabled(enabled);
+}
+
+export async function getPortalMyLinksSyncEnabled(): Promise<boolean> {
+  return readMyLinksSyncEnabled();
 }
 
 function snapshotOwnerId(snapshot: PortalExtensionSnapshot | null): string | null {
   return normalizeClientUserId(snapshot?.storage[SK.clientUserId]);
-}
-
-function fromBit(value: unknown, fallback: boolean): boolean {
-  if (value === 1) return true;
-  if (value === 0) return false;
-  return fallback;
 }
 
 function markerMidashi(index: number): string {
@@ -159,162 +223,6 @@ export async function writeSyncedLocalStorage(snapshot: PortalExtensionSnapshot)
   }
 }
 
-function settingsFromStorage(storageMap: Record<string, unknown>): Settings {
-  return {
-    theme: String(storageMap[SK.theme] ?? 'dark'),
-    hideProfileName: Boolean(storageMap[SK.hideProfileName]),
-    showKogiCalMascot: Boolean(storageMap[SK.showKogiCalMascot]),
-    showHomeCornerCharacter: Boolean(storageMap[SK.showHomeCornerCharacter]),
-    hideAssignmentCalendar: Boolean(storageMap[SK.hideAssignmentCalendar]),
-    home2WebMailOverlay: storageMap[SK.home2WebMailOverlay] !== false,
-    cplanOverlay: storageMap[SK.cplanOverlay] !== false,
-    calendarWeekStart: parseCalendarWeekStart(storageMap[SK.calendarWeekStart]),
-    language: normalizeLanguage(storageMap[SK.language] ?? DEFAULT_LANGUAGE),
-  };
-}
-
-function settingsSnapshotToStorage(snapshot: PortalSettingsSnapshot): Record<string, unknown> {
-  return {
-    [SK.theme]: snapshot.settings.theme,
-    [SK.hideProfileName]: snapshot.settings.hideProfileName,
-    [SK.showKogiCalMascot]: snapshot.settings.showKogiCalMascot,
-    [SK.showHomeCornerCharacter]: snapshot.settings.showHomeCornerCharacter,
-    [SK.hideAssignmentCalendar]: snapshot.settings.hideAssignmentCalendar,
-    [SK.home2WebMailOverlay]: snapshot.settings.home2WebMailOverlay,
-    [SK.cplanOverlay]: snapshot.settings.cplanOverlay,
-    [SK.calendarWeekStart]: snapshot.settings.calendarWeekStart,
-    [SK.language]: snapshot.settings.language,
-    [SK.customThemes]: snapshot.customThemes,
-  };
-}
-
-function defaultPortalSettingsStorage(): Record<string, unknown> {
-  return settingsSnapshotToStorage({
-    updatedAt: 0,
-    settings: {
-      theme: 'dark',
-      hideProfileName: false,
-      showKogiCalMascot: false,
-      showHomeCornerCharacter: false,
-      hideAssignmentCalendar: false,
-      home2WebMailOverlay: true,
-      cplanOverlay: true,
-      calendarWeekStart: 'monday',
-      language: DEFAULT_LANGUAGE,
-    },
-    customThemes: EMPTY_CUSTOM_THEMES,
-  });
-}
-
-function decodeLegacyV1(raw: PortalSettingsPayloadLegacyV1): PortalExtensionSnapshot | null {
-  if (!raw?.s || typeof raw.u !== 'number') return null;
-  const s = raw.s;
-  return {
-    updatedAt: raw.u,
-    storage: settingsSnapshotToStorage({
-      updatedAt: raw.u,
-      settings: {
-        theme: typeof s.t === 'string' ? s.t : 'dark',
-        hideProfileName: fromBit(s.h, false),
-        showKogiCalMascot: fromBit(s.k, false),
-        showHomeCornerCharacter: fromBit(s.c, false),
-        hideAssignmentCalendar: fromBit(s.a, false),
-        home2WebMailOverlay: fromBit(s.w2, true),
-        cplanOverlay: fromBit(s.cp, true),
-        calendarWeekStart: parseCalendarWeekStart(s.w),
-        language: normalizeLanguage(s.l ?? DEFAULT_LANGUAGE),
-      },
-      customThemes: parseCustomThemeCollection(raw.ct ?? EMPTY_CUSTOM_THEMES),
-    }),
-  };
-}
-
-function decodeSettingsPayloadV2(raw: PortalSettingsPayloadV2): PortalExtensionSnapshot | null {
-  if (raw.version !== PORTAL_SETTINGS_PAYLOAD_VERSION) return null;
-  if (typeof raw.updatedAt !== 'number' || !raw.settings) return null;
-  const s = raw.settings;
-  return {
-    updatedAt: raw.updatedAt,
-    storage: settingsSnapshotToStorage({
-      updatedAt: raw.updatedAt,
-      settings: {
-        theme: typeof s.theme === 'string' ? s.theme : 'dark',
-        hideProfileName: Boolean(s.hideProfileName),
-        showKogiCalMascot: Boolean(s.showKogiCalMascot),
-        showHomeCornerCharacter: Boolean(s.showHomeCornerCharacter),
-        hideAssignmentCalendar: Boolean(s.hideAssignmentCalendar),
-        home2WebMailOverlay: s.home2WebMailOverlay !== false,
-        cplanOverlay: s.cplanOverlay !== false,
-        calendarWeekStart: parseCalendarWeekStart(s.calendarWeekStart),
-        language: normalizeLanguage(s.language ?? DEFAULT_LANGUAGE),
-      },
-      customThemes: parseCustomThemeCollection(raw.customThemes ?? EMPTY_CUSTOM_THEMES),
-    }),
-  };
-}
-
-function decodePayload(json: string): PortalExtensionSnapshot | null {
-  const compact = decodePortalSyncCompactPayload(json);
-  if (compact) {
-    return {
-      updatedAt: compact.updatedAt,
-      storage: pickPortalSyncedStorage(compact.storage),
-    };
-  }
-
-  try {
-    const raw = JSON.parse(json) as
-      | PortalExtensionPayloadV3
-      | PortalSettingsPayloadV2
-      | PortalSettingsPayloadLegacyV1;
-    if (!raw || typeof raw !== 'object') return null;
-
-    if ('version' in raw && raw.version === PORTAL_EXTENSION_PAYLOAD_VERSION) {
-      if (typeof raw.updatedAt !== 'number' || !raw.storage || typeof raw.storage !== 'object') {
-        return null;
-      }
-      return {
-        updatedAt: raw.updatedAt,
-        storage: pickPortalSyncedStorage(raw.storage as Record<string, unknown>),
-      };
-    }
-
-    if ('version' in raw && raw.version === PORTAL_SETTINGS_PAYLOAD_VERSION) {
-      return decodeSettingsPayloadV2(raw as PortalSettingsPayloadV2);
-    }
-
-    if ('v' in raw && raw.v === 1) {
-      return decodeLegacyV1(raw as PortalSettingsPayloadLegacyV1);
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function encodePayloadJson(snapshot: PortalExtensionSnapshot): string {
-  return encodePortalSyncCompactPayload(
-    snapshot.updatedAt,
-    pickPortalSyncedStorage(snapshot.storage),
-  );
-}
-
-async function encodePayloadWire(snapshot: PortalExtensionSnapshot): Promise<string> {
-  const json = encodePayloadJson(snapshot);
-  const encrypted = await encryptPortalSyncPayload(json);
-  return encrypted ?? json;
-}
-
-async function decodePayloadWire(wire: string): Promise<PortalExtensionSnapshot | null> {
-  if (isEncryptedPortalSyncWire(wire)) {
-    const json = await decryptPortalSyncPayload(wire);
-    if (!json) return null;
-    return decodePayload(json);
-  }
-  return decodePayload(wire);
-}
-
 function splitIntoChunks(text: string): string[] {
   if (!text) return [''];
   const chunks: string[] = [];
@@ -330,11 +238,11 @@ export async function decodePortalExtensionSnapshot(
   const markers = links
     .filter((link) => !link.delFlg && isPortalSettingsMarkerLink(link))
     .sort((a, b) => markerIndex(a) - markerIndex(b));
-  if (markers.length === 0) return null;
+  if (markers.length === 0 || markers.length > PORTAL_SETTINGS_MARKER_MAX) return null;
   for (const marker of markers) {
     if (marker.biko.length > PORTAL_SETTINGS_BIKO_MAX) return null;
   }
-  return decodePayloadWire(markers.map((marker) => marker.biko).join(''));
+  return decodePortalSettingsPayloadWire(markers.map((marker) => marker.biko).join(''));
 }
 
 /** @deprecated PortalSettingsSnapshot 互換 */
@@ -345,10 +253,8 @@ export async function decodePortalSettingsSnapshot(
   if (!snapshot) return null;
   return {
     updatedAt: snapshot.updatedAt,
-    settings: settingsFromStorage(snapshot.storage),
-    customThemes: parseCustomThemeCollection(
-      snapshot.storage[SK.customThemes] ?? EMPTY_CUSTOM_THEMES,
-    ),
+    settings: settingsFromPortalStorage(snapshot.storage),
+    customThemes: customThemesFromPortalStorage(snapshot.storage),
   };
 }
 
@@ -356,16 +262,27 @@ export async function applyPortalExtensionMarkers(
   links: readonly PortalUserLink[],
   snapshot: PortalExtensionSnapshot,
 ): Promise<PortalUserLink[]> {
-  const chunks = splitIntoChunks(await encodePayloadWire(snapshot));
+  const chunks = splitIntoChunks(await encodePortalSettingsPayloadWire(snapshot));
+  if (chunks.length > PORTAL_SETTINGS_MARKER_MAX) {
+    throw new Error(
+      `同期データが上限を超えました（${chunks.length}/${PORTAL_SETTINGS_MARKER_MAX}）`,
+    );
+  }
   const nonMarkers = links.filter((link) => !isPortalSettingsMarkerLink(link));
   const allMarkers = links.filter((link) => isPortalSettingsMarkerLink(link));
   const activeMarkers = allMarkers.filter((link) => !link.delFlg);
+  const usedMarkers = new Set<PortalUserLink>();
 
   let nextLinkNo = nextPortalLinkNo(links);
 
   const updatedActiveMarkers: PortalUserLink[] = chunks.map((biko, index) => {
-    const existing = activeMarkers.find((link) => markerIndex(link) === index);
+    const existing =
+      activeMarkers.find((link) => markerIndex(link) === index && !usedMarkers.has(link)) ??
+      allMarkers.find(
+        (link) => link.delFlg && markerIndex(link) === index && !usedMarkers.has(link),
+      );
     if (existing) {
+      usedMarkers.add(existing);
       return {
         ...existing,
         midashi: markerMidashi(index),
@@ -387,12 +304,41 @@ export async function applyPortalExtensionMarkers(
   });
 
   const retiredMarkers = activeMarkers
-    .filter((link) => markerIndex(link) >= chunks.length)
+    .filter((link) => !usedMarkers.has(link))
     .map((link) => ({ ...link, delFlg: true }));
 
-  const unchangedDeletedMarkers = allMarkers.filter((link) => link.delFlg);
+  const unchangedDeletedMarkers = allMarkers.filter(
+    (link) => link.delFlg && !usedMarkers.has(link),
+  );
 
   return [...nonMarkers, ...updatedActiveMarkers, ...retiredMarkers, ...unchangedDeletedMarkers];
+}
+
+/** 同期用マーカーをすべて soft-delete（ユーザーの通常マイリンクは残す） */
+export function retireAllPortalExtensionMarkers(
+  links: readonly PortalUserLink[],
+): PortalUserLink[] {
+  return links.map((link) =>
+    isPortalSettingsMarkerLink(link) && !link.delFlg ? { ...link, delFlg: true } : link,
+  );
+}
+
+async function removePortalExtensionSyncFromMyLinks(): Promise<boolean> {
+  return enqueuePortalSyncMutation(async () => {
+    const writeEpoch = portalSyncWriteEpoch;
+    try {
+      const links = await fetchPortalUserLinks();
+      if (writeEpoch !== portalSyncWriteEpoch || myLinksSyncEnabledCache) return false;
+      const next = retireAllPortalExtensionMarkers(links);
+      const changed = next.some((link, index) => link.delFlg !== links[index]?.delFlg);
+      if (!changed) return true;
+      if (writeEpoch !== portalSyncWriteEpoch || myLinksSyncEnabledCache) return false;
+      await savePortalUserLinks(next);
+      return writeEpoch === portalSyncWriteEpoch && !myLinksSyncEnabledCache;
+    } catch {
+      return false;
+    }
+  });
 }
 
 export async function fetchPortalExtensionSnapshot(): Promise<PortalExtensionSnapshot | null> {
@@ -403,22 +349,33 @@ export async function fetchPortalExtensionSnapshot(): Promise<PortalExtensionSna
 export async function savePortalExtensionSnapshot(
   snapshot: PortalExtensionSnapshot,
 ): Promise<void> {
-  const links = await fetchPortalUserLinks();
-  const next = await applyPortalExtensionMarkers(links, snapshot);
-  await savePortalUserLinks(next);
+  if (!myLinksSyncEnabledCache) return;
+  await enqueuePortalSyncMutation(async () => {
+    const writeEpoch = portalSyncWriteEpoch;
+    if (!myLinksSyncEnabledCache) return;
+    const links = await fetchPortalUserLinks();
+    if (!myLinksSyncEnabledCache || writeEpoch !== portalSyncWriteEpoch) return;
+    const next = await applyPortalExtensionMarkers(links, snapshot);
+    if (!myLinksSyncEnabledCache || writeEpoch !== portalSyncWriteEpoch) return;
+    await savePortalUserLinks(next);
+  });
 }
 
 export async function persistDirtyPortalSyncCache(
   saveSnapshot: (snapshot: PortalExtensionSnapshot) => Promise<void>,
 ): Promise<boolean> {
   try {
+    if (!myLinksSyncEnabledCache) return false;
+    const writeEpoch = portalSyncWriteEpoch;
     const cache = await readPortalSyncCache();
     if (!cache.meta.dirty) return true;
+    if (!myLinksSyncEnabledCache || writeEpoch !== portalSyncWriteEpoch) return false;
     const snapshot: PortalExtensionSnapshot = {
       updatedAt: cache.meta.updatedAt || Date.now(),
       storage: pickPortalSyncedStorage(cache.storage),
     };
     await saveSnapshot(snapshot);
+    if (!myLinksSyncEnabledCache || writeEpoch !== portalSyncWriteEpoch) return false;
     suppressPortalSync = true;
     try {
       await markPortalSyncCacheClean(snapshot.updatedAt, snapshotOwnerId(snapshot));
@@ -451,6 +408,11 @@ export function installPortalExtensionSyncListener(): () => void {
   listenerInstalled = true;
   return storageClient.onChanged((changes, area) => {
     if (area !== 'local' || suppressPortalSync) return;
+    const syncPreferenceChange = changes[SK.syncViaMyLinks];
+    if (syncPreferenceChange) {
+      const enabled = parseSyncViaMyLinks(syncPreferenceChange.newValue);
+      void applyPortalMyLinksSyncEnabled(enabled);
+    }
     const relevant = Object.keys(changes).some(
       (key) => key === PORTAL_SYNC_CACHE_META_KEY || isPortalSyncedStorageKey(key),
     );
@@ -475,14 +437,10 @@ export async function bootstrapPortalExtensionSync(): Promise<void> {
 }
 
 async function runPortalExtensionBootstrap(): Promise<void> {
-  if (!canSyncPortalExtension()) return;
+  if (!isOnPortalHost()) return;
 
   installPortalExtensionSyncListener();
-
-  portalSyncReady = await reconcilePortalExtensionCache(
-    fetchPortalExtensionSnapshot,
-    savePortalExtensionSnapshot,
-  );
+  await applyPortalMyLinksSyncEnabled(await readMyLinksSyncEnabled());
 }
 
 /** ポータルAPIと端末キャッシュを照合する。戻り値はAPI取得に成功したか。 */
@@ -533,12 +491,7 @@ export async function reconcilePortalExtensionCache(
   return true;
 }
 
-export function parseSettingsFromExtensionStorage(storageMap: Record<string, unknown>): Settings {
-  return settingsFromStorage(storageMap);
-}
-
-export function parseCustomThemesFromExtensionStorage(
-  storageMap: Record<string, unknown>,
-): StoredCustomThemeCollection {
-  return parseCustomThemeCollection(storageMap[SK.customThemes] ?? EMPTY_CUSTOM_THEMES);
-}
+export {
+  customThemesFromPortalStorage as parseCustomThemesFromExtensionStorage,
+  settingsFromPortalStorage as parseSettingsFromExtensionStorage,
+};

@@ -6,19 +6,10 @@ import { KING_LMS_ORIGIN } from '../shared/constants';
 import type { DueItem } from '../ui/calendar/assignment';
 
 /** 提出済みとみなす gradebook user status */
-const SUBMITTED_STATUSES = new Set([
-  'NeedsGrading',
-  'Graded',
-  'Completed',
-  'NeedsGradingAgain',
-]);
+const SUBMITTED_STATUSES = new Set(['NeedsGrading', 'Graded', 'Completed', 'NeedsGradingAgain']);
 
 /** 未提出とみなす gradebook user status */
-const NOT_SUBMITTED_STATUSES = new Set([
-  'InProgress',
-  'NotStarted',
-  'InProgressAgain',
-]);
+const NOT_SUBMITTED_STATUSES = new Set(['InProgress', 'NotStarted', 'InProgressAgain']);
 
 /** 提出済みとみなす attempt status */
 const SUBMITTED_ATTEMPT_STATUSES = new Set([
@@ -90,11 +81,17 @@ export function submissionFromGradebookAttemptsResponse(
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => { setTimeout(resolve, ms); });
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 async function readJsonSafe(r: Response): Promise<unknown> {
-  try { return await r.json(); } catch { return null; }
+  try {
+    return await r.json();
+  } catch {
+    return null;
+  }
 }
 
 async function fetchWithRetries(
@@ -130,7 +127,10 @@ async function resolveSubmissionForColumn(
 
   const attemptsRes = await fetchWithRetries(fetchFn, attemptsUrl);
   if (attemptsRes) {
-    const fromAttempts = submissionFromGradebookAttemptsResponse(attemptsRes.status, attemptsRes.json);
+    const fromAttempts = submissionFromGradebookAttemptsResponse(
+      attemptsRes.status,
+      attemptsRes.json,
+    );
     if (fromAttempts !== undefined) return fromAttempts;
   }
 
@@ -157,9 +157,11 @@ export async function enrichDueItemsWithSubmissionStatus(
 
   for (let i = 0; i < pairs.length; i += concurrency) {
     const batch = pairs.slice(i, i + concurrency);
-    await Promise.all(batch.map(async ({ courseId, sourceId, key }) => {
-      statusByKey.set(key, await resolveSubmissionForColumn(fetchFn, courseId, sourceId));
-    }));
+    await Promise.all(
+      batch.map(async ({ courseId, sourceId, key }) => {
+        statusByKey.set(key, await resolveSubmissionForColumn(fetchFn, courseId, sourceId));
+      }),
+    );
   }
 
   return items.map((item) => {

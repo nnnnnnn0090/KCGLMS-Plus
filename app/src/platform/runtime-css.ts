@@ -9,10 +9,11 @@ let fallbackStyleNode: HTMLStyleElement | null = null;
 function canUseConstructableSheets(): boolean {
   if (constructableSheetsUsable != null) return constructableSheetsUsable;
   try {
-    constructableSheetsUsable = typeof CSSStyleSheet !== 'undefined'
-      && typeof document !== 'undefined'
-      && 'adoptedStyleSheets' in document
-      && Boolean(document.adoptedStyleSheets);
+    constructableSheetsUsable =
+      typeof CSSStyleSheet !== 'undefined' &&
+      typeof document !== 'undefined' &&
+      'adoptedStyleSheets' in document &&
+      Boolean(document.adoptedStyleSheets);
   } catch {
     constructableSheetsUsable = false;
   }

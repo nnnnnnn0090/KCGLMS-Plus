@@ -19,12 +19,7 @@ interface PortalApiRequestMessage {
   body?: string;
 }
 
-function postPortalApiResponse(
-  id: string,
-  ok: boolean,
-  status: number,
-  json: unknown,
-): void {
+function postPortalApiResponse(id: string, ok: boolean, status: number, json: unknown): void {
   window.postMessage(
     {
       type: FETCH_HOOK.portalApiResponse,
@@ -40,8 +35,8 @@ function postPortalApiResponse(
 
 export function installFetchBridge(): void {
   const BASE_HEADERS: Record<string, string> = {
-    'Accept':           'application/json, text/javascript, */*; q=0.01',
-    'Content-Type':     'application/json; charset=utf-8',
+    Accept: 'application/json, text/javascript, */*; q=0.01',
+    'Content-Type': 'application/json; charset=utf-8',
     'X-Requested-With': 'XMLHttpRequest',
   };
 

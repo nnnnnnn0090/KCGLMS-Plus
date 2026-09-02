@@ -26,13 +26,17 @@ function isBlank(value: string | string[]): boolean {
   return Array.isArray(value) ? value.length === 0 : value.trim().length === 0;
 }
 
-function validateAnswer(q: DeveloperSurveyQuestion, value: string | string[], labels: I18nMessages['developerSurvey']): string {
+function validateAnswer(
+  q: DeveloperSurveyQuestion,
+  value: string | string[],
+  labels: I18nMessages['developerSurvey'],
+): string {
   if (q.required && isBlank(value)) return labels.requiredError;
   if (Array.isArray(value)) {
     const allowed = new Set(q.options.map((opt) => opt.id));
     return value.every((id) => allowed.has(id)) ? '' : labels.invalidOptionError;
   }
-  if ((q.type === 'singleChoice') && value) {
+  if (q.type === 'singleChoice' && value) {
     const allowed = new Set(q.options.map((opt) => opt.id));
     if (!allowed.has(value)) return labels.invalidOptionError;
   }
@@ -59,7 +63,10 @@ export function DeveloperSurveyPanel({
   const disabled = answered || submitted || submitting;
   const hasText = survey.description.trim().length > 0;
 
-  const requiredMark = useMemo(() => <span className="p-developer-survey-required">{labels.required}</span>, [labels.required]);
+  const requiredMark = useMemo(
+    () => <span className="p-developer-survey-required">{labels.required}</span>,
+    [labels.required],
+  );
 
   function setAnswer(id: string, value: string | string[]): void {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -81,11 +88,13 @@ export function DeveloperSurveyPanel({
     <section className="p-panel p-developer-survey-panel">
       <span className="p-panel-head p-developer-survey-head">
         <span>{survey.title}</span>
-        {(answered || submitted) ? <span className="p-developer-survey-status">{labels.answered}</span> : null}
+        {answered || submitted ? (
+          <span className="p-developer-survey-status">{labels.answered}</span>
+        ) : null}
       </span>
       <div className="p-panel-body p-developer-survey-body">
         {hasText ? <p className="p-developer-survey-description">{survey.description}</p> : null}
-        {(answered || submitted) ? (
+        {answered || submitted ? (
           <p className="p-developer-survey-success">{labels.thanks}</p>
         ) : (
           <>
@@ -159,9 +168,12 @@ export function DeveloperSurveyPanel({
                         onChange={(e) => setAnswer(q.id, e.target.value)}
                       />
                     ) : null}
-                    {(q.type === 'text' || q.type === 'textarea') ? (
+                    {q.type === 'text' || q.type === 'textarea' ? (
                       <p className="p-developer-survey-count">
-                        {labels.characterCount(typeof value === 'string' ? value.length : 0, q.maxLength)}
+                        {labels.characterCount(
+                          typeof value === 'string' ? value.length : 0,
+                          q.maxLength,
+                        )}
                       </p>
                     ) : null}
                     {err ? <p className="p-developer-survey-error">{err}</p> : null}
@@ -174,7 +186,9 @@ export function DeveloperSurveyPanel({
               type="button"
               className="p-developer-survey-submit"
               disabled={disabled}
-              onClick={() => { void handleSubmit(); }}
+              onClick={() => {
+                void handleSubmit();
+              }}
             >
               {submitting ? labels.submitting : labels.submit}
             </button>

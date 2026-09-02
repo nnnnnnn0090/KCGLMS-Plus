@@ -26,21 +26,21 @@ import type { CalParams, CalEvent } from './types';
 /** use-panel 内の calRef.current と同等のミュータブル塊 */
 export interface CalendarPanelCalMutable {
   /** 週／月の直接 `pageFetch` と照合するキー（`fetchRange` など） */
-  pendingKey:     string | null;
+  pendingKey: string | null;
   /** 年バルク／延長フェッチ専用。`pendingKey` と分離し、週の再取得と競合しないようにする */
   bulkPendingKey: string | null;
-  loading:        boolean;
-  bulkFetching:   boolean;
-  bulkFetchKind:  null | 'initial' | 'extend-next' | 'extend-prev';
+  loading: boolean;
+  bulkFetching: boolean;
+  bulkFetchKind: null | 'initial' | 'extend-next' | 'extend-prev';
   clientDataMode: boolean;
-  bulkItems:      CalEvent[] | null;
-  bulkParsed:     { start: string; end: string } | null;
-  pendingExtend:    null | { weekParams?: CalParams; monthRef?: MonthRef };
+  bulkItems: CalEvent[] | null;
+  bulkParsed: { start: string; end: string } | null;
+  pendingExtend: null | { weekParams?: CalParams; monthRef?: MonthRef };
   pendingEnterAnim: boolean;
-  swipeAnimating:   boolean;
-  lastItems:      CalEvent[];
-  lastParsed:     CalParams | null;
-  storedUKbn:     string;
+  swipeAnimating: boolean;
+  lastItems: CalEvent[];
+  lastParsed: CalParams | null;
+  storedUKbn: string;
 }
 
 export interface CalendarPanelInboundContext {
@@ -97,32 +97,32 @@ export function runCalendarPanelInboundMessage(
   const parsed = d.requestUrl ? parseCalendarRequest(String(d.requestUrl)) : null;
   if (!parsed) return;
 
-  const m       = ctx.calRef.current;
-  const key     = rangeKey(parsed.start, parsed.end);
+  const m = ctx.calRef.current;
+  const key = rangeKey(parsed.start, parsed.end);
   const isMonth = parsed.end === addDaysIso(parsed.start, 42);
   const fetchMatches = m.pendingKey !== null && key === m.pendingKey;
-  const bulkMatches  = m.bulkPendingKey !== null && key === m.bulkPendingKey;
+  const bulkMatches = m.bulkPendingKey !== null && key === m.bulkPendingKey;
 
   // ── [1] バルクフェッチ完了 ────────────────────────────────────────────────
   // 年単位のデータを受け取り、extend か initial かに応じてマージし clientDataMode へ移行する。
   // pendingExtend がある場合は、あらかじめキューに積んでいた週/月移動をここで確定させる。
   if (bulkMatches && m.bulkFetching) {
     // 週の再取得と並走し得るため、`pendingKey` / `loading` は触らない（直接フェッチ側に任せる）
-    m.bulkFetching   = false;
+    m.bulkFetching = false;
     m.bulkPendingKey = null;
-    const items     = d.items as CalEvent[];
-    const kind      = m.bulkFetchKind;
+    const items = d.items as CalEvent[];
+    const kind = m.bulkFetchKind;
     m.bulkFetchKind = null;
 
     if (kind === 'extend-next' && m.bulkParsed) {
-      m.bulkItems  = mergeCalItemLists(m.bulkItems ?? [], items);
+      m.bulkItems = mergeCalItemLists(m.bulkItems ?? [], items);
       m.bulkParsed = { start: m.bulkParsed.start, end: parsed.end };
     } else if (kind === 'extend-prev' && m.bulkParsed) {
-      m.bulkItems  = mergeCalItemLists(items, m.bulkItems ?? []);
+      m.bulkItems = mergeCalItemLists(items, m.bulkItems ?? []);
       m.bulkParsed = { start: parsed.start, end: m.bulkParsed.end };
     } else {
-      m.bulkItems      = items.length ? items : m.lastItems.length ? [...m.lastItems] : items;
-      m.bulkParsed     = parsed;
+      m.bulkItems = items.length ? items : m.lastItems.length ? [...m.lastItems] : items;
+      m.bulkParsed = parsed;
       m.clientDataMode = true;
     }
 
@@ -155,10 +155,7 @@ export function runCalendarPanelInboundMessage(
   // ナビゲーション操作が重なった場合など、現在の pendingKey と一致しないレスポンスを
   // 受け取ることがある。グリッドは更新せず、パラメータの passive 更新だけ行う。
   // bulkPendingKey と一致する応答は [1] へ任せる（週キーと年キーが並走しても誤ってここに入れない）。
-  if (
-    !bulkMatches
-    && ((m.pendingKey !== null && !fetchMatches) || (!m.pendingKey && m.loading))
-  ) {
+  if (!bulkMatches && ((m.pendingKey !== null && !fetchMatches) || (!m.pendingKey && m.loading))) {
     applyPassiveWeekMonthFromMessage(ctx, parsed, isMonth);
     return;
   }
@@ -167,11 +164,10 @@ export function runCalendarPanelInboundMessage(
   // 週/月ナビゲーションによる直接フェッチのレスポンス。グリッドを即時再描画し、
   // バルクフェッチをキューに積んで次回のクライアントサイドナビゲーションに備える。
   // `pageFetch` より先に届くリプレイ等では loading / pendingKey が未設定のままのことがある。
-  const unsolicitedPaint =
-    !m.loading && !m.bulkFetching && m.pendingKey === null && !bulkMatches;
+  const unsolicitedPaint = !m.loading && !m.bulkFetching && m.pendingKey === null && !bulkMatches;
   if ((m.loading && fetchMatches) || unsolicitedPaint) {
     m.pendingKey = null;
-    m.loading    = false;
+    m.loading = false;
     m.storedUKbn = parsed.uKbn || m.storedUKbn;
 
     const sf = storeFromParsed(parsed, isMonth, ctx.weekParamsRef.current, ctx.monthRefRef.current);
@@ -185,7 +181,7 @@ export function runCalendarPanelInboundMessage(
     ctx.setWeekParams(weekParams);
     ctx.weekParamsRef.current = weekParams;
     ctx.setMonthRef(monthRefNext);
-    ctx.monthRefRef.current   = monthRefNext;
+    ctx.monthRefRef.current = monthRefNext;
 
     const items = d.items as CalEvent[];
 
@@ -194,10 +190,10 @@ export function runCalendarPanelInboundMessage(
     const drawParsed: CalParams =
       !isMonth && ctx.viewModeRef.current === 'week' ? weekParams : parsed;
 
-    m.lastItems  = items;
+    m.lastItems = items;
     m.lastParsed = drawParsed;
 
-    const enterAnim    = m.pendingEnterAnim;
+    const enterAnim = m.pendingEnterAnim;
     m.pendingEnterAnim = false;
     ctx.redraw(items, drawParsed, { enterAnim });
     ctx.syncToolbarLocked?.();

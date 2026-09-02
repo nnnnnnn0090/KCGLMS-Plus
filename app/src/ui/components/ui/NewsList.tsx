@@ -9,7 +9,7 @@ import { useI18n } from '../../../i18n';
 export type { NewsListItem } from '../../../shared/types';
 
 interface NewsListProps {
-  items:     NewsListItem[];
+  items: NewsListItem[];
   emptyMsg?: string;
 }
 
@@ -25,10 +25,10 @@ export function NewsList({ items, emptyMsg }: NewsListProps) {
     <>
       {filtered.map((item) => {
         const unread = String(item.readFlg) === '0';
-        const isNew  = String(item.newFlg)  === '1';
+        const isNew = String(item.newFlg) === '1';
         const isUrgent = String(item.importanceCd) === '02';
-        const id     = item.id;
-        const key    = id != null ? String(id) : `${item.title}-${item.newsDate}`;
+        const id = item.id;
+        const key = id != null ? String(id) : `${item.title}-${item.newsDate}`;
         const href = id != null ? newsHref(String(id)) : '#';
         const dateStr = String(item.newsDate ?? '').replace(/-/g, '/');
         return (
@@ -36,15 +36,27 @@ export function NewsList({ items, emptyMsg }: NewsListProps) {
             <a className="p-news-link" href={href}>
               <div className="p-news-meta-row">
                 <div className="p-news-date-line">
-                  <time dateTime={item.newsDate != null ? String(item.newsDate) : undefined}>{dateStr}</time>
-                  {isUrgent && <span className="p-news-urgent-badge" aria-hidden="true">{t.newsList.urgent}</span>}
+                  <time dateTime={item.newsDate != null ? String(item.newsDate) : undefined}>
+                    {dateStr}
+                  </time>
+                  {isUrgent && (
+                    <span className="p-news-urgent-badge" aria-hidden="true">
+                      {t.newsList.urgent}
+                    </span>
+                  )}
                 </div>
               </div>
               <span className="p-news-title-line">
                 <span className="p-news-title">{item.title}</span>
-                {isNew && <span className="p-news-new-badge" aria-hidden="true">NEW</span>}
+                {isNew && (
+                  <span className="p-news-new-badge" aria-hidden="true">
+                    NEW
+                  </span>
+                )}
               </span>
-              <span className="p-news-meta">{item.sender ?? ''} · {item.category ?? ''}</span>
+              <span className="p-news-meta">
+                {item.sender ?? ''} · {item.category ?? ''}
+              </span>
             </a>
           </article>
         );

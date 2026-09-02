@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  parseCalendarWeekStart,
-  parseStorageBool,
-  parseThemeId,
-} from './parsers';
+import { parseCalendarWeekStart, parseStorageBool, parseThemeId } from './parsers';
 import { SK } from '../../contract/storage-keys';
 
 describe('storage parsers', () => {

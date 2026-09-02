@@ -21,7 +21,9 @@ function avatarRingColor(background: string): '#000' | '#fff' {
   const hex = background.trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i)?.[1];
   if (!hex) return '#fff';
   const normalized = hex.length === 3 ? [...hex].map((value) => value + value).join('') : hex;
-  const [red, green, blue] = [0, 2, 4].map((offset) => Number.parseInt(normalized.slice(offset, offset + 2), 16));
+  const [red, green, blue] = [0, 2, 4].map((offset) =>
+    Number.parseInt(normalized.slice(offset, offset + 2), 16),
+  );
   const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
   return luminance > 0.55 ? '#000' : '#fff';
 }
@@ -92,11 +94,15 @@ export function ensurePortalBackdrop(
   if (!el) {
     el = document.createElement('div');
     el.id = PORTAL_DOM.bootCover;
-    el.className = 'tw-fixed tw-inset-0 tw-z-boot-cover tw-pointer-events-none tw-m-0 tw-h-full tw-w-full tw-border-0 tw-p-0';
+    el.className =
+      'tw-fixed tw-inset-0 tw-z-boot-cover tw-pointer-events-none tw-m-0 tw-h-full tw-w-full tw-border-0 tw-p-0';
     el.setAttribute('aria-hidden', 'true');
   }
   if (themeName != null) {
-    upsertRuntimeCss(PORTAL_DOM.headThemeStyle, portalHeadThemeCss(themeTokensForName(themeName, customThemes)));
+    upsertRuntimeCss(
+      PORTAL_DOM.headThemeStyle,
+      portalHeadThemeCss(themeTokensForName(themeName, customThemes)),
+    );
   }
 
   const parent = document.body ?? document.documentElement;

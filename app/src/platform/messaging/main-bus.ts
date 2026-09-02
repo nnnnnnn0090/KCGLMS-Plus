@@ -11,7 +11,9 @@ const TARGET_ORIGIN = '*';
 export function postMainMessage(msg: PageMessage): void {
   try {
     window.postMessage(msg, TARGET_ORIGIN);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 export function postCapturedApi(

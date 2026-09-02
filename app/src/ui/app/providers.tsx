@@ -4,7 +4,8 @@
 
 import type { ReactNode } from 'react';
 import { SettingsProvider } from '../../context/settings';
-import { CoursesProvider }  from '../../context/courses';
+import { CoursesProvider } from '../../context/courses';
+import { CustomCalEventsProvider } from '../../context/custom-cal-events';
 import { CalendarOverlayUiProvider } from '../../context/calendarOverlayUi';
 import { PortalDomProvider } from '../../context/portalDom';
 import { I18nProvider } from '../../i18n';
@@ -20,9 +21,11 @@ export function AppProviders({
     <SettingsProvider>
       <I18nProvider>
         <CoursesProvider>
-          <PortalDomProvider overlayRoot={overlayRoot}>
-            <CalendarOverlayUiProvider>{children}</CalendarOverlayUiProvider>
-          </PortalDomProvider>
+          <CustomCalEventsProvider>
+            <PortalDomProvider overlayRoot={overlayRoot}>
+              <CalendarOverlayUiProvider>{children}</CalendarOverlayUiProvider>
+            </PortalDomProvider>
+          </CustomCalEventsProvider>
         </CoursesProvider>
       </I18nProvider>
     </SettingsProvider>

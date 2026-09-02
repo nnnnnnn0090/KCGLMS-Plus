@@ -9,7 +9,10 @@ export function getMailheadForm(): HTMLFormElement | null {
   return el instanceof HTMLFormElement ? el : null;
 }
 
-export function serializeMailheadPost(form: HTMLFormElement, submitter: HTMLInputElement): URLSearchParams {
+export function serializeMailheadPost(
+  form: HTMLFormElement,
+  submitter: HTMLInputElement,
+): URLSearchParams {
   const p = new URLSearchParams();
   for (const raw of form.elements) {
     if (!(raw instanceof HTMLElement)) continue;
@@ -68,7 +71,13 @@ export function applyMailheadDocumentToLive(parsed: Document): boolean {
   const labLive = document.getElementById('MainContent_Label2');
   if (labNew && labLive) labLive.textContent = labNew.textContent;
 
-  for (const id of ['__VIEWSTATE', '__VIEWSTATEGENERATOR', '__EVENTVALIDATION', '__EVENTTARGET', '__EVENTARGUMENT']) {
+  for (const id of [
+    '__VIEWSTATE',
+    '__VIEWSTATEGENERATOR',
+    '__EVENTVALIDATION',
+    '__EVENTTARGET',
+    '__EVENTARGUMENT',
+  ]) {
     syncInputValueById(id, parsed);
   }
 
@@ -90,9 +99,9 @@ export async function fetchMailheadPost(submitter: HTMLInputElement): Promise<Do
   const body = serializeMailheadPost(form, submitter).toString();
 
   const res = await fetch(url, {
-    method:      'POST',
+    method: 'POST',
     credentials: 'include',
-    headers:     { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
     body,
   });
 

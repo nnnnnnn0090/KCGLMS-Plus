@@ -27,7 +27,9 @@ export function installXhrHook(): void {
     const u = String(self._portalUrl ?? '');
     if (shouldHook(u)) {
       this.addEventListener('load', function () {
-        try { dispatch(u, JSON.parse(this.responseText)); } catch (err) {
+        try {
+          dispatch(u, JSON.parse(this.responseText));
+        } catch (err) {
           devWarn('portal-hooks: XHR JSON parse failed', u, err);
         }
       });

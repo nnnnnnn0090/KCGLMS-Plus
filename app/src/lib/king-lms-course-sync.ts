@@ -9,12 +9,14 @@ export interface BeginKingLmsCourseListSyncOptions {
   toastQuiet?: boolean;
 }
 
-export async function beginKingLmsCourseListSync(options?: BeginKingLmsCourseListSyncOptions): Promise<void> {
+export async function beginKingLmsCourseListSync(
+  options?: BeginKingLmsCourseListSyncOptions,
+): Promise<void> {
   await storage.set({
-    [SK.kingLmsSyncPending]:            true,
-    [SK.kingLmsSyncReturnUrl]:          canonicalPortalHref(),
-    [SK.kingLmsSyncAwaitCourse]:        false,
-    [SK.kingLmsCourseSyncToastQuiet]:   Boolean(options?.toastQuiet),
+    [SK.kingLmsSyncPending]: true,
+    [SK.kingLmsSyncReturnUrl]: canonicalPortalHref(),
+    [SK.kingLmsSyncAwaitCourse]: false,
+    [SK.kingLmsCourseSyncToastQuiet]: Boolean(options?.toastQuiet),
   });
   window.location.href = KING_LMS_COURSE_SYNC_URL;
 }

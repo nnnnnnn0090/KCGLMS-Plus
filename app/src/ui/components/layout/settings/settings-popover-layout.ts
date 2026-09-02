@@ -56,17 +56,11 @@ export function layoutSettingsPopover(
     pop.style.removeProperty('--p-settings-pop-bottom');
   }
 
-  const maxHeight = Math.max(
-    MIN_HEIGHT_PX,
-    Math.min(MAX_HEIGHT_PX, Math.floor(availableHeight)),
-  );
+  const maxHeight = Math.max(MIN_HEIGHT_PX, Math.min(MAX_HEIGHT_PX, Math.floor(availableHeight)));
   dialog?.style.setProperty('--p-settings-max-height', `${maxHeight}px`);
 }
 
-export function clearSettingsPopoverLayout(
-  pop: HTMLElement,
-  dialog: HTMLElement | null,
-): void {
+export function clearSettingsPopoverLayout(pop: HTMLElement, dialog: HTMLElement | null): void {
   pop.classList.remove('is-viewport-docked', 'is-flipped');
   pop.style.removeProperty('--p-settings-pop-left');
   pop.style.removeProperty('--p-settings-pop-top');

@@ -7,14 +7,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { HOME2_MAIL_DIRECTORY_URL } from '../../../shared/constants';
 import { useI18n } from '../../../i18n';
 import type { PortalUserLink } from '../../../services/user-html-link';
-import {
-  addPortalUserLink,
-  deletePortalUserLink,
-} from '../../../services/user-html-link';
-import {
-  readShortcutLayout,
-  saveShortcutLayout,
-} from '../../../services/shortcut-layout';
+import { addPortalUserLink, deletePortalUserLink } from '../../../services/user-html-link';
+import { readShortcutLayout, saveShortcutLayout } from '../../../services/shortcut-layout';
 import {
   buildLinkEditorRows,
   linkKey,
@@ -25,9 +19,9 @@ import {
 } from './link-editor-rows';
 
 interface LinkEditorProps {
-  items:     ApiLink[];
+  items: ApiLink[];
   userLinks: PortalUserLink[];
-  editing:   boolean;
+  editing: boolean;
 }
 
 export function LinkEditor({ items, userLinks, editing }: LinkEditorProps) {
@@ -97,7 +91,11 @@ export function LinkEditor({ items, userLinks, editing }: LinkEditorProps) {
     const name = addName.trim();
     const url = addUrl.trim();
     if (!name || !url || busy) return;
-    try { new URL(url); } catch { return; }
+    try {
+      new URL(url);
+    } catch {
+      return;
+    }
     setBusy(true);
     try {
       await addPortalUserLink(userLinks, name, url);
@@ -152,32 +150,32 @@ export function LinkEditor({ items, userLinks, editing }: LinkEditorProps) {
   const visible = rows.filter((r) => !hidden.has(r.key));
 
   if (!editing) {
-    return visible.length === 0
-      ? <p className="p-empty">{t.linkEditor.empty}</p>
-      : (
-        <div className="p-link-list">
-          {visible.map((r) => (
-            <article key={r.portalId ?? r.key} className="p-shortcut">
-              <a
-                className="p-shortcut-link"
-                href={r.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                id={
-                  r.midashi === '学生出欠登録'
-                    ? 'p-shortcut-attendance'
-                    : linkKey(r.url) === linkKey(HOME2_MAIL_DIRECTORY_URL)
-                      ? 'p-shortcut-webmail'
-                      : undefined
-                }
-              >
-                <span className="p-shortcut-title">{r.midashi}</span>
-                {r.biko ? <span className="p-shortcut-meta">{r.biko}</span> : null}
-              </a>
-            </article>
-          ))}
-        </div>
-      );
+    return visible.length === 0 ? (
+      <p className="p-empty">{t.linkEditor.empty}</p>
+    ) : (
+      <div className="p-link-list">
+        {visible.map((r) => (
+          <article key={r.portalId ?? r.key} className="p-shortcut">
+            <a
+              className="p-shortcut-link"
+              href={r.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              id={
+                r.midashi === '学生出欠登録'
+                  ? 'p-shortcut-attendance'
+                  : linkKey(r.url) === linkKey(HOME2_MAIL_DIRECTORY_URL)
+                    ? 'p-shortcut-webmail'
+                    : undefined
+              }
+            >
+              <span className="p-shortcut-title">{r.midashi}</span>
+              {r.biko ? <span className="p-shortcut-meta">{r.biko}</span> : null}
+            </a>
+          </article>
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -195,7 +193,13 @@ export function LinkEditor({ items, userLinks, editing }: LinkEditorProps) {
             onDragEnd={onDragEnd}
             onDrop={(e) => onDrop(e, i)}
           >
-            <span className="p-link-edit-grip" aria-hidden="true" title={t.linkEditor.dragToReorder}>⋮⋮</span>
+            <span
+              className="p-link-edit-grip"
+              aria-hidden="true"
+              title={t.linkEditor.dragToReorder}
+            >
+              ⋮⋮
+            </span>
             <span className="p-link-edit-name">{r.midashi}</span>
             <button
               type="button"
@@ -220,9 +224,32 @@ export function LinkEditor({ items, userLinks, editing }: LinkEditorProps) {
         ))}
       </div>
       <div className="p-link-add-form">
-        <input type="text" className="p-link-add-input" placeholder={t.linkEditor.linkNamePlaceholder} autoComplete="off" value={addName} onChange={(e) => setAddName(e.target.value)} disabled={busy} />
-        <input type="url" className="p-link-add-input" placeholder={t.linkEditor.urlPlaceholder} autoComplete="off" value={addUrl} onChange={(e) => setAddUrl(e.target.value)} disabled={busy} />
-        <button type="button" className="p-link-add-btn" onClick={() => void addCustomLink()} disabled={busy}>{t.common.add}</button>
+        <input
+          type="text"
+          className="p-link-add-input"
+          placeholder={t.linkEditor.linkNamePlaceholder}
+          autoComplete="off"
+          value={addName}
+          onChange={(e) => setAddName(e.target.value)}
+          disabled={busy}
+        />
+        <input
+          type="url"
+          className="p-link-add-input"
+          placeholder={t.linkEditor.urlPlaceholder}
+          autoComplete="off"
+          value={addUrl}
+          onChange={(e) => setAddUrl(e.target.value)}
+          disabled={busy}
+        />
+        <button
+          type="button"
+          className="p-link-add-btn"
+          onClick={() => void addCustomLink()}
+          disabled={busy}
+        >
+          {t.common.add}
+        </button>
       </div>
     </>
   );

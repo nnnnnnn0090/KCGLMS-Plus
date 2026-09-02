@@ -49,10 +49,7 @@ export function useDeveloperSurvey(language: AppLanguage): UseDeveloperSurveyRes
     setReady(false);
     setError('');
 
-    void Promise.all([
-      storage.get(SK.developerSurveyAnswered),
-      fetchDeveloperSurveyJson(),
-    ])
+    void Promise.all([storage.get(SK.developerSurveyAnswered), fetchDeveloperSurveyJson()])
       .then(async ([stored, response]) => {
         if (!response.ok) throw new Error(String(response.status));
         const json = await response.json();
@@ -85,26 +82,29 @@ export function useDeveloperSurvey(language: AppLanguage): UseDeveloperSurveyRes
     [answeredKeys, survey],
   );
 
-  const submit = useCallback(async (answers: DeveloperSurveyAnswers): Promise<boolean> => {
-    if (!survey || submitting || answered) return false;
-    setSubmitting(true);
-    setError('');
-    try {
-      const response = await submitDeveloperSurveyResponse(survey.id, survey.revision, answers);
-      if (!response.ok) throw new Error(String(response.status));
-      const key = developerSurveyKey(survey);
-      const next = Array.from(new Set([...answeredKeys, key]));
-      await storage.set({ [SK.developerSurveyAnswered]: next });
-      setAnsweredKeys(next);
-      setSubmitted(true);
-      return true;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      return false;
-    } finally {
-      setSubmitting(false);
-    }
-  }, [answered, answeredKeys, submitting, survey]);
+  const submit = useCallback(
+    async (answers: DeveloperSurveyAnswers): Promise<boolean> => {
+      if (!survey || submitting || answered) return false;
+      setSubmitting(true);
+      setError('');
+      try {
+        const response = await submitDeveloperSurveyResponse(survey.id, survey.revision, answers);
+        if (!response.ok) throw new Error(String(response.status));
+        const key = developerSurveyKey(survey);
+        const next = Array.from(new Set([...answeredKeys, key]));
+        await storage.set({ [SK.developerSurveyAnswered]: next });
+        setAnsweredKeys(next);
+        setSubmitted(true);
+        return true;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+        return false;
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [answered, answeredKeys, submitting, survey],
+  );
 
   return { survey, answered, ready, submitting, submitted, error, submit };
 }

@@ -29,8 +29,8 @@ export function useExtensionUpdateAvailable(): {
     };
   }, []);
 
-  const updateAvailable = FORCE_SHOW_UPDATE_NOTICE
-    || isExtensionUpdateAvailable(current, latestVersion);
+  const updateAvailable =
+    FORCE_SHOW_UPDATE_NOTICE || isExtensionUpdateAvailable(current, latestVersion);
   const displayLatest = latestVersion ?? (FORCE_SHOW_UPDATE_NOTICE ? '9.9.9' : null);
 
   return {

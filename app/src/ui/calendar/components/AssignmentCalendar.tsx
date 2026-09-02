@@ -40,7 +40,7 @@ import { useI18n } from '../../../i18n';
 
 interface AssignmentCalendarProps {
   payload: DuePayload | null;
-  titles:  { week: string; month: string };
+  titles: { week: string; month: string };
   demoTodayIso?: string;
 }
 
@@ -52,17 +52,20 @@ export function AssignmentCalendar({ payload, titles, demoTodayIso }: Assignment
   const { settings, settingsReady } = useSettings();
   const { language, t } = useI18n();
   const weekStart = settings.calendarWeekStart;
-  const events   = useMemo(() => dueItemsToCalEvents(payload?.items ?? [], language), [payload?.items, language]);
-  const hasData  = events.length > 0;
+  const events = useMemo(
+    () => dueItemsToCalEvents(payload?.items ?? [], language),
+    [payload?.items, language],
+  );
+  const hasData = events.length > 0;
 
-  const [viewMode,       setViewMode]       = useState<'week' | 'month'>('week');
-  const [weekParams,     setWeekParams]     = useState(() => weekRangeContaining(todayIso));
-  const [monthRef,       setMonthRef]       = useState(() => isoToMonthRef(todayIso));
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+  const [weekParams, setWeekParams] = useState(() => weekRangeContaining(todayIso));
+  const [monthRef, setMonthRef] = useState(() => isoToMonthRef(todayIso));
   const [swipeAnimating, setSwipeAnimating] = useState(false);
   /** King LMS 同期ページへ遷移する直前の storage 書き込み中 */
   const [refreshNavigating, setRefreshNavigating] = useState(false);
 
-  const calBodyRef    = useRef<HTMLDivElement>(null);
+  const calBodyRef = useRef<HTMLDivElement>(null);
   /** 取得時刻の「◯秒前」を1秒ごとに更新 */
   const [capturedNowMs, setCapturedNowMs] = useState(() => Date.now());
   // スワイプ中は useLayoutEffect による DOM 更新をスキップする
@@ -77,7 +80,7 @@ export function AssignmentCalendar({ payload, titles, demoTodayIso }: Assignment
   useEffect(() => {
     if (!settingsReady) return;
     const today = todayIso;
-    const wp    = weekParamsRef.current;
+    const wp = weekParamsRef.current;
 
     if (prevWeekStartRef.current === null) {
       prevWeekStartRef.current = weekStart;
@@ -90,7 +93,7 @@ export function AssignmentCalendar({ payload, titles, demoTodayIso }: Assignment
     prevWeekStartRef.current = weekStart;
 
     const anchor = calendarRealignAnchorIso(today, wp);
-    const wr       = weekRangeContaining(anchor, weekStart);
+    const wr = weekRangeContaining(anchor, weekStart);
     setWeekParams(wr);
     setMonthRef(isoToMonthRef(wr.start));
   }, [settingsReady, weekStart, todayIso]);
@@ -98,15 +101,30 @@ export function AssignmentCalendar({ payload, titles, demoTodayIso }: Assignment
   // ── 現在表示範囲の HTML を生成する ────────────────────────────────────
   const gridHtml = useMemo(() => {
     if (!hasData) return '';
-    const r = viewMode === 'month'
-      ? sixWeekRange(monthRef.y, monthRef.m, weekStart)
-      : { start: weekParams.start, end: weekParams.end };
-    return buildCalendarGridHtml(
-      filterCalItemsByRange(events, r.start, r.end),
-      r,
-      { mode: viewMode, monthRef: viewMode === 'month' ? monthRef : null, ...assignmentViewMeta, weekStart, language, todayIso: demoTodayIso, nowMs: demoNowMs },
-    );
-  }, [hasData, events, viewMode, monthRef, weekParams, weekStart, language, demoTodayIso, demoNowMs]);
+    const r =
+      viewMode === 'month'
+        ? sixWeekRange(monthRef.y, monthRef.m, weekStart)
+        : { start: weekParams.start, end: weekParams.end };
+    return buildCalendarGridHtml(filterCalItemsByRange(events, r.start, r.end), r, {
+      mode: viewMode,
+      monthRef: viewMode === 'month' ? monthRef : null,
+      ...assignmentViewMeta,
+      weekStart,
+      language,
+      todayIso: demoTodayIso,
+      nowMs: demoNowMs,
+    });
+  }, [
+    hasData,
+    events,
+    viewMode,
+    monthRef,
+    weekParams,
+    weekStart,
+    language,
+    demoTodayIso,
+    demoNowMs,
+  ]);
 
   // ── グリッド HTML を DOM に反映（スワイプ中は skip） ──────────────────
   useLayoutEffect(() => {
@@ -134,8 +152,8 @@ export function AssignmentCalendar({ payload, titles, demoTodayIso }: Assignment
     setRefreshNavigating(true);
     try {
       await storage.set({
-        [SK.kingLmsAssignmentSyncPending]:    true,
-        [SK.kingLmsAssignmentSyncReturnUrl]:  canonicalPortalHref(),
+        [SK.kingLmsAssignmentSyncPending]: true,
+        [SK.kingLmsAssignmentSyncReturnUrl]: canonicalPortalHref(),
       });
       window.location.href = KING_LMS_ASSIGNMENT_SYNC_URL;
     } catch {
@@ -144,57 +162,81 @@ export function AssignmentCalendar({ payload, titles, demoTodayIso }: Assignment
   }
 
   // ── 前/次 ナビゲーション ─────────────────────────────────────────────
-  const navigate = useCallback((dir: 'prev' | 'next') => {
-    if (swipeAnimating || !hasData) return;
-    const el = calBodyRef.current;
-    if (!el) return;
+  const navigate = useCallback(
+    (dir: 'prev' | 'next') => {
+      if (swipeAnimating || !hasData) return;
+      const el = calBodyRef.current;
+      if (!el) return;
 
-    // 現在の HTML（スワイプアウト用）
-    const r0 = viewMode === 'month'
-      ? sixWeekRange(monthRef.y, monthRef.m, weekStart)
-      : { start: weekParams.start, end: weekParams.end };
-    const oldHtml = buildCalendarGridHtml(
-      filterCalItemsByRange(events, r0.start, r0.end),
-      r0,
-      { mode: viewMode, monthRef: viewMode === 'month' ? monthRef : null, ...assignmentViewMeta, weekStart, language, todayIso: demoTodayIso, nowMs: demoNowMs },
-    );
+      // 現在の HTML（スワイプアウト用）
+      const r0 =
+        viewMode === 'month'
+          ? sixWeekRange(monthRef.y, monthRef.m, weekStart)
+          : { start: weekParams.start, end: weekParams.end };
+      const oldHtml = buildCalendarGridHtml(filterCalItemsByRange(events, r0.start, r0.end), r0, {
+        mode: viewMode,
+        monthRef: viewMode === 'month' ? monthRef : null,
+        ...assignmentViewMeta,
+        weekStart,
+        language,
+        todayIso: demoTodayIso,
+        nowMs: demoNowMs,
+      });
 
-    // 次の表示範囲を計算してステートを更新
-    let nextWp = weekParams;
-    let nextMr = monthRef;
-    if (viewMode === 'week') {
-      nextWp = dir === 'prev' ? prevWeekRange(weekParams) : nextWeekRange(weekParams);
-      nextMr = isoToMonthRef(nextWp.start);
-      setWeekParams(nextWp);
-      setMonthRef(nextMr);
-    } else {
-      nextMr = shiftMonthRef(monthRef, dir === 'prev' ? -1 : 1);
-      setMonthRef(nextMr);
-    }
+      // 次の表示範囲を計算してステートを更新
+      let nextWp = weekParams;
+      let nextMr = monthRef;
+      if (viewMode === 'week') {
+        nextWp = dir === 'prev' ? prevWeekRange(weekParams) : nextWeekRange(weekParams);
+        nextMr = isoToMonthRef(nextWp.start);
+        setWeekParams(nextWp);
+        setMonthRef(nextMr);
+      } else {
+        nextMr = shiftMonthRef(monthRef, dir === 'prev' ? -1 : 1);
+        setMonthRef(nextMr);
+      }
 
-    // 次の HTML（スワイプイン用）
-    const r1 = viewMode === 'month'
-      ? sixWeekRange(nextMr.y, nextMr.m, weekStart)
-      : { start: nextWp.start, end: nextWp.end };
-    const newHtml = buildCalendarGridHtml(
-      filterCalItemsByRange(events, r1.start, r1.end),
-      r1,
-      { mode: viewMode, monthRef: viewMode === 'month' ? nextMr : null, ...assignmentViewMeta, weekStart, language, todayIso: demoTodayIso, nowMs: demoNowMs },
-    );
+      // 次の HTML（スワイプイン用）
+      const r1 =
+        viewMode === 'month'
+          ? sixWeekRange(nextMr.y, nextMr.m, weekStart)
+          : { start: nextWp.start, end: nextWp.end };
+      const newHtml = buildCalendarGridHtml(filterCalItemsByRange(events, r1.start, r1.end), r1, {
+        mode: viewMode,
+        monthRef: viewMode === 'month' ? nextMr : null,
+        ...assignmentViewMeta,
+        weekStart,
+        language,
+        todayIso: demoTodayIso,
+        nowMs: demoNowMs,
+      });
 
-    if (prefersReducedMotion()) {
+      if (prefersReducedMotion()) {
+        clearCalBodyLoadingAttrs(el);
+        return;
+      }
+
+      skipDomSyncRef.current = true;
+      setSwipeAnimating(true);
       clearCalBodyLoadingAttrs(el);
-      return;
-    }
-
-    skipDomSyncRef.current = true;
-    setSwipeAnimating(true);
-    clearCalBodyLoadingAttrs(el);
-    applyCalSwipe(el, dir, oldHtml, newHtml, () => {
-      setSwipeAnimating(false);
-      skipDomSyncRef.current = false;
-    });
-  }, [swipeAnimating, hasData, viewMode, weekParams, monthRef, events, weekStart, language, demoTodayIso, demoNowMs]);
+      applyCalSwipe(el, dir, oldHtml, newHtml, () => {
+        setSwipeAnimating(false);
+        skipDomSyncRef.current = false;
+      });
+    },
+    [
+      swipeAnimating,
+      hasData,
+      viewMode,
+      weekParams,
+      monthRef,
+      events,
+      weekStart,
+      language,
+      demoTodayIso,
+      demoNowMs,
+    ],
+  );
 
   // ── 週/月 モード切替 ─────────────────────────────────────────────────
   function switchMode(mode: 'week' | 'month') {
@@ -207,14 +249,17 @@ export function AssignmentCalendar({ payload, titles, demoTodayIso }: Assignment
       // モード切替前の高さを保持してレイアウトシフトを緩和する
       const h = Math.round(el.getBoundingClientRect().height);
       if (h > 64) setRuntimeElementCss(el, 'min-height', `min-height:${h}px`);
-      requestAnimationFrame(() => { clearRuntimeElementCss(el, 'min-height'); });
+      requestAnimationFrame(() => {
+        clearRuntimeElementCss(el, 'min-height');
+      });
     }
   }
 
   // ── ラベル ────────────────────────────────────────────────────────────
-  const rangeLabel = viewMode === 'week'
-    ? `${weekParams.start.replace(/-/g, '/')} 〜 ${weekParams.end.replace(/-/g, '/')}`
-    : t.calendar.monthTitle(monthRef.y, monthRef.m + 1);
+  const rangeLabel =
+    viewMode === 'week'
+      ? `${weekParams.start.replace(/-/g, '/')} 〜 ${weekParams.end.replace(/-/g, '/')}`
+      : t.calendar.monthTitle(monthRef.y, monthRef.m + 1);
 
   const capturedAgo = useMemo(() => {
     if (payload?.capturedAt == null || !Number.isFinite(payload.capturedAt)) return null;
@@ -263,28 +308,20 @@ export function AssignmentCalendar({ payload, titles, demoTodayIso }: Assignment
               <strong>King LMS</strong>
               {t.calendar.assignmentRefreshLead.split('King LMS')[1] ?? ''}
             </p>
-            <p className="p-assignment-refresh-status__hint">
-              {t.calendar.assignmentRefreshHint}
-            </p>
+            <p className="p-assignment-refresh-status__hint">{t.calendar.assignmentRefreshHint}</p>
           </div>
         </div>
       ) : null}
 
       {/* データ未取得メッセージ */}
       <div className="p-panel-body p-assignment-fetch-wrap" hidden={hasData}>
-        <p className="p-empty">
-          {t.calendar.assignmentNoData}
-        </p>
+        <p className="p-empty">{t.calendar.assignmentNoData}</p>
       </div>
 
       {/* キャッシュ注意＋提出状況（Beta）の注記 */}
       <div className="p-assignment-cache-note" hidden={!hasData} role="note">
-        <p>
-          {t.calendar.assignmentCacheNote(capturedAgo)}
-        </p>
-        <p className="p-assignment-cache-note__beta">
-          {t.calendar.assignmentBetaNote}
-        </p>
+        <p>{t.calendar.assignmentCacheNote(capturedAgo)}</p>
+        <p className="p-assignment-cache-note__beta">{t.calendar.assignmentBetaNote}</p>
       </div>
 
       <CalendarShell

@@ -6,10 +6,7 @@ import { useSyncExternalStore } from 'react';
 import { FETCH_HOOK } from '../contract/messages';
 import { postReplayRequest } from '../platform/messaging/page-bus';
 import type { PortalCapturedMessage } from '../shared/types';
-import {
-  applyHomePortalMessage,
-  type HomePortalInboxState,
-} from '../lib/portal-messages-home';
+import { applyHomePortalMessage, type HomePortalInboxState } from '../lib/portal-messages-home';
 
 export type { PortalCapturedMessage };
 
@@ -76,10 +73,10 @@ export function subscribePortalInbox(
 // ─── ホーム受信箱（useSyncExternalStore） ─────────────────────────────────
 
 const initialHomeInbox: HomePortalInboxState = {
-  kinoData:       null,
-  kogiNews:       [],
+  kinoData: null,
+  kogiNews: [],
   newTopicsItems: [],
-  linkItems:      [],
+  linkItems: [],
   userLinkRecords: [],
 };
 

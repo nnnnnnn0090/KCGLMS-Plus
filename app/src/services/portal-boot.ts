@@ -11,6 +11,7 @@ import {
   syncPortalTheme,
   type StoredCustomThemeCollection,
 } from '../domain/themes';
+import { syncPortalFont } from '../domain/ui-font';
 import { resolveKingLmsMountToastMessage } from './sync-hash';
 import { ensurePortalExtensionBootstrapped } from './portal-settings-sync';
 import {
@@ -49,10 +50,11 @@ export async function bootPortalContent(): Promise<void> {
   try {
     await ensurePortalExtensionBootstrapped();
 
-    const [syncToastMsg, themeName, customThemesRaw] = await Promise.all([
+    const [syncToastMsg, themeName, customThemesRaw, uiFont] = await Promise.all([
       resolveKingLmsMountToastMessage(),
       storageRepo.getTheme(),
       storageRepo.getCustomThemes(),
+      storageRepo.getFont(),
     ]);
     const customThemes = parseCustomThemeCollection(customThemesRaw);
 
@@ -63,6 +65,7 @@ export async function bootPortalContent(): Promise<void> {
     const { scroller } = appendPortalOverlayShell();
 
     syncPortalTheme(themeName, customThemes);
+    syncPortalFont(uiFont);
 
     document.documentElement.classList.add('kcg-portal-surface');
     document.body?.classList.add('kcg-portal-surface');

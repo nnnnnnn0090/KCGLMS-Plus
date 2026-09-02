@@ -5,35 +5,31 @@
 import { isoToMonthRef, calEventDayIso } from '../../lib/date';
 import { KING_LMS_ORIGIN } from '../../shared/constants';
 import type { CalEvent } from './types';
-import {
-  localeForLanguage,
-  messagesForLanguage,
-  type AppLanguage,
-} from '../../i18n/messages';
+import { localeForLanguage, messagesForLanguage, type AppLanguage } from '../../i18n/messages';
 
 // ─── 型 ───────────────────────────────────────────────────────────────────
 
 export interface DueItem {
   /** コース ID（数値または文字列）。URL 組み立てに使用 */
-  courseId?:   string | number;
+  courseId?: string | number;
   courseName?: string;
-  title?:      string;
-  dueDate?:    string;
+  title?: string;
+  dueDate?: string;
   /** calendarItems.itemSourceId（同一課題のマージに使用） */
-  sourceId?:   string;
+  sourceId?: string;
   /** gradebook user status から取得。true=提出済み, false=未提出 */
   submitted?: boolean;
 }
 
 export interface DuePayload {
-  items:      DueItem[];
+  items: DueItem[];
   capturedAt: number;
 }
 
 /** 課題カレンダーの描画オプション（授業カレンダー用のコース一覧は使わない） */
 export const assignmentViewMeta = {
   kingLmsCourses: [] as Array<{ displayName?: string; externalAccessUrl?: string }>,
-  calKind:        'assignment' as const,
+  calKind: 'assignment' as const,
 };
 
 // ─── ヘルパー ─────────────────────────────────────────────────────────────
@@ -49,8 +45,8 @@ function assignmentMergeKey(row: DueItem): string | null {
 function assignmentDisplayKey(row: DueItem): string {
   const start = String(row.dueDate ?? '').trim();
   const title = String(row.title ?? '').trim() || '__untitled__';
-  const cid   = String(row.courseId ?? '').trim();
-  const dk    = calEventDayIso({ start });
+  const cid = String(row.courseId ?? '').trim();
+  const dk = calEventDayIso({ start });
   return `${dk}\0${start}\0${title}\0${cid}`;
 }
 
@@ -79,13 +75,20 @@ export function resolveAssignmentDisplayStatus(
   return 'unknown';
 }
 
-export function assignmentStatusLabel(status: AssignmentDisplayStatus, language: AppLanguage = 'ja'): string {
+export function assignmentStatusLabel(
+  status: AssignmentDisplayStatus,
+  language: AppLanguage = 'ja',
+): string {
   const t = messagesForLanguage(language).calendar;
   switch (status) {
-    case 'submitted': return t.submitted;
-    case 'pending': return t.pending;
-    case 'overdue': return t.overdue;
-    default: return '';
+    case 'submitted':
+      return t.submitted;
+    case 'pending':
+      return t.pending;
+    case 'overdue':
+      return t.overdue;
+    default:
+      return '';
   }
 }
 
@@ -95,9 +98,13 @@ export type { CalendarWeekStart } from '../../lib/date';
 /**
  * 保存データの取得時刻（ミリ秒 epoch）から、注意書き用の相対表現を返す（秒まで表示）。
  */
-export function formatKingLmsCapturedAgo(capturedAtMs: number, language: AppLanguage = 'ja', nowMs = Date.now()): string {
+export function formatKingLmsCapturedAgo(
+  capturedAtMs: number,
+  language: AppLanguage = 'ja',
+  nowMs = Date.now(),
+): string {
   const t = messagesForLanguage(language).calendar;
-  const diff    = Math.max(0, nowMs - capturedAtMs);
+  const diff = Math.max(0, nowMs - capturedAtMs);
   const totalSec = Math.floor(diff / 1000);
   if (totalSec < 1) return t.justNow;
   if (totalSec < 60) return t.secondsAgo(totalSec);
@@ -119,10 +126,10 @@ export function formatKingLmsCapturedAgo(capturedAtMs: number, language: AppLang
   const days = Math.floor(totalSec / 86400);
   if (days < 30) {
     const r1 = totalSec % 86400;
-    const h  = Math.floor(r1 / 3600);
+    const h = Math.floor(r1 / 3600);
     const r2 = r1 % 3600;
-    const m  = Math.floor(r2 / 60);
-    const s  = r2 % 60;
+    const m = Math.floor(r2 / 60);
+    const s = r2 % 60;
     return t.daysHoursMinutesSecondsAgo(days, h, m, s);
   }
 
@@ -136,7 +143,10 @@ export function formatDueLabel(iso: string, language: AppLanguage = 'ja'): strin
   try {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return String(iso);
-    return d.toLocaleString(localeForLanguage(language), { dateStyle: 'medium', timeStyle: 'short' });
+    return d.toLocaleString(localeForLanguage(language), {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
   } catch {
     return String(iso);
   }
@@ -145,7 +155,11 @@ export function formatDueLabel(iso: string, language: AppLanguage = 'ja'): strin
 /**
  * 課題ツールチップ用: 締切まで（または超過後）の残り時間を日本語で返す。
  */
-export function formatRemainingUntilDue(iso: string, language: AppLanguage = 'ja', nowMs = Date.now()): string | null {
+export function formatRemainingUntilDue(
+  iso: string,
+  language: AppLanguage = 'ja',
+  nowMs = Date.now(),
+): string | null {
   const text = messagesForLanguage(language).calendar;
   const dueMs = Date.parse(iso);
   if (Number.isNaN(dueMs)) return null;
@@ -175,10 +189,10 @@ export function formatRemainingUntilDue(iso: string, language: AppLanguage = 'ja
 
 function buildAssignmentCalEvent(rep: DueItem, language: AppLanguage): CalEvent {
   const t = messagesForLanguage(language);
-  const start      = String(rep.dueDate).trim();
-  const title      = String(rep.title ?? '').trim() || t.common.untitled;
+  const start = String(rep.dueDate).trim();
+  const title = String(rep.title ?? '').trim() || t.common.untitled;
   const courseName = String(rep.courseName ?? '').trim();
-  const cid        = String(rep.courseId ?? '').trim();
+  const cid = String(rep.courseId ?? '').trim();
   const tipLines: string[] = [
     courseName && `${t.calendar.course}: ${courseName}`,
     `${t.calendar.due}: ${formatDueLabel(start, language)}`,
@@ -227,13 +241,13 @@ export function dueItemsToCalEvents(raw: DueItem[], language: AppLanguage = 'ja'
     else unmergedBundles.set(dk, [row]);
   }
 
-  const out:    CalEvent[] = [];
+  const out: CalEvent[] = [];
   const seenDisp = new Set<string>();
 
   const locale = localeForLanguage(language);
 
   for (const [, group] of mergeGroups) {
-    const rep   = pickRepresentative(group, locale);
+    const rep = pickRepresentative(group, locale);
     const dedup = assignmentDisplayKey(rep);
     if (seenDisp.has(dedup)) continue;
     seenDisp.add(dedup);
@@ -241,7 +255,7 @@ export function dueItemsToCalEvents(raw: DueItem[], language: AppLanguage = 'ja'
   }
 
   for (const [, bundle] of unmergedBundles) {
-    const rep   = pickRepresentative(bundle, locale);
+    const rep = pickRepresentative(bundle, locale);
     const dedup = assignmentDisplayKey(rep);
     if (seenDisp.has(dedup)) continue;
     seenDisp.add(dedup);

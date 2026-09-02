@@ -63,7 +63,8 @@ export function GuidedTourSteps({
   celebrateAndFinishTour,
 }: GuidedTourStepsProps) {
   const { w: vw, h: vh } = viewport;
-  const findCopy = (id: string) => t.guidedTour.steps.find((item: { id: string }) => item.id === id);
+  const findCopy = (id: string) =>
+    t.guidedTour.steps.find((item: { id: string }) => item.id === id);
   const copy = findCopy(currentStep.id);
   const isLast = stepIndex === steps.length - 1;
   const showSpotlightSvg = currentStep.kind === 'spotlight' && vw > 0 && vh > 0 && hole !== null;

@@ -3,15 +3,7 @@
  * 言語とテーマの初期設定後、実画面上で主要機能を短く案内する。
  */
 
-import {
-  useState,
-  useEffect,
-  useLayoutEffect,
-  useCallback,
-  useId,
-  useMemo,
-  useRef,
-} from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useId, useMemo, useRef } from 'react';
 import { PAGE, SK } from '../../../shared/constants';
 import storage from '../../../lib/storage';
 import { usePortalDom } from '../../../context/portalDom';
@@ -368,14 +360,7 @@ export function GuidedTour({
   const vh = viewport.h || (typeof window !== 'undefined' ? window.innerHeight : 600);
   const spotlightCardCss =
     currentStep.kind === 'spotlight'
-      ? computeSpotlightCardCss(
-          currentStep,
-          hole,
-          vw,
-          vh,
-          cardSize,
-          CALENDAR_OVERVIEW_STEP_IDS,
-        )
+      ? computeSpotlightCardCss(currentStep, hole, vw, vh, cardSize, CALENDAR_OVERVIEW_STEP_IDS)
       : undefined;
 
   return (

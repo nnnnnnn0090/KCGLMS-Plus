@@ -5,16 +5,23 @@ export const chromeStorageClient = {
     return new Promise((resolve) => {
       try {
         if (typeof browser !== 'undefined' && browser.storage?.local) {
-          browser.storage.local.get(keys).then(resolve).catch(() => resolve({}));
+          browser.storage.local
+            .get(keys)
+            .then(resolve)
+            .catch(() => resolve({}));
           return;
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       try {
         if (typeof chrome !== 'undefined' && chrome.storage?.local) {
           chrome.storage.local.get(keys, (r) => resolve(r ?? {}));
           return;
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       resolve({});
     });
   },
@@ -26,13 +33,17 @@ export const chromeStorageClient = {
           browser.storage.local.set(obj).then(resolve).catch(resolve);
           return;
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       try {
         if (typeof chrome !== 'undefined' && chrome.storage?.local) {
           chrome.storage.local.set(obj, resolve);
           return;
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       resolve();
     });
   },
@@ -44,35 +55,40 @@ export const chromeStorageClient = {
           browser.storage.local.remove(keys).then(resolve).catch(resolve);
           return;
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       try {
         if (typeof chrome !== 'undefined' && chrome.storage?.local) {
           chrome.storage.local.remove(keys, resolve);
           return;
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       resolve();
     });
   },
 
   onChanged(
-    listener: (
-      changes: Record<string, chrome.storage.StorageChange>,
-      areaName: string,
-    ) => void,
+    listener: (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void,
   ): () => void {
     try {
       if (typeof browser !== 'undefined' && browser.storage?.onChanged) {
         browser.storage.onChanged.addListener(listener);
         return () => browser.storage.onChanged.removeListener(listener);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     try {
       if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
         chrome.storage.onChanged.addListener(listener);
         return () => chrome.storage.onChanged.removeListener(listener);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return () => undefined;
   },
 };

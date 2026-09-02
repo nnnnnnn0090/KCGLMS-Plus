@@ -4,7 +4,10 @@
  */
 
 import { readExtensionVersion } from '../lib/extension-version';
-import { notifyExtensionInstallToWeb, notifyExtensionUpdateToWeb } from '../lib/notify-extension-update';
+import {
+  notifyExtensionInstallToWeb,
+  notifyExtensionUpdateToWeb,
+} from '../lib/notify-extension-update';
 import { semverGreater } from '../lib/semver';
 import storage from '../lib/storage';
 import { SK } from '../contract/storage-keys';

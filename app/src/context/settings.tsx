@@ -15,13 +15,13 @@ import {
 import { SK } from '../shared/constants';
 import storage from '../lib/storage';
 import { syncPortalTheme } from '../domain/themes';
+import { syncPortalFont } from '../domain/ui-font';
 import {
   EMPTY_CUSTOM_THEMES,
   type CustomTheme,
   type StoredCustomThemeCollection,
 } from '../domain/themes/custom-themes';
-import type { CalendarWeekStart } from '../lib/date';
-import { DEFAULT_LANGUAGE, type AppLanguage } from '../i18n/messages';
+import { DEFAULT_SETTINGS, type Settings } from '../domain/settings';
 import { PORTAL_SYNCED_STORAGE_KEYS } from '../contract/portal-synced-storage';
 import {
   ensurePortalExtensionBootstrapped,
@@ -29,19 +29,7 @@ import {
   parseSettingsFromExtensionStorage,
 } from '../services/portal-settings-sync';
 
-// ─── 型 ───────────────────────────────────────────────────────────────────
-
-export interface Settings {
-  theme: string;
-  hideProfileName: boolean;
-  showKogiCalMascot: boolean;
-  showHomeCornerCharacter: boolean;
-  hideAssignmentCalendar: boolean;
-  home2WebMailOverlay: boolean;
-  cplanOverlay: boolean;
-  calendarWeekStart: CalendarWeekStart;
-  language: AppLanguage;
-}
+export type { Settings };
 
 export interface SettingsContextValue {
   settings: Settings;
@@ -53,19 +41,7 @@ export interface SettingsContextValue {
   deleteCustomTheme: (id: string) => void;
 }
 
-// ─── デフォルト値 ─────────────────────────────────────────────────────────
-
-const DEFAULTS: Settings = {
-  theme: 'dark',
-  hideProfileName: false,
-  showKogiCalMascot: false,
-  showHomeCornerCharacter: false,
-  hideAssignmentCalendar: false,
-  home2WebMailOverlay: true,
-  cplanOverlay: true,
-  calendarWeekStart: 'monday',
-  language: DEFAULT_LANGUAGE,
-};
+const DEFAULTS: Settings = { ...DEFAULT_SETTINGS };
 
 const SETTINGS_TO_SK = {
   theme: SK.theme,
@@ -77,6 +53,7 @@ const SETTINGS_TO_SK = {
   cplanOverlay: SK.cplanOverlay,
   calendarWeekStart: SK.calendarWeekStart,
   language: SK.language,
+  font: SK.font,
 } satisfies Record<keyof Settings, string>;
 
 function parseSettings(data: Record<string, unknown>): Settings {
@@ -93,8 +70,6 @@ function loadUiStateFromStorage(data: Record<string, unknown>): {
   };
 }
 
-// ─── コンテキスト ─────────────────────────────────────────────────────────
-
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
@@ -110,6 +85,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setSettings(next.settings);
     setCustomThemes(next.customThemes);
     syncPortalTheme(next.settings.theme, next.customThemes);
+    syncPortalFont(next.settings.font);
   }, []);
 
   useEffect(() => {
@@ -134,6 +110,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const updateSetting = useCallback(
     async <K extends keyof Settings>(key: K, value: Settings[K]) => {
       setSettings((prev) => ({ ...prev, [key]: value }));
+      if (key === 'font') syncPortalFont(value as Settings['font']);
       await storage.set({ [SETTINGS_TO_SK[key]]: value });
     },
     [],

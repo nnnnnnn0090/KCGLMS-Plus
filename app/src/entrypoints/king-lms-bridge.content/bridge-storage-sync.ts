@@ -28,10 +28,10 @@ export async function maybeShowOverlayFromStorage(): Promise<void> {
   const language = normalizeLanguage(data[SK.language]);
   const text = messagesForLanguage(language).sync;
   const assignmentWaiting =
-    !!data[SK.kingLmsAssignmentSyncPending]
-    || (!!data[SK.kingLmsAssignmentSyncAwaitCalendar]
-      && !!data[SK.kingLmsAssignmentSyncReturnUrl]
-      && isAssignmentSyncPage());
+    !!data[SK.kingLmsAssignmentSyncPending] ||
+    (!!data[SK.kingLmsAssignmentSyncAwaitCalendar] &&
+      !!data[SK.kingLmsAssignmentSyncReturnUrl] &&
+      isAssignmentSyncPage());
   if (assignmentWaiting) {
     mountSyncOverlay(language, text.assignmentFetching);
     startAssignmentTimer();
@@ -45,14 +45,21 @@ export async function cancelPendingForLoginRedirect(): Promise<void> {
   clearAssignmentTimer();
   clearCourseTimer();
   removeSyncOverlay();
-  const data = await storage.get([SK.kingLmsSyncReturnUrl, SK.kingLmsAssignmentSyncReturnUrl, SK.language]);
+  const data = await storage.get([
+    SK.kingLmsSyncReturnUrl,
+    SK.kingLmsAssignmentSyncReturnUrl,
+    SK.language,
+  ]);
   const language = normalizeLanguage(data[SK.language]);
-  const hadCourseReturn     = typeof data[SK.kingLmsSyncReturnUrl]           === 'string' && !!data[SK.kingLmsSyncReturnUrl];
-  const hadAssignmentReturn = typeof data[SK.kingLmsAssignmentSyncReturnUrl] === 'string' && !!data[SK.kingLmsAssignmentSyncReturnUrl];
+  const hadCourseReturn =
+    typeof data[SK.kingLmsSyncReturnUrl] === 'string' && !!data[SK.kingLmsSyncReturnUrl];
+  const hadAssignmentReturn =
+    typeof data[SK.kingLmsAssignmentSyncReturnUrl] === 'string' &&
+    !!data[SK.kingLmsAssignmentSyncReturnUrl];
   await storage.set({
-    [SK.kingLmsSyncPending]:               false,
-    [SK.kingLmsSyncAwaitCourse]:           hadCourseReturn,
-    [SK.kingLmsAssignmentSyncPending]:     false,
+    [SK.kingLmsSyncPending]: false,
+    [SK.kingLmsSyncAwaitCourse]: hadCourseReturn,
+    [SK.kingLmsAssignmentSyncPending]: false,
     [SK.kingLmsAssignmentSyncAwaitCalendar]: hadAssignmentReturn,
   });
   if (hadCourseReturn || hadAssignmentReturn) {
@@ -61,13 +68,22 @@ export async function cancelPendingForLoginRedirect(): Promise<void> {
 }
 
 export async function saveCourses(courses: unknown[]): Promise<void> {
-  if (isLoginRedirectPage()) { await cancelPendingForLoginRedirect(); return; }
-  const data = await storage.get([SK.kingLmsSyncPending, SK.kingLmsSyncAwaitCourse, SK.kingLmsSyncReturnUrl, SK.language]);
+  if (isLoginRedirectPage()) {
+    await cancelPendingForLoginRedirect();
+    return;
+  }
+  const data = await storage.get([
+    SK.kingLmsSyncPending,
+    SK.kingLmsSyncAwaitCourse,
+    SK.kingLmsSyncReturnUrl,
+    SK.language,
+  ]);
   const language = normalizeLanguage(data[SK.language]);
   let syncPending = !!data[SK.kingLmsSyncPending];
-  const hadAwait  = !!data[SK.kingLmsSyncAwaitCourse];
+  const hadAwait = !!data[SK.kingLmsSyncAwaitCourse];
   // AwaitCourse フラグ（ログイン後に戻ったケース）でも同期を継続する
-  if (!syncPending && hadAwait && data[SK.kingLmsSyncReturnUrl] && isCoursePage()) syncPending = true;
+  if (!syncPending && hadAwait && data[SK.kingLmsSyncReturnUrl] && isCoursePage())
+    syncPending = true;
   if (syncPending) mountSyncOverlay(language);
   const toSet: Record<string, unknown> = { [SK.kingLmsCourses]: courses };
   if (hadAwait && isCoursePage()) {
@@ -96,7 +112,7 @@ export type SaveAssignmentDueOpts = {
 function patchAssignmentAwaitCalendarToPending(): Record<string, unknown> {
   return {
     [SK.kingLmsAssignmentSyncAwaitCalendar]: false,
-    [SK.kingLmsAssignmentSyncPending]:     true,
+    [SK.kingLmsAssignmentSyncPending]: true,
   };
 }
 
@@ -120,12 +136,19 @@ export async function saveAssignmentDue(
   captureState?: string,
   opts?: SaveAssignmentDueOpts,
 ): Promise<void> {
-  const data = await storage.get([SK.kingLmsAssignmentSyncPending, SK.kingLmsAssignmentSyncAwaitCalendar, SK.kingLmsAssignmentSyncReturnUrl, SK.language]);
+  const data = await storage.get([
+    SK.kingLmsAssignmentSyncPending,
+    SK.kingLmsAssignmentSyncAwaitCalendar,
+    SK.kingLmsAssignmentSyncReturnUrl,
+    SK.language,
+  ]);
   const language = normalizeLanguage(data[SK.language]);
   let syncPending = !!data[SK.kingLmsAssignmentSyncPending];
-  const hadAwait  = !!data[SK.kingLmsAssignmentSyncAwaitCalendar];
-  if (!syncPending && hadAwait && data[SK.kingLmsAssignmentSyncReturnUrl] && isAssignmentSyncPage()) syncPending = true;
-  if (syncPending) mountSyncOverlay(language, messagesForLanguage(language).sync.assignmentFetching);
+  const hadAwait = !!data[SK.kingLmsAssignmentSyncAwaitCalendar];
+  if (!syncPending && hadAwait && data[SK.kingLmsAssignmentSyncReturnUrl] && isAssignmentSyncPage())
+    syncPending = true;
+  if (syncPending)
+    mountSyncOverlay(language, messagesForLanguage(language).sync.assignmentFetching);
 
   if (captureState === 'error') {
     if (syncPending) {
@@ -142,7 +165,9 @@ export async function saveAssignmentDue(
 
   // 空配列で既存有りを潰さない（hooks 以外のレースの保険）
   if (items.length === 0) {
-    const existing = await storage.get(SK.kingLmsAssignmentDue) as { items?: unknown[] } | undefined;
+    const existing = (await storage.get(SK.kingLmsAssignmentDue)) as
+      | { items?: unknown[] }
+      | undefined;
     const prevItems = existing?.items;
     if (Array.isArray(prevItems) && prevItems.length > 0) {
       await completeAssignmentSyncKeepStoredDue(syncPending, hadAwait);

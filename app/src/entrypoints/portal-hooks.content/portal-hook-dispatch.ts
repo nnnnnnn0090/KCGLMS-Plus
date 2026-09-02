@@ -47,7 +47,12 @@ export function dispatch(url: string, json: unknown): void {
     post(MSG.kinoMessage, { data: json });
     return;
   }
-  if (isDeliveredDetail(url) && json && !Array.isArray(json) && (json as Record<string, unknown>).id != null) {
+  if (
+    isDeliveredDetail(url) &&
+    json &&
+    !Array.isArray(json) &&
+    (json as Record<string, unknown>).id != null
+  ) {
     const data = json as Record<string, unknown>;
     if (String(data.id).length > 0) {
       post(MSG.deliveredNewsDetail, { data, requestUrl: toAbs(url) });
@@ -55,18 +60,18 @@ export function dispatch(url: string, json: unknown): void {
     }
   }
   if (!Array.isArray(json)) return;
-  if (isNewTopics(url))          post(MSG.newTopics,          { items: json });
-  if (isUserHtmlLinkMe(url))     post(MSG.userHtmlLinkMe,     { items: json });
-  else if (isUserHtmlLink(url))  post(MSG.userHtmlLink,       { items: json });
-  if (isKogiCalendar(url))       postWithUrl(MSG.kogiCalendar,       url, json);
-  if (isHoshuCalendar(url))      postWithUrl(MSG.hoshuCalendar,      url, json);
-  if (isCampusCalendar(url))     postWithUrl(MSG.campusCalendar,     url, json);
-  if (isKogiNews(url))           post(MSG.kogiNews,           { items: json });
-  if (isKyukoInfo(url))          postWithUrl(MSG.kyukoInfo,          url, json);
-  if (isHokoInfo(url))           postWithUrl(MSG.hokoInfo,           url, json);
-  if (isKyoshitsuChange(url))    postWithUrl(MSG.kyoshitsuChange,    url, json);
-  if (isDeliveredNendo(url))     postWithUrl(MSG.deliveredNews,      url, json);
-  if (isQuestionnaireInfo(url))  postWithUrl(MSG.questionnaireInfo,  url, json);
+  if (isNewTopics(url)) post(MSG.newTopics, { items: json });
+  if (isUserHtmlLinkMe(url)) post(MSG.userHtmlLinkMe, { items: json });
+  else if (isUserHtmlLink(url)) post(MSG.userHtmlLink, { items: json });
+  if (isKogiCalendar(url)) postWithUrl(MSG.kogiCalendar, url, json);
+  if (isHoshuCalendar(url)) postWithUrl(MSG.hoshuCalendar, url, json);
+  if (isCampusCalendar(url)) postWithUrl(MSG.campusCalendar, url, json);
+  if (isKogiNews(url)) post(MSG.kogiNews, { items: json });
+  if (isKyukoInfo(url)) postWithUrl(MSG.kyukoInfo, url, json);
+  if (isHokoInfo(url)) postWithUrl(MSG.hokoInfo, url, json);
+  if (isKyoshitsuChange(url)) postWithUrl(MSG.kyoshitsuChange, url, json);
+  if (isDeliveredNendo(url)) postWithUrl(MSG.deliveredNews, url, json);
+  if (isQuestionnaireInfo(url)) postWithUrl(MSG.questionnaireInfo, url, json);
 }
 
 export function replayAllSentMessages(): void {

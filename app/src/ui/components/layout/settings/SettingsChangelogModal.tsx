@@ -8,15 +8,15 @@ import { useI18n } from '../../../../i18n';
 import type { ParsedChangelogRelease } from './settings-changelog';
 
 export interface SettingsChangelogModalProps {
-  overlayEl:       HTMLElement | null;
-  mounted:         boolean;
-  closing:         boolean;
-  loading:         boolean;
-  err:             string | null;
-  list:            ParsedChangelogRelease[] | null;
-  modalRootRef:    RefObject<HTMLDivElement | null>;
-  closeButtonRef:  RefObject<HTMLButtonElement | null>;
-  onRequestClose:  () => void;
+  overlayEl: HTMLElement | null;
+  mounted: boolean;
+  closing: boolean;
+  loading: boolean;
+  err: string | null;
+  list: ParsedChangelogRelease[] | null;
+  modalRootRef: RefObject<HTMLDivElement | null>;
+  closeButtonRef: RefObject<HTMLButtonElement | null>;
+  onRequestClose: () => void;
 }
 
 export function SettingsChangelogModal({

@@ -13,7 +13,8 @@ export const KING_LMS_SAML_APP_ID = '_4_1' as const;
 
 export const KING_LMS_HOME_URL = 'https://king-lms.kcg.edu/ultra' as const;
 export const KING_LMS_COURSE_SYNC_TARGET_URL = 'https://king-lms.kcg.edu/ultra/course' as const;
-export const KING_LMS_ASSIGNMENT_SYNC_TARGET_URL = 'https://king-lms.kcg.edu/ultra/calendar' as const;
+export const KING_LMS_ASSIGNMENT_SYNC_TARGET_URL =
+  'https://king-lms.kcg.edu/ultra/calendar' as const;
 
 export const KING_LMS_COURSE_SYNC_URL =
   'https://king-lms.kcg.edu/auth-saml/saml/login?apId=_4_1&redirectUrl=https%3A%2F%2Fking-lms.kcg.edu%2Fultra%2Fcourse' as const;

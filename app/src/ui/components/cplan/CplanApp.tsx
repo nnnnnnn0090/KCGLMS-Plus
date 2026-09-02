@@ -1,5 +1,9 @@
 import { useCallback, useMemo, useState, type FormEvent } from 'react';
-import type { CplanAttendanceSnapshot, CplanLink, CplanSnapshot } from '../../../domain/cplan/types';
+import type {
+  CplanAttendanceSnapshot,
+  CplanLink,
+  CplanSnapshot,
+} from '../../../domain/cplan/types';
 import { sanitizeHostHtml } from '../../../lib/dom';
 
 const normalizeText = (value: string | null | undefined) =>
@@ -471,7 +475,9 @@ function CplanMain({ snapshot }: { snapshot: CplanSnapshot }) {
         {snapshot.announcementHtml ? (
           <section className="p-cplan-notice">
             <h2>{ja ? 'お知らせ' : 'Announcements'}</h2>
-            <div dangerouslySetInnerHTML={{ __html: sanitizeHostHtml(snapshot.announcementHtml) }} />
+            <div
+              dangerouslySetInnerHTML={{ __html: sanitizeHostHtml(snapshot.announcementHtml) }}
+            />
           </section>
         ) : null}
       </main>

@@ -7,7 +7,9 @@ import { PORTAL_DOM } from '../contract/dom';
 import { postLogoffTrigger } from '../platform/messaging/page-bus';
 
 /** 拡張オーバーレイ外の `li.logoff` 内アンカー */
-export function findHostLogoffAnchor(overlayRootId = PORTAL_DOM.overlayRoot): HTMLAnchorElement | null {
+export function findHostLogoffAnchor(
+  overlayRootId = PORTAL_DOM.overlayRoot,
+): HTMLAnchorElement | null {
   for (const li of document.querySelectorAll('li.logoff')) {
     if (!(li instanceof HTMLElement)) continue;
     if (li.closest(`#${overlayRootId}`)) continue;
@@ -17,8 +19,7 @@ export function findHostLogoffAnchor(overlayRootId = PORTAL_DOM.overlayRoot): HT
   return null;
 }
 
-const DO_POST_BACK_RE =
-  /__doPostBack\s*\(\s*(['"])(.*?)\1\s*,\s*(['"])(.*?)\3\s*\)/;
+const DO_POST_BACK_RE = /__doPostBack\s*\(\s*(['"])(.*?)\1\s*,\s*(['"])(.*?)\3\s*\)/;
 
 type WindowWithPostBack = Window & {
   __doPostBack?: (eventTarget: string, eventArgument: string) => void;

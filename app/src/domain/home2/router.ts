@@ -7,7 +7,7 @@ import { HOME2_HOSTNAME } from '../../contract/origins';
 export type Home2MailLayout = 'full' | 'mailHead' | 'readMail' | 'sendMail' | 'headerOnly';
 
 export interface Home2MailRoute {
-  kind:   'home2-mail';
+  kind: 'home2-mail';
   layout: Home2MailLayout;
 }
 

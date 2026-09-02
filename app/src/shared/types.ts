@@ -9,20 +9,20 @@ import type { MsgType } from './constants';
 type WithSource = { source?: string };
 
 export type PortalCapturedMessage =
-  | (WithSource & { type: typeof MSG.kinoMessage;         data?: unknown })
-  | (WithSource & { type: typeof MSG.kogiCalendar;        items: unknown[]; requestUrl?: string })
-  | (WithSource & { type: typeof MSG.hoshuCalendar;       items: unknown[]; requestUrl?: string })
-  | (WithSource & { type: typeof MSG.campusCalendar;      items: unknown[]; requestUrl?: string })
-  | (WithSource & { type: typeof MSG.kyukoInfo;           items: unknown[]; requestUrl?: string })
-  | (WithSource & { type: typeof MSG.hokoInfo;            items: unknown[]; requestUrl?: string })
-  | (WithSource & { type: typeof MSG.kyoshitsuChange;     items: unknown[]; requestUrl?: string })
-  | (WithSource & { type: typeof MSG.questionnaireInfo;   items: unknown[]; requestUrl?: string })
+  | (WithSource & { type: typeof MSG.kinoMessage; data?: unknown })
+  | (WithSource & { type: typeof MSG.kogiCalendar; items: unknown[]; requestUrl?: string })
+  | (WithSource & { type: typeof MSG.hoshuCalendar; items: unknown[]; requestUrl?: string })
+  | (WithSource & { type: typeof MSG.campusCalendar; items: unknown[]; requestUrl?: string })
+  | (WithSource & { type: typeof MSG.kyukoInfo; items: unknown[]; requestUrl?: string })
+  | (WithSource & { type: typeof MSG.hokoInfo; items: unknown[]; requestUrl?: string })
+  | (WithSource & { type: typeof MSG.kyoshitsuChange; items: unknown[]; requestUrl?: string })
+  | (WithSource & { type: typeof MSG.questionnaireInfo; items: unknown[]; requestUrl?: string })
   | (WithSource & { type: typeof MSG.deliveredNewsDetail; data?: unknown })
-  | (WithSource & { type: typeof MSG.deliveredNews;       items: unknown[]; requestUrl?: string })
-  | (WithSource & { type: typeof MSG.newTopics;           items: unknown[] })
-  | (WithSource & { type: typeof MSG.kogiNews;            items: unknown[] })
-  | (WithSource & { type: typeof MSG.userHtmlLink;        items: unknown[] })
-  | (WithSource & { type: typeof MSG.userHtmlLinkMe;    items: unknown[] })
+  | (WithSource & { type: typeof MSG.deliveredNews; items: unknown[]; requestUrl?: string })
+  | (WithSource & { type: typeof MSG.newTopics; items: unknown[] })
+  | (WithSource & { type: typeof MSG.kogiNews; items: unknown[] })
+  | (WithSource & { type: typeof MSG.userHtmlLink; items: unknown[] })
+  | (WithSource & { type: typeof MSG.userHtmlLinkMe; items: unknown[] })
   | UnknownPortalCaptured;
 
 /** 将来の type 追加やフック拡張用フォールバック */
@@ -38,14 +38,14 @@ export interface UnknownPortalCaptured {
 
 /** ホームのショートカットリンク（カスタム追加分） */
 export interface CustomLink {
-  id:      string;
+  id: string;
   midashi: string;
-  url:     string;
+  url: string;
 }
 
 /** ショートカットリンクのストレージ形式 */
 export interface LinkConfig {
-  order:  string[];
+  order: string[];
   hidden: string[];
   custom: CustomLink[];
 }
@@ -54,14 +54,14 @@ export interface LinkConfig {
 
 /** ポータル API のお知らせ一覧行（キーは API 差分を吸収するため緩め） */
 export interface NewsListItem {
-  id?:           unknown;
-  title?:        string;
-  newsDate?:     string;
-  sender?:       string;
-  category?:     string;
-  categoryCd?:   string;
+  id?: unknown;
+  title?: string;
+  newsDate?: string;
+  sender?: string;
+  category?: string;
+  categoryCd?: string;
   importanceCd?: string;
-  importance?:   string;
-  readFlg?:      string | number;
-  newFlg?:       string | number;
+  importance?: string;
+  readFlg?: string | number;
+  newFlg?: string | number;
 }

@@ -4,7 +4,11 @@ import { CplanApp } from '../../ui/components/cplan/CplanApp';
 import { CPLAN_CONTENT_SCRIPT_MATCHES } from '../../contract/origins';
 import { TIMING } from '../../contract/timing';
 import { readCplanSnapshot } from '../../domain/cplan/snapshot';
-import { appendPortalOverlayShell, removePortalBackdrop, syncCplanSurfaceRuntime } from '../../domain/themes';
+import {
+  appendPortalOverlayShell,
+  removePortalBackdrop,
+  syncCplanSurfaceRuntime,
+} from '../../domain/themes';
 import {
   isExtensionBlockedByRemoteKillSwitch,
   startExtensionOperationalWatch,

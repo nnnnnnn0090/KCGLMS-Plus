@@ -1,11 +1,6 @@
 /** Cplan スナップショット読取（F-040）。ホスト DOM から現在ページ状態を抽出する。 */
 
-import type {
-  CplanAttendanceSnapshot,
-  CplanLink,
-  CplanRoute,
-  CplanSnapshot,
-} from './types';
+import type { CplanAttendanceSnapshot, CplanLink, CplanRoute, CplanSnapshot } from './types';
 
 export type { CplanSnapshot, CplanLink, CplanRoute, CplanAttendanceSnapshot };
 

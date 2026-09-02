@@ -7,9 +7,8 @@ export function readPortalSyncEncryptionSecret(): string | null {
   if (typeof fromImport === 'string' && fromImport.trim().length >= 16) {
     return fromImport.trim();
   }
-  const fromProcess = typeof process !== 'undefined'
-    ? process.env.VITE_TELEMETRY_HMAC_SECRET
-    : undefined;
+  const fromProcess =
+    typeof process !== 'undefined' ? process.env.VITE_TELEMETRY_HMAC_SECRET : undefined;
   if (typeof fromProcess === 'string' && fromProcess.trim().length >= 16) {
     return fromProcess.trim();
   }

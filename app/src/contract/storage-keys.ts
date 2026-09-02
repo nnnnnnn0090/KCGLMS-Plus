@@ -4,6 +4,10 @@ export const SK = {
   hideProfileName: 'portalThemeHideProfileName',
   theme: 'portalThemeColorTheme',
   customThemes: 'portalThemeCustomThemes',
+  /** 授業カレンダー「追加予定」のユーザー予定（マイリンク同期対象） */
+  customCalEvents: 'portalThemeCustomCalEvents',
+  /** 追加予定帯を折りたたんでいるか（未設定時は予定の有無で決める） */
+  customCalBandCollapsed: 'portalThemeCustomCalBandCollapsed',
   showKogiCalMascot: 'portalThemeShowKogiCalMascot',
   showHomeCornerCharacter: 'portalThemeShowHomeCornerCharacter',
   /** ホームの King LMS 連携「課題」カレンダーを表示しない */
@@ -31,6 +35,13 @@ export const SK = {
   calendarWeekStart: 'portalThemeCalendarWeekStart',
   /** 拡張 UI の表示言語 */
   language: 'portalThemeLanguage',
+  /** 拡張 UI のフォント（`default` | `zen-maru-gothic` | …） */
+  font: 'portalThemeUiFont',
+  /**
+   * マイリンク経由で設定を端末間同期するか。
+   * 端末ローカルのみ（マイリンク同期対象外）。未設定時は true。
+   */
+  syncViaMyLinks: 'portalThemeSyncViaMyLinks',
   /** 更新通知済みの拡張 manifest version（`readExtensionVersion()` と比較） */
   extensionVersionSeen: 'portalThemeExtensionVersionSeen',
   /** 開発者お知らせパネルの表示言語（`ja` / `en` / `zh` / `zh_TW` / `ko` / `vi` / `ne` / `id` / `th`） */

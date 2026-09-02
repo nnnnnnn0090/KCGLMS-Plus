@@ -13,7 +13,7 @@ export function parseIsoLocal(iso: string): Date {
 
 /** Date → "YYYY-MM-DD" */
 export function toIsoLocal(d: Date): string {
-  const y  = d.getFullYear();
+  const y = d.getFullYear();
   const mo = String(d.getMonth() + 1).padStart(2, '0');
   const da = String(d.getDate()).padStart(2, '0');
   return `${y}-${mo}-${da}`;
@@ -50,7 +50,7 @@ export function parseCalendarWeekStart(raw: unknown): CalendarWeekStart {
 /** 指定日以前の最も近い月曜日（ローカル日付の暦日境界） */
 function mondayOnOrBefore(d: Date): Date {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  x.setDate(x.getDate() - (x.getDay() + 6) % 7);
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
   return x;
 }
 
@@ -74,9 +74,9 @@ export function weekRangeContaining(
   iso: string,
   weekStart: CalendarWeekStart = 'monday',
 ): { uKbn: string; start: string; end: string } {
-  const d     = parseIsoLocal(iso);
+  const d = parseIsoLocal(iso);
   const strip = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const left  = weekStartOnOrBefore(strip, weekStart);
+  const left = weekStartOnOrBefore(strip, weekStart);
   const start = toIsoLocal(left);
   return { uKbn: '0', start, end: addDaysIso(start, 7) };
 }
@@ -102,11 +102,11 @@ export function calParamsAfterWeekStartChange(
   todayIso: string,
 ): { uKbn: string; start: string; end: string } {
   const anchor = calendarRealignAnchorIso(todayIso, current);
-  const wr     = weekRangeContaining(anchor, nextWeekStart);
+  const wr = weekRangeContaining(anchor, nextWeekStart);
   return {
     uKbn: current.uKbn || wr.uKbn,
     start: wr.start,
-    end:   wr.end,
+    end: wr.end,
   };
 }
 
@@ -124,7 +124,10 @@ export function sixWeekRange(
 
 // ─── MonthRef ─────────────────────────────────────────────────────────────────
 
-export interface MonthRef { y: number; m: number }
+export interface MonthRef {
+  y: number;
+  m: number;
+}
 
 export function isoToMonthRef(iso: string): MonthRef {
   const d = parseIsoLocal(iso);
@@ -134,8 +137,14 @@ export function isoToMonthRef(iso: string): MonthRef {
 export function shiftMonthRef(ref: MonthRef, delta: number): MonthRef {
   let { y, m } = ref;
   m += delta;
-  while (m < 0)  { m += 12; y -= 1; }
-  while (m > 11) { m -= 12; y += 1; }
+  while (m < 0) {
+    m += 12;
+    y -= 1;
+  }
+  while (m > 11) {
+    m -= 12;
+    y += 1;
+  }
   return { y, m };
 }
 
@@ -148,7 +157,10 @@ export function calendarYearRangeFromIso(iso: string): { start: string; end: str
 }
 
 /** 指定日の 1 年前の年範囲 */
-export function calendarYearRangeBeforeInclusiveStart(startInclusive: string): { start: string; end: string } {
+export function calendarYearRangeBeforeInclusiveStart(startInclusive: string): {
+  start: string;
+  end: string;
+} {
   const y = parseIsoLocal(startInclusive).getFullYear() - 1;
   return { start: `${y}-01-01`, end: `${y + 1}-01-01` };
 }
@@ -159,7 +171,9 @@ export function calendarYearRangeBeforeInclusiveStart(startInclusive: string): {
 export function calEventDayIso(ev: { start?: unknown }): string {
   const raw = ev?.start;
   if (raw == null || raw === '') return '';
-  const m = String(raw).trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  const m = String(raw)
+    .trim()
+    .match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (!m) return '';
   return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
 }

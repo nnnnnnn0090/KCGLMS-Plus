@@ -9,6 +9,8 @@
 
 # Dependencies
 /app/node_modules/
+/node_modules/
+/app/artifacts/
 
 # Environment (never commit secrets)
 /app/.env

@@ -14,10 +14,7 @@ import { SettingsPanel, type SettingsPanelHandle } from '../components/layout/se
 import { EXTENSION_PROMO_PAGE_URL, PAGE, PORTAL_ORIGIN, SK } from '../../shared/constants';
 import storage from '../../lib/storage';
 import { consumeExtensionUpdateToastMessage } from '../../services/update-notice';
-import {
-  extensionUpdateToastDurationMs,
-  syncToastDurationMs,
-} from '../../services/toast';
+import { extensionUpdateToastDurationMs, syncToastDurationMs } from '../../services/toast';
 import type { PortalRoute } from '../../domain/portal/router';
 import type { PortalAppRoute, PortalSurface } from './types';
 import { isHome2MailRoute } from './types';
@@ -29,7 +26,7 @@ import { GuidedTour } from '../components/ui/GuidedTour';
 
 export interface PortalAppProps {
   surface: PortalSurface;
-  route:   PortalAppRoute;
+  route: PortalAppRoute;
   /** King LMS 同期完了トースト（ポータルのみ） */
   syncToastMsg: string;
   /** コンテンツスクリプトが作成した #portal-overlay 要素（スクロール・イベント委譲の基点） */
@@ -60,21 +57,26 @@ function PortalAppShell({ surface, route, syncToastMsg }: PortalAppProps) {
 
   const portalRoute = surface === 'portal' ? (route as PortalRoute) : null;
 
-  const showFullChrome = surface === 'portal'
-    || (isHome2MailRoute(route) && (route.layout === 'full' || route.layout === 'mailHead' || route.layout === 'readMail' || route.layout === 'sendMail'));
+  const showFullChrome =
+    surface === 'portal' ||
+    (isHome2MailRoute(route) &&
+      (route.layout === 'full' ||
+        route.layout === 'mailHead' ||
+        route.layout === 'readMail' ||
+        route.layout === 'sendMail'));
 
-  const pageEndFabScrollTopScope = surface === 'home2-mail'
-    && isHome2MailRoute(route)
-    && route.layout === 'headerOnly'
-    ? 'window' as const
-    : 'overlay' as const;
+  const pageEndFabScrollTopScope =
+    surface === 'home2-mail' && isHome2MailRoute(route) && route.layout === 'headerOnly'
+      ? ('window' as const)
+      : ('overlay' as const);
 
   const calendarInteractionEpoch = useMemo(() => {
     if (isHome2MailRoute(route)) return `h2:${route.layout}`;
     if (surface === 'portal' && portalRoute) {
-      const base = portalRoute.detailId != null
-        ? `p:${portalRoute.page}:${portalRoute.detailId}`
-        : `p:${portalRoute.page}`;
+      const base =
+        portalRoute.detailId != null
+          ? `p:${portalRoute.page}:${portalRoute.detailId}`
+          : `p:${portalRoute.page}`;
       if (portalRoute.page === PAGE.HOME) {
         return `${base}:hideAsg${settings.hideAssignmentCalendar ? '1' : '0'}`;
       }
@@ -133,14 +135,12 @@ function PortalAppShell({ surface, route, syncToastMsg }: PortalAppProps) {
 
   // 設定パネルのトグル（開いている場合は閉じるアニメを先に実行）
   const toggleSettings = useCallback(() => {
-    setSettingsOpen((wasOpen) => {
-      if (wasOpen) {
-        settingsPanelRef.current?.requestClose();
-        return wasOpen; // 閉じアニメ完了後に onClose → setSettingsOpen(false) が走る
-      }
-      return true;
-    });
-  }, []);
+    if (settingsOpen) {
+      settingsPanelRef.current?.requestClose();
+      return;
+    }
+    setSettingsOpen(true);
+  }, [settingsOpen]);
 
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
 
@@ -154,7 +154,7 @@ function PortalAppShell({ surface, route, syncToastMsg }: PortalAppProps) {
         settingsReady={settingsReady}
         settingsOpen={settingsOpen}
         onSettingsToggle={toggleSettings}
-        settingsPopover={(
+        settingsPopover={
           <SettingsPanel
             ref={settingsPanelRef}
             popoverSurfaceRef={settingsPopRef}
@@ -166,7 +166,7 @@ function PortalAppShell({ surface, route, syncToastMsg }: PortalAppProps) {
             onSettingChange={updateSetting}
             onReplayGuidedTour={handleReplayGuidedTour}
           />
-        )}
+        }
       />
 
       <PortalPageOutlet route={route} settings={settings} />

@@ -38,7 +38,11 @@ describe('user-html-link', () => {
   it('creates save payload like Profile page', () => {
     const links = [
       createPortalUserLinkDraft([], 'New', 'https://example.com'),
-      { ...createPortalUserLinkDraft([], 'Remove', 'https://remove.example'), id: '', delFlg: true },
+      {
+        ...createPortalUserLinkDraft([], 'Remove', 'https://remove.example'),
+        id: '',
+        delFlg: true,
+      },
     ];
     expect(buildPortalUserLinkSavePayload(links)).toEqual([
       {
@@ -56,8 +60,26 @@ describe('user-html-link', () => {
 
   it('computes next linkNo from active links', () => {
     const links = parsePortalUserLinks([
-      { id: '1', version: 1, linkNo: 4, midashi: 'A', url: 'https://a.test', biko: '', order: 0, delFlg: false },
-      { id: '2', version: 1, linkNo: 9, midashi: 'B', url: 'https://b.test', biko: '', order: 0, delFlg: true },
+      {
+        id: '1',
+        version: 1,
+        linkNo: 4,
+        midashi: 'A',
+        url: 'https://a.test',
+        biko: '',
+        order: 0,
+        delFlg: false,
+      },
+      {
+        id: '2',
+        version: 1,
+        linkNo: 9,
+        midashi: 'B',
+        url: 'https://b.test',
+        biko: '',
+        order: 0,
+        delFlg: true,
+      },
     ]);
     expect(nextPortalLinkNo(links)).toBe(10);
     expect(activePortalUserLinks(links)).toHaveLength(1);

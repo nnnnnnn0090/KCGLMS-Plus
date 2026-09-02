@@ -1,5 +1,6 @@
 import { DEFAULT_LANGUAGE, detectDefaultLanguage, type AppLanguage } from './i18n/messages';
 import type { CalendarWeekStart } from '../platform/storage/parsers';
+import { DEFAULT_UI_FONT, type UiFont } from './ui-font';
 
 /** 設定パネル項目のドメインモデル（§4.6.2） */
 export interface Settings {
@@ -12,6 +13,7 @@ export interface Settings {
   cplanOverlay: boolean;
   calendarWeekStart: CalendarWeekStart;
   language: AppLanguage;
+  font: UiFont;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -24,6 +26,7 @@ export const DEFAULT_SETTINGS: Settings = {
   cplanOverlay: true,
   calendarWeekStart: 'monday',
   language: DEFAULT_LANGUAGE,
+  font: DEFAULT_UI_FONT,
 };
 
 export function resolveInitialLanguage(stored: unknown): AppLanguage {

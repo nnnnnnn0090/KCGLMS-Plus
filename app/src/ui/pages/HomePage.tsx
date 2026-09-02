@@ -14,9 +14,7 @@ import { usePortalDom } from '../../context/portalDom';
 import { useHomeStorageBootstrap } from '../../hooks/useHomeStorageBootstrap';
 import { useHomePortalInbox } from '../../hooks/useHomePortalInbox';
 import { useLastLogin } from '../../hooks/useLastLogin';
-import {
-  useDeveloperNotice,
-} from '../../hooks/useDeveloperNotice';
+import { useDeveloperNotice } from '../../hooks/useDeveloperNotice';
 import { useDeveloperSurvey } from '../../hooks/useDeveloperSurvey';
 import { PageShell } from '../components/layout/PageShell';
 import { KinoPanel } from '../components/ui/KinoPanel';
@@ -52,7 +50,8 @@ function scrollElementToVerticalCenter(
   const cRect = scroller.getBoundingClientRect();
   const tRect = target.getBoundingClientRect();
   const visibleOffsetTop = tRect.top - cRect.top;
-  const nextTop = scroller.scrollTop + visibleOffsetTop - scroller.clientHeight / 2 + tRect.height / 2;
+  const nextTop =
+    scroller.scrollTop + visibleOffsetTop - scroller.clientHeight / 2 + tRect.height / 2;
   const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
   const clamped = Math.max(0, Math.min(nextTop, maxScroll));
   // `smooth` は操作中のホイール等と合成されてずれることがある。瞬時合わせは scrollTop 直指定が確実。
@@ -73,19 +72,19 @@ export function HomePage({ settings }: HomePageProps) {
 
   const { kinoData, kogiNews, newTopicsItems, linkItems, userLinkRecords } = useHomePortalInbox();
   const demoKogiCalendar = useMemo(
-    () => PROMOTION_DEMO_MODE ? createPromotionDemoKogiCalendar() : undefined,
+    () => (PROMOTION_DEMO_MODE ? createPromotionDemoKogiCalendar() : undefined),
     [],
   );
   const demoAssignmentPayload = useMemo(
-    () => PROMOTION_DEMO_MODE ? createPromotionDemoAssignments() : null,
+    () => (PROMOTION_DEMO_MODE ? createPromotionDemoAssignments() : null),
     [],
   );
   const demoTodayIso = PROMOTION_DEMO_MODE ? promotionDemoTodayIso() : undefined;
   const displayedNews = PROMOTION_DEMO_MODE ? PROMOTION_DEMO_NEWS : newTopicsItems;
 
   const [assignmentPayload, setAssignmentPayload] = useState<DuePayload | null>(null);
-  const [linksEditing,      setLinksEditing]      = useState(false);
-  const [newsTab,           setNewsTab]           = useState<NewsTab>('general');
+  const [linksEditing, setLinksEditing] = useState(false);
+  const [newsTab, setNewsTab] = useState<NewsTab>('general');
 
   const tabbedNews = displayedNews.filter((item) =>
     newsTab === 'lostProperty' ? isLostPropertyNews(item) : !isLostPropertyNews(item),
@@ -110,8 +109,8 @@ export function HomePage({ settings }: HomePageProps) {
       };
 
       const motionReduce =
-        typeof window.matchMedia === 'function'
-        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -136,11 +135,14 @@ export function HomePage({ settings }: HomePageProps) {
   }, [overlayRoot]);
 
   const kogiDisplayDeps = useMemo(
-    () => courses.map((c) => `${String(c.displayName ?? '')}\t${String(c.externalAccessUrl ?? '')}`).join('\n'),
+    () =>
+      courses
+        .map((c) => `${String(c.displayName ?? '')}\t${String(c.externalAccessUrl ?? '')}`)
+        .join('\n'),
     [courses],
   );
   const getKingLmsCourses = useCallback(() => courses, [courses]);
-  const lastLogin         = useLastLogin();
+  const lastLogin = useLastLogin();
   const { notice: developerNotice, lang: noticeLang } = useDeveloperNotice(language);
   const developerSurvey = useDeveloperSurvey(language);
 
@@ -148,7 +150,7 @@ export function HomePage({ settings }: HomePageProps) {
     developerNotice?.byLang?.[noticeLang]?.title || t.developerNotice.fallbackTitle;
   const developerNoticeMessage = developerNotice?.byLang?.[noticeLang]?.message ?? '';
   const developerNoticeHtml = useMemo(
-    () => developerNoticeMessage ? renderMarkdown(developerNoticeMessage) : '',
+    () => (developerNoticeMessage ? renderMarkdown(developerNoticeMessage) : ''),
     [developerNoticeMessage],
   );
 
@@ -158,7 +160,6 @@ export function HomePage({ settings }: HomePageProps) {
       headExtra={lastLogin ? <span className="p-last-login">{lastLogin}</span> : undefined}
     >
       <div className="p-stack">
-
         {developerNotice ? (
           <section className="p-panel">
             <span className="p-panel-head p-developer-notice-head">
@@ -267,15 +268,10 @@ export function HomePage({ settings }: HomePageProps) {
               </button>
             </span>
             <div className={`p-panel-body${linksEditing ? ' is-editing' : ''}`} id="p-links">
-              <LinkEditor
-                items={linkItems}
-                userLinks={userLinkRecords}
-                editing={linksEditing}
-              />
+              <LinkEditor items={linkItems} userLinks={userLinkRecords} editing={linksEditing} />
             </div>
           </section>
         </div>
-
       </div>
       {settings.showHomeCornerCharacter ? <HomeCornerCharacter /> : null}
     </PageShell>

@@ -13,10 +13,14 @@ export function installFetchHook(): void {
   const origFetch = window.fetch;
 
   window.fetch = function (input, init) {
-    const url = typeof input === 'string' ? input
-      : input instanceof URL ? String(input)
-      : input instanceof Request ? input.url
-      : '';
+    const url =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? String(input)
+          : input instanceof Request
+            ? input.url
+            : '';
 
     captureHeaders(url, init?.headers ?? (input instanceof Request ? input.headers : undefined));
 
@@ -24,9 +28,13 @@ export function installFetchHook(): void {
     if (!shouldHook(url)) return p;
 
     return p.then((response) => {
-      response.clone().json().then((json) => dispatch(url, json)).catch((err) => {
-        devWarn('portal-hooks: response JSON parse failed', url, err);
-      });
+      response
+        .clone()
+        .json()
+        .then((json) => dispatch(url, json))
+        .catch((err) => {
+          devWarn('portal-hooks: response JSON parse failed', url, err);
+        });
       return response;
     });
   };

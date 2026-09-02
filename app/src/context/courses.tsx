@@ -29,7 +29,7 @@ export async function readStoredCourses(): Promise<CourseRow[]> {
 }
 
 interface CoursesContextValue {
-  courses:    CourseRow[];
+  courses: CourseRow[];
   setCourses: (rows: CourseRow[]) => void;
 }
 
@@ -45,7 +45,9 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
     void readStoredCourses().then((rows) => {
       if (!cancelled && rows.length > 0) setCourses(rows);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [settingsReady]);
 
   const value = useMemo(() => ({ courses, setCourses }), [courses]);

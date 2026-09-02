@@ -3,18 +3,14 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  APP_LANGUAGES,
-  APP_LANGUAGE_LABELS,
-  useI18n,
-} from '../../../i18n';
+import { APP_LANGUAGES, APP_LANGUAGE_LABELS, useI18n } from '../../../i18n';
 import type { AppLanguage } from '../../../i18n/messages';
 
 const LANG_PICKER_EXIT_MS = 360;
 
 export interface LanguagePickerProps {
   initialLanguage: AppLanguage;
-  onChange:  (language: AppLanguage) => void;
+  onChange: (language: AppLanguage) => void;
   onConfirm: (language: AppLanguage) => void;
 }
 
@@ -24,11 +20,14 @@ export function LanguagePicker({ initialLanguage, onChange, onConfirm }: Languag
   const [exiting, setExiting] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
-  const pick = useCallback((id: AppLanguage) => {
-    if (exiting) return;
-    setSelected(id);
-    onChange(id);
-  }, [exiting, onChange]);
+  const pick = useCallback(
+    (id: AppLanguage) => {
+      if (exiting) return;
+      setSelected(id);
+      onChange(id);
+    },
+    [exiting, onChange],
+  );
 
   const handleConfirm = useCallback(() => {
     if (exiting) return;

@@ -9,17 +9,17 @@ import { isPortalSettingsMarkerLink } from '../../../services/portal-settings-sy
 
 export interface ApiLink {
   midashi: string;
-  url:     string;
-  biko?:   string;
-  kubun?:  number;
+  url: string;
+  biko?: string;
+  kubun?: number;
 }
 
 export interface LinkEditorRow {
-  key:       string;
-  midashi:   string;
-  url:       string;
-  biko:      string;
-  isCustom:  boolean;
+  key: string;
+  midashi: string;
+  url: string;
+  biko: string;
+  isCustom: boolean;
   portalId?: string;
 }
 
@@ -74,20 +74,22 @@ export function buildLinkEditorRows(
   const extraUrls = new Set(extras.filter((i) => i.midashi && i.url).map((i) => linkKey(i.url)));
   const fromApi = items.filter(
     (i) =>
-      i.midashi
-      && i.url
-      && !extraUrls.has(linkKey(i.url))
-      && !isPortalSettingsMarkerLink({ midashi: i.midashi, url: i.url }),
+      i.midashi &&
+      i.url &&
+      !extraUrls.has(linkKey(i.url)) &&
+      !isPortalSettingsMarkerLink({ midashi: i.midashi, url: i.url }),
   );
 
   const allRaw: LinkEditorRow[] = [
-    ...extras.filter((i) => i.midashi && i.url).map((r) => ({
-      key: linkKey(r.url),
-      midashi: r.midashi,
-      url: r.url,
-      biko: r.biko ?? '',
-      isCustom: false,
-    })),
+    ...extras
+      .filter((i) => i.midashi && i.url)
+      .map((r) => ({
+        key: linkKey(r.url),
+        midashi: r.midashi,
+        url: r.url,
+        biko: r.biko ?? '',
+        isCustom: false,
+      })),
     ...fromApi.map((r) => {
       const custom = isUserLink(r, userLinks);
       return {

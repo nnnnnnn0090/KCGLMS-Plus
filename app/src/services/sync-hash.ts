@@ -14,23 +14,27 @@ export function kingLmsCourseListSyncSuccessGuideToast(language: AppLanguage): s
 function hashMessages(language: AppLanguage): Record<string, string> {
   const t = messagesForLanguage(language).sync;
   return {
-    [SYNC_HASH.courseDone]:       t.courseGuideToast,
-    [SYNC_HASH.courseTimeout]:    t.courseTimeout,
-    [SYNC_HASH.assignmentDone]:   t.assignmentDone,
+    [SYNC_HASH.courseDone]: t.courseGuideToast,
+    [SYNC_HASH.courseTimeout]: t.courseTimeout,
+    [SYNC_HASH.assignmentDone]: t.assignmentDone,
     [SYNC_HASH.assignmentTimeout]: t.assignmentTimeout,
-    [SYNC_HASH.assignmentError]:  t.assignmentError,
+    [SYNC_HASH.assignmentError]: t.assignmentError,
   };
 }
 
 export function consumeKingLmsSyncReturnHash(language: AppLanguage): string {
   const hash = location.hash.replace(/^#/, '');
-  const msg  = hashMessages(language)[hash] ?? '';
+  const msg = hashMessages(language)[hash] ?? '';
 
   if (msg) {
     try {
       history.replaceState(null, '', buildPortalHistoryUrl());
     } catch {
-      try { location.hash = ''; } catch { /* ignore */ }
+      try {
+        location.hash = '';
+      } catch {
+        /* ignore */
+      }
     }
   }
   return msg;

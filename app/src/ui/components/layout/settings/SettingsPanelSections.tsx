@@ -17,6 +17,8 @@ import {
   PORTAL_COMMUNITY_DISCORD_INVITE_URL,
 } from '../../../../shared/constants';
 import { MascotDecorationSetting } from './MascotDecorationSetting';
+import { SettingsExtraEventsSection } from './SettingsExtraEventsSection';
+import { SettingsMyLinksSyncSection } from './SettingsMyLinksSyncSection';
 import { SettingsSwitch } from './SettingsSwitch';
 import { downloadTheme } from './ThemeStudio';
 import { ColorSwatch } from '../../ui/ColorSwatch';
@@ -229,19 +231,25 @@ export function SettingsPortalOnlySections({
 
   if (group === 'connections') {
     return (
-      <div className="p-settings-section p-settings-section--king-lms">
-        <div className="p-settings-section-title">{t.settings.dataIntegration}</div>
-        <div className="p-settings-row p-settings-row-actions p-settings-king-lms-sync">
-          <button
-            type="button"
-            className="p-settings-resync-btn"
-            onClick={() => void beginKingLmsCourseListSync({ toastQuiet: true })}
-          >
-            {t.settings.resyncCourses}
-          </button>
-          <p className="p-settings-hint">{t.settings.resyncCoursesHint}</p>
+      <>
+        <SettingsMyLinksSyncSection />
+
+        <div className="p-settings-section p-settings-section--king-lms">
+          <div className="p-settings-section-title">{t.settings.dataIntegration}</div>
+          <div className="p-settings-row p-settings-row-actions p-settings-king-lms-sync">
+            <button
+              type="button"
+              className="p-settings-resync-btn"
+              onClick={() => void beginKingLmsCourseListSync({ toastQuiet: true })}
+            >
+              {t.settings.resyncCourses}
+            </button>
+            <p className="p-settings-hint">{t.settings.resyncCoursesHint}</p>
+          </div>
         </div>
-      </div>
+
+        <SettingsExtraEventsSection />
+      </>
     );
   }
 

@@ -1,0 +1,6 @@
+**/._*
+node_modules/
+.output/
+.wxt/
+coverage/
+artifacts/

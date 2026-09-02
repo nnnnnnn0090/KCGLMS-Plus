@@ -35,7 +35,9 @@ export function isLocalLmsDataStorageKey(key: string): boolean {
   return key === SK.kingLmsCourses || key === SK.kingLmsAssignmentDue;
 }
 
-export function pickCrossContextHandoffStorage(data: Record<string, unknown>): Record<string, unknown> {
+export function pickCrossContextHandoffStorage(
+  data: Record<string, unknown>,
+): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const key of CROSS_CONTEXT_HANDOFF_STORAGE_KEYS) {
     if (data[key] !== undefined) out[key] = data[key];

@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 import type { ThemeTokens } from '../../../../domain/themes';
-import { clearRuntimeElementCss, setRuntimeElementCss } from '../../../../lib/runtime-element-style';
+import {
+  clearRuntimeElementCss,
+  setRuntimeElementCss,
+} from '../../../../lib/runtime-element-style';
 
 export function TourThemeOption({
   themeKey,

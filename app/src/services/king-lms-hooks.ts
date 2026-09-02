@@ -92,9 +92,12 @@ function startWideCalendarFetch(origFetch: typeof fetch): void {
         wideFetchFailed = true;
         return;
       }
-      return r.json().then(ingestCalendarItems).catch(() => {
-        wideFetchFailed = true;
-      });
+      return r
+        .json()
+        .then(ingestCalendarItems)
+        .catch(() => {
+          wideFetchFailed = true;
+        });
     })
     .catch(() => {
       wideFetchSettled = true;
@@ -164,7 +167,13 @@ function hookFetchResponse(url: string, p: Promise<Response>): void {
     }).catch(() => {});
   }
   if (isKingLmsMembershipsUrl(url)) {
-    p.then((r) => r.clone().json().then(handleMemberships).catch(() => {})).catch(() => {});
+    p.then((r) =>
+      r
+        .clone()
+        .json()
+        .then(handleMemberships)
+        .catch(() => {}),
+    ).catch(() => {});
   }
   if (isKingLmsCalendarItemsUrl(url)) {
     p.then((r) => {

@@ -7,10 +7,7 @@ import {
   isExtensionBlockedByRemoteKillSwitch,
   startExtensionOperationalWatch,
 } from '../../services/extension-runtime';
-import {
-  resolveHome2MailRoute,
-  teardownHome2Overlay,
-} from '../../services/home2-host';
+import { resolveHome2MailRoute, teardownHome2Overlay } from '../../services/home2-host';
 import { mountHome2MailOverlay } from './mount-home2-mail-overlay';
 
 export default defineContentScript({

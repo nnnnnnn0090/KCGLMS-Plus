@@ -30,12 +30,13 @@ export function PageShell({
   const mainCls = variant === 'news' ? 'p-main p-main-news' : 'p-main';
   return (
     <main className={mainCls}>
-      {!hideHead && (head ?? (
-        <div className="p-main-head">
-          {title != null ? <h1>{title}</h1> : null}
-          {headExtra}
-        </div>
-      ))}
+      {!hideHead &&
+        (head ?? (
+          <div className="p-main-head">
+            {title != null ? <h1>{title}</h1> : null}
+            {headExtra}
+          </div>
+        ))}
       {children}
     </main>
   );

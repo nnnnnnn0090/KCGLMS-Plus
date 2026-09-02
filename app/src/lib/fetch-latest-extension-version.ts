@@ -16,7 +16,7 @@ async function loadLatestFromChangelog(): Promise<string | null> {
     cache: 'no-store',
   });
   if (!res.ok) return null;
-  const parsed = parseChangelogJson(await res.json() as unknown);
+  const parsed = parseChangelogJson((await res.json()) as unknown);
   return parsed?.[0]?.version ?? null;
 }
 
@@ -37,10 +37,7 @@ export function fetchLatestExtensionVersion(): Promise<string | null> {
 }
 
 /** インストール中の manifest が changelog の最新より古いか */
-export function isExtensionUpdateAvailable(
-  current: string,
-  latest: string | null,
-): boolean {
+export function isExtensionUpdateAvailable(current: string, latest: string | null): boolean {
   if (!current || !latest) return false;
   return semverGreater(latest, current);
 }

@@ -29,7 +29,12 @@ async function verifyWithSecret(
 
 describe('telemetry-auth', () => {
   it('signs requests with shared secret', async () => {
-    const signed = await signTelemetryRequest(TEST_SECRET, 'POST', '/survey-response', 1_710_000_000_000);
+    const signed = await signTelemetryRequest(
+      TEST_SECRET,
+      'POST',
+      '/survey-response',
+      1_710_000_000_000,
+    );
     const canonical = buildTelemetryCanonicalString(signed.timestamp, 'POST', '/survey-response');
     await expect(verifyWithSecret(TEST_SECRET, signed.signature, canonical)).resolves.toBe(true);
   });

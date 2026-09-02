@@ -25,7 +25,9 @@ describe('calendar-items-to-due-items', () => {
   });
 
   it('skips non-GradableItem rows', () => {
-    expect(calendarItemToDueItem({ itemSourceType: 'other', startDate: '2026-01-01T00:00:00.000Z' })).toBeNull();
+    expect(
+      calendarItemToDueItem({ itemSourceType: 'other', startDate: '2026-01-01T00:00:00.000Z' }),
+    ).toBeNull();
   });
 
   it('mergeDueItems deduplicates by course/source/due', () => {

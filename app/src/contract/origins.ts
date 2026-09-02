@@ -46,10 +46,7 @@ export const EXTENSION_PROMO_ORIGIN = 'https://kcg-portal-redesign-project-web.v
 /** みんなの活動 API（host_permissions と community-access 許可リスト用） */
 export const COMMUNITY_API_ORIGIN = 'https://portal-community.com' as const;
 
-const COMMUNITY_E2E_API_ORIGINS = [
-  'http://127.0.0.1:8787',
-  'http://localhost:8787',
-] as const;
+const COMMUNITY_E2E_API_ORIGINS = ['http://127.0.0.1:8787', 'http://localhost:8787'] as const;
 
 /** 拡張が接続を許可するコミュニティ API origin（manifest host_permissions と一致させる） */
 export function listAllowedCommunityApiOrigins(): readonly string[] {

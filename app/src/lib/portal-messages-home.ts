@@ -9,15 +9,15 @@ import { parsePortalUserLink } from '../services/user-html-link';
 // ─── 型 ───────────────────────────────────────────────────────────────────
 
 export interface KinoMessagePayload {
-  title?:   string;
+  title?: string;
   message?: string;
 }
 
 export interface UserHtmlLinkItem {
   midashi: string;
-  url:     string;
-  biko?:   string;
-  kubun?:  number;
+  url: string;
+  biko?: string;
+  kubun?: number;
 }
 
 export interface PortalUserLinkRecord {
@@ -32,10 +32,10 @@ export interface PortalUserLinkRecord {
 }
 
 export interface HomePortalInboxState {
-  kinoData:       KinoMessagePayload | null;
-  kogiNews:       NewsListItem[];
+  kinoData: KinoMessagePayload | null;
+  kogiNews: NewsListItem[];
   newTopicsItems: NewsListItem[];
-  linkItems:      UserHtmlLinkItem[];
+  linkItems: UserHtmlLinkItem[];
   userLinkRecords: PortalUserLinkRecord[];
 }
 

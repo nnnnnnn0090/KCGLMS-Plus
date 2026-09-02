@@ -14,6 +14,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    exclude: ['**/._*'],
     reporters: process.env.CI ? ['default'] : ['verbose'],
     env: {
       VITE_TELEMETRY_HMAC_SECRET: 'vitest-portal-sync-secret-key',
@@ -21,7 +22,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts', 'src/entrypoints/**', 'src/domain/i18n/locales/**'],
+      exclude: ['**/._*', 'src/**/*.test.ts', 'src/entrypoints/**', 'src/domain/i18n/locales/**'],
       thresholds: {
         lines: 25,
         functions: 25,

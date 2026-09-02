@@ -2,19 +2,22 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { formatHome2MailDateForDisplay, home2MailDateTimeIso } from '../../lib/format-home2-mail-date';
+import {
+  formatHome2MailDateForDisplay,
+  home2MailDateTimeIso,
+} from '../../lib/format-home2-mail-date';
 import { useI18n } from '../../i18n';
 
 interface Home2ReadSnap {
   subject: string;
-  from:    string;
-  date:    string;
-  body:    string;
-  nav:     {
-    reply:      boolean;
+  from: string;
+  date: string;
+  body: string;
+  nav: {
+    reply: boolean;
     replyQuote: boolean;
-    forward:    boolean;
-    binSave:    boolean;
+    forward: boolean;
+    binSave: boolean;
   };
 }
 
@@ -45,10 +48,10 @@ function parseReadmailFromDom(): Home2ReadSnap {
     date,
     body,
     nav: {
-      reply:      navBtnDisabled('MainContent_butRetMail1'),
+      reply: navBtnDisabled('MainContent_butRetMail1'),
       replyQuote: navBtnDisabled('MainContent_butRetMail2'),
-      forward:    navBtnDisabled('MainContent_butFow'),
-      binSave:    navBtnDisabled('MainContent_butBinFileSave'),
+      forward: navBtnDisabled('MainContent_butFow'),
+      binSave: navBtnDisabled('MainContent_butBinFileSave'),
     },
   };
 }
@@ -97,7 +100,13 @@ function renderReadmailBodyWithBracketLinks(body: string): ReactNode {
 function IconBack() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M15 6l-6 6 6 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -118,8 +127,11 @@ export function Home2WebMailReadPage() {
 
   useEffect(() => {
     refresh();
-    const mo = new MutationObserver(() => { refresh(); });
-    const root = document.getElementById('ctl01') ?? document.querySelector('.page .main') ?? document.body;
+    const mo = new MutationObserver(() => {
+      refresh();
+    });
+    const root =
+      document.getElementById('ctl01') ?? document.querySelector('.page .main') ?? document.body;
     mo.observe(root, { subtree: true, childList: true, attributes: true, characterData: true });
     return () => mo.disconnect();
   }, [refresh]);
@@ -127,21 +139,46 @@ export function Home2WebMailReadPage() {
   return (
     <main className="p-main p-home2-send" id="p-home2-mail-read">
       <div className="p-home2-send-toolbar" role="toolbar" aria-label={t.home2.readToolbar}>
-        <button type="button" className="p-home2-send-back" onClick={onBack} title={t.home2.backTitle}>
+        <button
+          type="button"
+          className="p-home2-send-back"
+          onClick={onBack}
+          title={t.home2.backTitle}
+        >
           <IconBack />
           <span>{t.common.back}</span>
         </button>
         <div className="p-home2-send-tools">
-          <button type="button" className="p-home2-send-act p-home2-send-act--primary" disabled={snap.nav.reply} onClick={() => nativeSubmitClick('MainContent_butRetMail1')}>
+          <button
+            type="button"
+            className="p-home2-send-act p-home2-send-act--primary"
+            disabled={snap.nav.reply}
+            onClick={() => nativeSubmitClick('MainContent_butRetMail1')}
+          >
             {t.home2.reply}
           </button>
-          <button type="button" className="p-home2-send-act" disabled={snap.nav.replyQuote} onClick={() => nativeSubmitClick('MainContent_butRetMail2')}>
+          <button
+            type="button"
+            className="p-home2-send-act"
+            disabled={snap.nav.replyQuote}
+            onClick={() => nativeSubmitClick('MainContent_butRetMail2')}
+          >
             {t.home2.replyQuote}
           </button>
-          <button type="button" className="p-home2-send-act" disabled={snap.nav.forward} onClick={() => nativeSubmitClick('MainContent_butFow')}>
+          <button
+            type="button"
+            className="p-home2-send-act"
+            disabled={snap.nav.forward}
+            onClick={() => nativeSubmitClick('MainContent_butFow')}
+          >
             {t.home2.forward}
           </button>
-          <button type="button" className="p-home2-send-act p-home2-send-act--muted" disabled={snap.nav.binSave} onClick={() => nativeSubmitClick('MainContent_butBinFileSave')}>
+          <button
+            type="button"
+            className="p-home2-send-act p-home2-send-act--muted"
+            disabled={snap.nav.binSave}
+            onClick={() => nativeSubmitClick('MainContent_butBinFileSave')}
+          >
             {t.home2.saveAttachments}
           </button>
         </div>

@@ -3,14 +3,7 @@
  * getElementById 依存を React ツリー内で共有する。
  */
 
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useRef,
-  type ReactNode,
-  type RefObject,
-} from 'react';
+import { createContext, useContext, useMemo, useRef, type ReactNode, type RefObject } from 'react';
 
 export interface PortalDomContextValue {
   overlayRoot: HTMLElement;
@@ -27,10 +20,7 @@ export function PortalDomProvider({
   children: ReactNode;
 }) {
   const settingsPopRef = useRef<HTMLDivElement | null>(null);
-  const value = useMemo(
-    () => ({ overlayRoot, settingsPopRef }),
-    [overlayRoot],
-  );
+  const value = useMemo(() => ({ overlayRoot, settingsPopRef }), [overlayRoot]);
   return <PortalDomContext.Provider value={value}>{children}</PortalDomContext.Provider>;
 }
 

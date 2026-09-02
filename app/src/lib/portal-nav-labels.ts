@@ -15,14 +15,14 @@ export type PortalNavHostKey =
 
 /** ホスト側の表示文言（完全一致）→ 翻訳キー */
 const HOST_LABEL_KEYS: Record<string, PortalNavHostKey> = {
-  'ホーム':               'home',
-  'お知らせ一覧':         'newsList',
-  '休講補講等一覧':       'kyukoHoko',
-  '授業評価アンケート回答': 'questionnaire',
-  'キャビネット':         'cabinet',
-  'Webサービス':          'campusPlan',
-  'キャンパスプラン':     'campusPlan',
-  'プロフィール':         'profile',
+  ホーム: 'home',
+  お知らせ一覧: 'newsList',
+  休講補講等一覧: 'kyukoHoko',
+  授業評価アンケート回答: 'questionnaire',
+  キャビネット: 'cabinet',
+  Webサービス: 'campusPlan',
+  キャンパスプラン: 'campusPlan',
+  プロフィール: 'profile',
 };
 
 function normalizeHostLabel(raw: string): string {
@@ -38,7 +38,9 @@ function portalPathKey(href: string): PortalNavHostKey | null {
     if (path === '/portal/Questionnaire') return 'questionnaire';
     if (path === '/portal/Cabinet' || path.startsWith('/portal/Cabinet/')) return 'cabinet';
     if (path === '/portal/Profile') return 'profile';
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return null;
 }
 

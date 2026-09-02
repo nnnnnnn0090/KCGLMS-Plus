@@ -1,9 +1,6 @@
 import { PORTAL_CONTENT_SCRIPT_MATCHES } from '../contract/origins';
 import { SK } from '../contract/storage-keys';
-import {
-  ensurePortalBackdrop,
-  parseCustomThemeCollection,
-} from '../domain/themes';
+import { ensurePortalBackdrop, parseCustomThemeCollection } from '../domain/themes';
 import { storageRepo } from '../platform/storage/repo';
 
 /** portal-early: テーマ先行適用 + ブートカバー（F-002） */

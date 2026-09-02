@@ -5,14 +5,14 @@
 import { useState, useCallback, useRef } from 'react';
 import { TIMING } from '../contract/timing';
 
-const DURATION_MS       = TIMING.toastDefaultMs;
+const DURATION_MS = TIMING.toastDefaultMs;
 const CLOSE_FALLBACK_MS = TIMING.toastCloseFallbackMs;
 
 export interface ToastState {
-  message:   string;
+  message: string;
   placement: 'bottom' | 'top';
-  visible:   boolean;
-  closing:   boolean;
+  visible: boolean;
+  closing: boolean;
 }
 
 export interface ToastShowOptions {
@@ -21,20 +21,39 @@ export interface ToastShowOptions {
 }
 
 export function useToast() {
-  const [toast, setToast]  = useState<ToastState>({ message: '', placement: 'bottom', visible: false, closing: false });
-  const hideTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cancelAnimRef      = useRef<(() => void) | null>(null);
+  const [toast, setToast] = useState<ToastState>({
+    message: '',
+    placement: 'bottom',
+    visible: false,
+    closing: false,
+  });
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelAnimRef = useRef<(() => void) | null>(null);
 
   const show = useCallback((msg: string, opts?: ToastShowOptions) => {
-    if (hideTimerRef.current) { clearTimeout(hideTimerRef.current); hideTimerRef.current = null; }
-    if (cancelAnimRef.current) { cancelAnimRef.current(); cancelAnimRef.current = null; }
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+    if (cancelAnimRef.current) {
+      cancelAnimRef.current();
+      cancelAnimRef.current = null;
+    }
 
-    setToast({ message: msg, placement: opts?.placement ?? 'bottom', visible: true, closing: false });
+    setToast({
+      message: msg,
+      placement: opts?.placement ?? 'bottom',
+      visible: true,
+      closing: false,
+    });
 
-    const durationMs = typeof opts?.durationMs === 'number' && opts.durationMs > 0 ? opts.durationMs : DURATION_MS;
+    const durationMs =
+      typeof opts?.durationMs === 'number' && opts.durationMs > 0 ? opts.durationMs : DURATION_MS;
     hideTimerRef.current = setTimeout(() => {
       hideTimerRef.current = null;
-      const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reduced =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduced) {
         setToast((prev) => ({ ...prev, visible: false, closing: false }));
         return;
@@ -50,7 +69,10 @@ export function useToast() {
 
   function onAnimationEnd(e: React.AnimationEvent<HTMLDivElement>) {
     if (e.animationName !== 'p-toast-out' && e.animationName !== 'p-toast-out-top') return;
-    if (cancelAnimRef.current) { cancelAnimRef.current(); cancelAnimRef.current = null; }
+    if (cancelAnimRef.current) {
+      cancelAnimRef.current();
+      cancelAnimRef.current = null;
+    }
     setToast((prev) => ({ ...prev, visible: false, closing: false }));
   }
 

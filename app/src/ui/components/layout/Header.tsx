@@ -358,7 +358,12 @@ export function Header({
   }, [navSource]);
 
   useEffect(() => {
-    if (navSource !== 'portal' || !communityEnabled || !communityApiOrigin || !portalStudentKeyProof)
+    if (
+      navSource !== 'portal' ||
+      !communityEnabled ||
+      !communityApiOrigin ||
+      !portalStudentKeyProof
+    )
       return;
     if (!hasCommunityUrlParams()) return;
     let cancelled = false;

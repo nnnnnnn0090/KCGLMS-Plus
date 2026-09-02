@@ -46,15 +46,15 @@ function formatDeadline(raw: string, locale: string): string {
 /** アンケート一覧行を一度だけ pick して束ねる（API 確定キー） */
 function parseSurveyRow(row: Row) {
   return {
-    nendo:           pick(row, ['nendo']),
+    nendo: pick(row, ['nendo']),
     questionnaireCd: pick(row, ['questionnaireCd']),
-    kogiCd:          pick(row, ['kogiCd']),
-    periodCd:        pick(row, ['periodCd']),
-    periodNo:        pick(row, ['periodNo']),
-    kogi:            pick(row, ['kogi']),
-    yobiRNm:         pick(row, ['yobiRNm']),
-    jigenRNm:        pick(row, ['jigenRNm']),
-    kyoinFullNm:     pick(row, ['kyoinFullNm']),
+    kogiCd: pick(row, ['kogiCd']),
+    periodCd: pick(row, ['periodCd']),
+    periodNo: pick(row, ['periodNo']),
+    kogi: pick(row, ['kogi']),
+    yobiRNm: pick(row, ['yobiRNm']),
+    jigenRNm: pick(row, ['jigenRNm']),
+    kyoinFullNm: pick(row, ['kyoinFullNm']),
     dispEndDateTime: pick(row, ['dispEndDateTime']),
   };
 }
@@ -68,7 +68,9 @@ function buildDetailHrefParsed(s: ReturnType<typeof parseSurveyRow>): string {
         `/portal/Questionnaire/Detail/${encodeURIComponent(nendo)}/${encodeURIComponent(questionnaireCd)}/${encodeURIComponent(kogiCd)}/${encodeURIComponent(periodCd)}/${encodeURIComponent(periodNo)}`,
         location.origin,
       ).href;
-    } catch { /* skip */ }
+    } catch {
+      /* skip */
+    }
   }
   return '';
 }
@@ -102,15 +104,11 @@ function applyFilters(raw: Row[], onlyUnanswered: boolean, kogiKw: string, kyoin
   }
   const fk = kogiKw.trim();
   if (fk) {
-    list = list.filter((row) =>
-      pick(row, ['kogi']).includes(fk),
-    );
+    list = list.filter((row) => pick(row, ['kogi']).includes(fk));
   }
   const fe = kyoinKw.trim();
   if (fe) {
-    list = list.filter((row) =>
-      pick(row, ['kyoinFullNm']).includes(fe),
-    );
+    list = list.filter((row) => pick(row, ['kyoinFullNm']).includes(fe));
   }
   return list;
 }
@@ -119,8 +117,8 @@ function applyFilters(raw: Row[], onlyUnanswered: boolean, kogiKw: string, kyoin
 
 function SurveyRow({ row }: { row: Row }) {
   const { locale } = useI18n();
-  const s        = parseSurveyRow(row);
-  const href     = buildDetailHrefParsed(s);
+  const s = parseSurveyRow(row);
+  const href = buildDetailHrefParsed(s);
   const deadline = formatDeadline(s.dispEndDateTime, locale);
   const { kogi, yobiRNm: yobi, jigenRNm: jigen, kyoinFullNm: kyoin } = s;
   return (
@@ -143,10 +141,12 @@ export function SurveyPage() {
   const [portal, setPortal] = useState<SurveyPortalState>({ kinoData: null, raw: null });
   const { kinoData, raw } = portal;
   const [onlyUnanswered, setOnlyUnanswered] = useState(true);
-  const [kogiKw,         setKogiKw]         = useState('');
-  const [kyoinKw,        setKyoinKw]        = useState('');
+  const [kogiKw, setKogiKw] = useState('');
+  const [kyoinKw, setKyoinKw] = useState('');
 
-  useEffect(() => { pageFetch(urls.questionnaireInfo()); }, []);
+  useEffect(() => {
+    pageFetch(urls.questionnaireInfo());
+  }, []);
 
   const handleMessage = useCallback((msg: PortalCapturedMessage) => {
     setPortal((prev) => reduceSurveyPortalMessage(prev, msg));
@@ -155,17 +155,30 @@ export function SurveyPage() {
   usePortalMessage(handleMessage);
 
   const filtered = raw !== null ? applyFilters(raw, onlyUnanswered, kogiKw, kyoinKw) : [];
-  const noData   = raw !== null && raw.length === 0;
+  const noData = raw !== null && raw.length === 0;
 
-  const listTitle = raw === null || filtered.length > 0
-    ? t.surveyPage.listShowing(nendo)
-    : t.surveyPage.listEmpty(nendo);
+  const listTitle =
+    raw === null || filtered.length > 0
+      ? t.surveyPage.listShowing(nendo)
+      : t.surveyPage.listEmpty(nendo);
 
   let tableBody: React.ReactNode;
   if (raw === null) {
-    tableBody = <tr><td colSpan={5}><p className="p-news-empty">{t.common.loading}</p></td></tr>;
+    tableBody = (
+      <tr>
+        <td colSpan={5}>
+          <p className="p-news-empty">{t.common.loading}</p>
+        </td>
+      </tr>
+    );
   } else if (filtered.length === 0) {
-    tableBody = <tr><td colSpan={5}><p className="p-news-empty">{t.surveyPage.emptyFiltered}</p></td></tr>;
+    tableBody = (
+      <tr>
+        <td colSpan={5}>
+          <p className="p-news-empty">{t.surveyPage.emptyFiltered}</p>
+        </td>
+      </tr>
+    );
   } else {
     tableBody = filtered.map((row) => <SurveyRow key={surveyRowKey(row)} row={row} />);
   }
@@ -249,7 +262,11 @@ export function SurveyPage() {
             <button
               type="button"
               className="p-news-clear-btn"
-              onClick={() => { setOnlyUnanswered(true); setKogiKw(''); setKyoinKw(''); }}
+              onClick={() => {
+                setOnlyUnanswered(true);
+                setKogiKw('');
+                setKyoinKw('');
+              }}
             >
               {t.newsPage.clear}
             </button>

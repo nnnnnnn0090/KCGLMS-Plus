@@ -1,18 +1,18 @@
 /** ポータル REST API のパス断片（§8.1）。 */
 
 export const PORTAL_API = {
-  newTopics:          'NewTopics',
-  userHtmlLink:       'UserHtmlLink',
-  kogiCalendar:       'KogiCalendar',
-  hoshuCalendar:      'HoshuCalendar',
-  campusCalendar:     'CampusCalendar',
-  kogiNews:           'KogiNews',
-  portalKinoMessage:  'PortalKinoMessage',
-  deliveredNews:      'DeliveredNews',
-  kyukoInfo:          'KyukoInfo',
-  hokoInfo:           'HokoInfo',
-  kyoshitsuChange:    'KyoshitsuChangeInfo',
-  questionnaireInfo:  'questionnaireInfo',
+  newTopics: 'NewTopics',
+  userHtmlLink: 'UserHtmlLink',
+  kogiCalendar: 'KogiCalendar',
+  hoshuCalendar: 'HoshuCalendar',
+  campusCalendar: 'CampusCalendar',
+  kogiNews: 'KogiNews',
+  portalKinoMessage: 'PortalKinoMessage',
+  deliveredNews: 'DeliveredNews',
+  kyukoInfo: 'KyukoInfo',
+  hokoInfo: 'HokoInfo',
+  kyoshitsuChange: 'KyoshitsuChangeInfo',
+  questionnaireInfo: 'questionnaireInfo',
 } as const;
 
 /** DeliveredNews 年度一覧 API のパス断片（pathname 上） */

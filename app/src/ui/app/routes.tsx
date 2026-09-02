@@ -17,15 +17,11 @@ import { Home2WebMailSendPage } from '../pages/Home2WebMailSendPage';
 import { useI18n } from '../../i18n';
 
 // 遅延ロード（ホームページ以外）
-const NewsPage = lazy(() =>
-  import('../pages/NewsPage').then((m) => ({ default: m.NewsPage })),
-);
+const NewsPage = lazy(() => import('../pages/NewsPage').then((m) => ({ default: m.NewsPage })));
 const DetailPage = lazy(() =>
   import('../pages/DetailPage').then((m) => ({ default: m.DetailPage })),
 );
-const KyukoPage = lazy(() =>
-  import('../pages/KyukoPage').then((m) => ({ default: m.KyukoPage })),
-);
+const KyukoPage = lazy(() => import('../pages/KyukoPage').then((m) => ({ default: m.KyukoPage })));
 const SurveyPage = lazy(() =>
   import('../pages/SurveyPage').then((m) => ({ default: m.SurveyPage })),
 );
@@ -40,7 +36,13 @@ function PageFallback() {
 }
 
 /** ルートに応じたページコンポーネント。レイアウトは App が担当する。 */
-export function PortalPageOutlet({ route, settings }: { route: PortalAppRoute; settings: Settings }) {
+export function PortalPageOutlet({
+  route,
+  settings,
+}: {
+  route: PortalAppRoute;
+  settings: Settings;
+}) {
   if (isHome2MailRoute(route)) {
     if (route.layout === 'full') return <Home2WebMailLoginPage />;
     if (route.layout === 'mailHead') return <Home2WebMailMailboxPage />;
@@ -53,13 +55,29 @@ export function PortalPageOutlet({ route, settings }: { route: PortalAppRoute; s
     case PAGE.HOME:
       return <HomePage settings={settings} />;
     case PAGE.NEWS:
-      return <Suspense fallback={<PageFallback />}><NewsPage /></Suspense>;
+      return (
+        <Suspense fallback={<PageFallback />}>
+          <NewsPage />
+        </Suspense>
+      );
     case PAGE.DETAIL:
-      return <Suspense fallback={<PageFallback />}><DetailPage newsDetailId={route.detailId ?? ''} /></Suspense>;
+      return (
+        <Suspense fallback={<PageFallback />}>
+          <DetailPage newsDetailId={route.detailId ?? ''} />
+        </Suspense>
+      );
     case PAGE.KYUKO:
-      return <Suspense fallback={<PageFallback />}><KyukoPage /></Suspense>;
+      return (
+        <Suspense fallback={<PageFallback />}>
+          <KyukoPage />
+        </Suspense>
+      );
     case PAGE.SURVEY:
-      return <Suspense fallback={<PageFallback />}><SurveyPage /></Suspense>;
+      return (
+        <Suspense fallback={<PageFallback />}>
+          <SurveyPage />
+        </Suspense>
+      );
     default:
       return null;
   }

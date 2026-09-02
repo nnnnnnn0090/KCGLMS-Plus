@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
 import { useSettings } from '../context/settings';
 import {
   localeForLanguage,
@@ -28,8 +22,8 @@ export {
 
 export interface I18nContextValue {
   language: AppLanguage;
-  locale:   string;
-  t:        I18nMessages;
+  locale: string;
+  t: I18nMessages;
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -37,15 +31,22 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 export function I18nProvider({ children }: { children: ReactNode }) {
   const { settings } = useSettings();
   const language = normalizeLanguage(settings.language);
-  const value = useMemo<I18nContextValue>(() => ({
-    language,
-    locale: localeForLanguage(language),
-    t:      messagesForLanguage(language),
-  }), [language]);
+  const value = useMemo<I18nContextValue>(
+    () => ({
+      language,
+      locale: localeForLanguage(language),
+      t: messagesForLanguage(language),
+    }),
+    [language],
+  );
 
   useEffect(() => {
     const tag = language === 'zh_TW' ? 'zh-Hant' : language.replace('_', '-');
-    try { document.documentElement.lang = tag; } catch { /* ignore */ }
+    try {
+      document.documentElement.lang = tag;
+    } catch {
+      /* ignore */
+    }
   }, [language]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

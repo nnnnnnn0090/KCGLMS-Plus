@@ -3,17 +3,14 @@
  * パース失敗時は既定値を返し、storage へ書き戻さない。
  */
 
-import {
-  APP_LANGUAGES,
-  DEFAULT_LANGUAGE,
-  type AppLanguage,
-} from '../../domain/i18n/messages';
+import { APP_LANGUAGES, DEFAULT_LANGUAGE, type AppLanguage } from '../../domain/i18n/messages';
 import type { DueItem } from '../../ui/calendar/assignment';
 import {
   EMPTY_CUSTOM_THEMES,
   parseCustomThemeCollection,
   type StoredCustomThemeCollection,
 } from '../../domain/themes/custom-themes';
+import { normalizeUiFont, type UiFont } from '../../domain/ui-font';
 import { INSTALL_OPEN_PENDING_KEY, SK } from '../../contract/storage-keys';
 import { isRecord, parseBool, parseString, parseStringArray } from '../../contract/validation-core';
 
@@ -80,8 +77,17 @@ export function parseCalendarWeekStart(raw: unknown): CalendarWeekStart {
 
 export function parseLanguage(raw: unknown): AppLanguage {
   return typeof raw === 'string' && (APP_LANGUAGES as readonly string[]).includes(raw)
-    ? raw as AppLanguage
+    ? (raw as AppLanguage)
     : DEFAULT_LANGUAGE;
+}
+
+export function parseUiFont(raw: unknown): UiFont {
+  return normalizeUiFont(raw);
+}
+
+/** 未設定・不正値は true（既存ユーザー互換） */
+export function parseSyncViaMyLinks(raw: unknown): boolean {
+  return raw !== false;
 }
 
 export function parseDeveloperNoticeLang(raw: unknown, languageFallback: AppLanguage): AppLanguage {

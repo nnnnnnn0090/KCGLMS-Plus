@@ -10,30 +10,30 @@ interface Home2SendAttachment {
 }
 
 interface Home2SendSnap {
-  from:        string;
-  ccError:     string;
-  sendError:   string;
-  fileInfo:    string;
-  byteInfo:    string;
-  fileName:    string;
+  from: string;
+  ccError: string;
+  sendError: string;
+  fileInfo: string;
+  byteInfo: string;
+  fileName: string;
   attachments: Home2SendAttachment[];
-  ccVisible:   boolean;
-  nav:         {
-    showCc:   boolean;
-    send:     boolean;
-    fileAdd:  boolean;
-    fileDel:  boolean;
+  ccVisible: boolean;
+  nav: {
+    showCc: boolean;
+    send: boolean;
+    fileAdd: boolean;
+    fileDel: boolean;
   };
 }
 
-const ID_TO       = 'MainContent_txtSendAdd';
-const ID_SUB      = 'MainContent_txtSub';
-const ID_CC       = 'MainContent_txtCC';
-const ID_BODY     = 'MainContent_txtBody';
-const ID_SHOW_CC  = 'MainContent_CheckBox1';
-const ID_COPY_ME  = 'MainContent_chkKakunin';
-const ID_FILE     = 'MainContent_FileUpload1';
-const ID_LST      = 'MainContent_lstAddFiles';
+const ID_TO = 'MainContent_txtSendAdd';
+const ID_SUB = 'MainContent_txtSub';
+const ID_CC = 'MainContent_txtCC';
+const ID_BODY = 'MainContent_txtBody';
+const ID_SHOW_CC = 'MainContent_CheckBox1';
+const ID_COPY_ME = 'MainContent_chkKakunin';
+const ID_FILE = 'MainContent_FileUpload1';
+const ID_LST = 'MainContent_lstAddFiles';
 
 function getNative<T extends HTMLElement>(id: string): T | null {
   const el = document.getElementById(id);
@@ -75,8 +75,8 @@ function readAttachments(): Home2SendAttachment[] {
   const sel = getNative<HTMLSelectElement>(ID_LST);
   if (!sel) return [];
   return Array.from(sel.options).map((o) => ({
-    value:    o.value,
-    label:    o.textContent?.replace(/\s+/g, ' ').trim() ?? o.value,
+    value: o.value,
+    label: o.textContent?.replace(/\s+/g, ' ').trim() ?? o.value,
     selected: o.selected,
   }));
 }
@@ -96,17 +96,28 @@ function parseSendmailFromDom(): Home2SendSnap {
   const showCc = getNative<HTMLInputElement>(ID_SHOW_CC);
 
   return {
-    from:        getNative<HTMLInputElement>('MainContent_txtMyAdd')?.value?.replace(/\s+/g, ' ').trim() ?? '',
-    ccError:     ccInput ? readVisibleValidatorMessage('MainContent_RegularExpressionValidator1') : '',
-    sendError:   document.getElementById('MainContent_labSendError')?.textContent?.replace(/\s+/g, ' ').trim() ?? '',
-    fileInfo:    document.getElementById('MainContent_labAddFileInfo')?.textContent?.replace(/\s+/g, ' ').trim() ?? '',
-    byteInfo:    document.getElementById('MainContent_labByte')?.textContent?.replace(/\s+/g, ' ').trim() ?? '',
-    fileName:    file?.files?.[0]?.name ?? '',
+    from:
+      getNative<HTMLInputElement>('MainContent_txtMyAdd')?.value?.replace(/\s+/g, ' ').trim() ?? '',
+    ccError: ccInput ? readVisibleValidatorMessage('MainContent_RegularExpressionValidator1') : '',
+    sendError:
+      document
+        .getElementById('MainContent_labSendError')
+        ?.textContent?.replace(/\s+/g, ' ')
+        .trim() ?? '',
+    fileInfo:
+      document
+        .getElementById('MainContent_labAddFileInfo')
+        ?.textContent?.replace(/\s+/g, ' ')
+        .trim() ?? '',
+    byteInfo:
+      document.getElementById('MainContent_labByte')?.textContent?.replace(/\s+/g, ' ').trim() ??
+      '',
+    fileName: file?.files?.[0]?.name ?? '',
     attachments: readAttachments(),
-    ccVisible:   !!ccInput || (showCc?.checked ?? false),
+    ccVisible: !!ccInput || (showCc?.checked ?? false),
     nav: {
-      showCc:  navBtnDisabled(ID_SHOW_CC),
-      send:    navBtnDisabled('MainContent_butSend'),
+      showCc: navBtnDisabled(ID_SHOW_CC),
+      send: navBtnDisabled('MainContent_butSend'),
       fileAdd: navBtnDisabled('MainContent_butFileAdd'),
       fileDel: navBtnDisabled('MainContent_butDelFile'),
     },
@@ -116,7 +127,13 @@ function parseSendmailFromDom(): Home2SendSnap {
 function IconBack() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M15 6l-6 6 6 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -124,7 +141,12 @@ function IconBack() {
 function IconSend() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M3 11l18-8-8 18-2-8-8-2z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path
+        d="M3 11l18-8-8 18-2-8-8-2z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -132,7 +154,13 @@ function IconSend() {
 function IconAttach() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M21 12.5l-8.5 8.5a5 5 0 01-7-7l9-9a3.5 3.5 0 015 5l-9 9a2 2 0 01-3-3l8-8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M21 12.5l-8.5 8.5a5 5 0 01-7-7l9-9a3.5 3.5 0 015 5l-9 9a2 2 0 01-3-3l8-8"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -199,7 +227,8 @@ export function Home2WebMailSendPage() {
   }, [to, subject, cc, body, copyMe]);
 
   useEffect(() => {
-    const root = document.getElementById('ctl01') ?? document.querySelector('.page .main') ?? document.body;
+    const root =
+      document.getElementById('ctl01') ?? document.querySelector('.page .main') ?? document.body;
     const mo = new MutationObserver(() => {
       if (!nativeReadyRef.current) return;
       const ccEl = getNative<HTMLInputElement>(ID_CC);
@@ -237,7 +266,9 @@ export function Home2WebMailSendPage() {
     setSelectedAttachment(value);
     const sel = getNative<HTMLSelectElement>(ID_LST);
     if (!sel) return;
-    Array.from(sel.options).forEach((o) => { o.selected = o.value === value; });
+    Array.from(sel.options).forEach((o) => {
+      o.selected = o.value === value;
+    });
     sel.dispatchEvent(new Event('change', { bubbles: true }));
   }, []);
 
@@ -258,22 +289,28 @@ export function Home2WebMailSendPage() {
     window.history.back();
   }, []);
 
-  const onSend = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    const toEl = getNative<HTMLInputElement>(ID_TO);
-    const subEl = getNative<HTMLInputElement>(ID_SUB);
-    const bodyEl = getNative<HTMLTextAreaElement>(ID_BODY);
-    const ccEl = getNative<HTMLInputElement>(ID_CC);
-    const copyEl = getNative<HTMLInputElement>(ID_COPY_ME);
-    if (toEl) setNativeInputValue(toEl, to);
-    if (subEl) setNativeInputValue(subEl, subject);
-    if (bodyEl) setNativeTextareaValue(bodyEl, body);
-    if (ccEl) setNativeInputValue(ccEl, cc);
-    if (copyEl) setNativeChecked(copyEl, copyMe);
-    nativeSubmitClick('MainContent_butSend');
-  }, [to, subject, cc, body, copyMe]);
+  const onSend = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const toEl = getNative<HTMLInputElement>(ID_TO);
+      const subEl = getNative<HTMLInputElement>(ID_SUB);
+      const bodyEl = getNative<HTMLTextAreaElement>(ID_BODY);
+      const ccEl = getNative<HTMLInputElement>(ID_CC);
+      const copyEl = getNative<HTMLInputElement>(ID_COPY_ME);
+      if (toEl) setNativeInputValue(toEl, to);
+      if (subEl) setNativeInputValue(subEl, subject);
+      if (bodyEl) setNativeTextareaValue(bodyEl, body);
+      if (ccEl) setNativeInputValue(ccEl, cc);
+      if (copyEl) setNativeChecked(copyEl, copyMe);
+      nativeSubmitClick('MainContent_butSend');
+    },
+    [to, subject, cc, body, copyMe],
+  );
 
-  const sizeLabel = useMemo(() => (snap.byteInfo ? formatFileSizeBytes(snap.byteInfo, locale) : ''), [snap.byteInfo, locale]);
+  const sizeLabel = useMemo(
+    () => (snap.byteInfo ? formatFileSizeBytes(snap.byteInfo, locale) : ''),
+    [snap.byteInfo, locale],
+  );
 
   return (
     <main className="p-main p-home2-send" id="p-home2-mail-send">
@@ -283,10 +320,20 @@ export function Home2WebMailSendPage() {
           <span>{t.common.back}</span>
         </button>
         <div className="p-home2-send-tools">
-          <button type="button" className="p-home2-send-act p-home2-send-act--muted" onClick={onToggleCc} disabled={snap.nav.showCc}>
+          <button
+            type="button"
+            className="p-home2-send-act p-home2-send-act--muted"
+            onClick={onToggleCc}
+            disabled={snap.nav.showCc}
+          >
             {snap.ccVisible ? t.home2.hideCc : t.home2.showCc}
           </button>
-          <button type="submit" form="p-home2-send-form" className="p-home2-send-act p-home2-send-act--primary" disabled={snap.nav.send}>
+          <button
+            type="submit"
+            form="p-home2-send-form"
+            className="p-home2-send-act p-home2-send-act--primary"
+            disabled={snap.nav.send}
+          >
             <IconSend />
             <span>{t.home2.send}</span>
           </button>
@@ -296,7 +343,9 @@ export function Home2WebMailSendPage() {
       <form id="p-home2-send-form" className="p-home2-send-card" onSubmit={onSend}>
         <header className="p-home2-send-head">
           <h1 className="p-home2-send-title">{t.home2.newMessage}</h1>
-          <p className="p-home2-send-from">{t.home2.from} <span>{snap.from || t.common.none}</span></p>
+          <p className="p-home2-send-from">
+            {t.home2.from} <span>{snap.from || t.common.none}</span>
+          </p>
         </header>
 
         <div className="p-home2-send-fields">
@@ -348,7 +397,12 @@ export function Home2WebMailSendPage() {
 
         <section className="p-home2-send-attach" aria-label={t.home2.attachments}>
           <div className="p-home2-send-attach-row">
-            <button type="button" className="p-home2-send-act" onClick={onPickFile} title={t.home2.pickFileTitle}>
+            <button
+              type="button"
+              className="p-home2-send-act"
+              onClick={onPickFile}
+              title={t.home2.pickFileTitle}
+            >
               <IconAttach />
               <span>{t.home2.chooseFile}</span>
             </button>
@@ -360,11 +414,20 @@ export function Home2WebMailSendPage() {
           </div>
 
           {snap.attachments.length > 0 ? (
-            <ul className="p-home2-send-attach-list" role="listbox" aria-label={t.home2.attachedFiles}>
+            <ul
+              className="p-home2-send-attach-list"
+              role="listbox"
+              aria-label={t.home2.attachedFiles}
+            >
               {snap.attachments.map((a) => {
                 const isSel = (selectedAttachment || snap.attachments[0]?.value) === a.value;
                 return (
-                  <li key={a.value} className={`p-home2-send-chip${isSel ? ' is-selected' : ''}`} role="option" aria-selected={isSel}>
+                  <li
+                    key={a.value}
+                    className={`p-home2-send-chip${isSel ? ' is-selected' : ''}`}
+                    role="option"
+                    aria-selected={isSel}
+                  >
                     <button
                       type="button"
                       className="p-home2-send-chip-label"
@@ -378,7 +441,10 @@ export function Home2WebMailSendPage() {
                       type="button"
                       className="p-home2-send-chip-x"
                       aria-label={t.home2.removeAttachment(a.label)}
-                      onClick={() => { onPickAttachment(a.value); onFileDel(); }}
+                      onClick={() => {
+                        onPickAttachment(a.value);
+                        onFileDel();
+                      }}
                       disabled={snap.nav.fileDel && !isSel}
                     >
                       ×

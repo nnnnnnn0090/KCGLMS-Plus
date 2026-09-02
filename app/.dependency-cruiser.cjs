@@ -5,8 +5,10 @@ module.exports = {
       name: 'contract-isolation',
       severity: 'error',
       comment: 'contract は他レイヤに依存しない（§5.1）',
-      from: { path: '^src/contract' },
-      to: { pathNot: '^src/contract' },
+      from: { path: '^src/contract', pathNot: '\\.(test|spec)\\.' },
+      to: {
+        pathNot: '^(src/contract|\\.\\./\\.\\./shared/community-boundary/gate\\.ts$)',
+      },
     },
     {
       name: 'domain-not-to-services-ui-entrypoints',
@@ -44,8 +46,7 @@ module.exports = {
     {
       name: 'services-to-ui-boot-legacy',
       severity: 'ignore',
-      comment:
-        'TASK-032 暫定: portal-boot の動的 import のみ許可。entrypoints 移行後に削除。',
+      comment: 'TASK-032 暫定: portal-boot の動的 import のみ許可。entrypoints 移行後に削除。',
       from: { path: '^src/services/portal-boot\\.ts$' },
       to: { path: '^src/ui' },
     },
@@ -94,6 +95,7 @@ module.exports = {
     },
   ],
   options: {
+    exclude: { path: '(^|/)\\._' },
     doNotFollow: { path: 'node_modules' },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: 'tsconfig.json' },

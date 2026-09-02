@@ -23,11 +23,11 @@ jobs:
       - run: npm run lint
       - run: npx tsc --noEmit
       - run: npx depcruise src --config .dependency-cruiser.cjs
-      - run: npx type-coverage --at-least 99.5 --strict
+      - run: npm run type-coverage
       - run: node scripts/contract-freeze.mjs --check
       - run: npx vitest run --coverage
-      - run: npm run build
-      - run: npm run build:firefox
+      - run: VITE_PORTAL_DISTRIBUTION_BUILD=1 npm run build
+      - run: VITE_PORTAL_DISTRIBUTION_BUILD=1 npm run build:firefox
       - run: node scripts/manifest-equivalence.mjs --golden ../golden/manifest.chrome.json --target .output/chrome-mv3/manifest.json --version-source version.json
       - run: node scripts/manifest-equivalence.mjs --golden ../golden/manifest.firefox.json --target .output/firefox-mv3/manifest.json --version-source version.json
       - run: node scripts/css-equivalence.mjs --check --golden ../golden/css --target .output

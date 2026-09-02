@@ -1,12 +1,5 @@
 import { createHash } from 'node:crypto';
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  statSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -80,7 +73,7 @@ export function writeJson(filePath, data) {
 export function listContractFiles() {
   const contractDir = join(SRC_ROOT, 'contract');
   return readdirSync(contractDir)
-    .filter((name) => name.endsWith('.ts'))
+    .filter((name) => !name.startsWith('._') && name.endsWith('.ts'))
     .sort()
     .map((name) => join('src/contract', name));
 }
@@ -89,7 +82,7 @@ export function listContractFiles() {
 export function listI18nLocaleFiles() {
   const localesDir = join(SRC_ROOT, 'domain/i18n/locales');
   return readdirSync(localesDir)
-    .filter((name) => name.endsWith('.ts'))
+    .filter((name) => !name.startsWith('._') && name.endsWith('.ts'))
     .sort()
     .map((name) => join('src/domain/i18n/locales', name));
 }

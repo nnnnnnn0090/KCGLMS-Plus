@@ -535,12 +535,12 @@ const themeNamesTh: Record<string, string> = {
 };
 
 export const themeNames = {
-  en:    themeNamesEn,
-  zh:    themeNamesZh,
+  en: themeNamesEn,
+  zh: themeNamesZh,
   zh_TW: themeNamesZhTW,
-  ko:    themeNamesKo,
-  vi:    themeNamesVi,
-  ne:    themeNamesNe,
-  id:    themeNamesId,
-  th:    themeNamesTh,
+  ko: themeNamesKo,
+  vi: themeNamesVi,
+  ne: themeNamesNe,
+  id: themeNamesId,
+  th: themeNamesTh,
 };

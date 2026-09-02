@@ -29,17 +29,20 @@ type NewsItem = NewsListItem;
 
 export function NewsPage() {
   const { t } = useI18n();
-  const y0           = new Date().getFullYear();
+  const y0 = new Date().getFullYear();
   const initialNendo = String(currentNendo());
 
-  const [nendo,          setNendo]          = useState(initialNendo);
-  const [portalInbox,    setPortalInbox]   = useState<NewsListPortalState>({ kinoData: null, raw: null });
+  const [nendo, setNendo] = useState(initialNendo);
+  const [portalInbox, setPortalInbox] = useState<NewsListPortalState>({
+    kinoData: null,
+    raw: null,
+  });
   const { kinoData, raw } = portalInbox;
   const [checkedSenders, setCheckedSenders] = useState<Set<string>>(new Set());
-  const [checkedCats,    setCheckedCats]    = useState<Set<string>>(new Set());
-  const [keyword,        setKeyword]        = useState('');
-  const [newsTab,        setNewsTab]        = useState<NewsTab>('general');
-  const [filterOptions,  setFilterOptions]  = useState<ParsedNewsListFilters>(() =>
+  const [checkedCats, setCheckedCats] = useState<Set<string>>(new Set());
+  const [keyword, setKeyword] = useState('');
+  const [newsTab, setNewsTab] = useState<NewsTab>('general');
+  const [filterOptions, setFilterOptions] = useState<ParsedNewsListFilters>(() =>
     parsePortalNewsListFilters(),
   );
 
@@ -56,8 +59,7 @@ export function NewsPage() {
       const parsed = parsePortalNewsListFilters();
       setFilterOptions(parsed);
       tries++;
-      const done =
-        (parsed.senders.length > 0 && parsed.categories.length > 0) || tries >= 50;
+      const done = (parsed.senders.length > 0 && parsed.categories.length > 0) || tries >= 50;
       if (!done) timeoutId = window.setTimeout(schedule, 100);
     }
     schedule();
@@ -102,7 +104,9 @@ export function NewsPage() {
     const kw = keyword.trim().toLowerCase();
     if (kw) {
       list = list.filter((i) =>
-        `${i.title ?? ''} ${i.sender ?? ''} ${i.category ?? ''} ${i.newsDate ?? ''}`.toLowerCase().includes(kw),
+        `${i.title ?? ''} ${i.sender ?? ''} ${i.category ?? ''} ${i.newsDate ?? ''}`
+          .toLowerCase()
+          .includes(kw),
       );
     }
     return list;
@@ -132,10 +136,13 @@ export function NewsPage() {
     setKeyword('');
   }
 
-  const list     = filteredList();
-  const nendoMsg = raw && raw.length > 0
-    ? t.newsPage.nendoShowing(nendo)
-    : raw !== null ? t.newsPage.nendoEmpty(nendo) : t.common.loading;
+  const list = filteredList();
+  const nendoMsg =
+    raw && raw.length > 0
+      ? t.newsPage.nendoShowing(nendo)
+      : raw !== null
+        ? t.newsPage.nendoEmpty(nendo)
+        : t.common.loading;
 
   return (
     <PageShell variant="news" title={t.newsPage.title}>

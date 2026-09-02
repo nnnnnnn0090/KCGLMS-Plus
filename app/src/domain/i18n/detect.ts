@@ -5,7 +5,9 @@ export function detectDefaultLanguage(): AppLanguage {
   try {
     const langs = navigator.languages?.length ? navigator.languages : [navigator.language];
     for (const raw of langs) {
-      const tag = String(raw ?? '').trim().toLowerCase();
+      const tag = String(raw ?? '')
+        .trim()
+        .toLowerCase();
       if (!tag) continue;
       if (tag.startsWith('ja')) return 'ja';
       if (tag.startsWith('en')) return 'en';
@@ -17,7 +19,9 @@ export function detectDefaultLanguage(): AppLanguage {
       if (tag.startsWith('id')) return 'id';
       if (tag.startsWith('th')) return 'th';
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return DEFAULT_LANGUAGE;
 }
 

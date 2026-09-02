@@ -1,9 +1,10 @@
 /**
  * 設定パネルから開くサードパーティライセンス一覧モーダル。
+ * 「ライブラリ」「フォント」タブで区分する。
  */
 
 import { createPortal } from 'react-dom';
-import type { RefObject } from 'react';
+import { useState, type RefObject } from 'react';
 import { useI18n } from '../../../../i18n';
 
 interface ThirdPartyLicense {
@@ -13,7 +14,9 @@ interface ThirdPartyLicense {
   url: string;
 }
 
-const THIRD_PARTY_LICENSES: ThirdPartyLicense[] = [
+type LicensesTab = 'libraries' | 'fonts';
+
+const LIBRARY_LICENSES: ThirdPartyLicense[] = [
   {
     name: 'KCGLMS+',
     license: 'MIT',
@@ -44,15 +47,101 @@ const THIRD_PARTY_LICENSES: ThirdPartyLicense[] = [
     copyright: 'Copyright (c) Meta Platforms, Inc. and affiliates.',
     url: 'https://github.com/facebook/react/blob/v19.2.5/LICENSE',
   },
+  {
+    name: 'Motion Icons React',
+    license: 'MIT',
+    copyright: 'Copyright (c) 2025 Gravityy',
+    url: 'https://github.com/Garvit1000/motion-icons/blob/main/LICENSE',
+  },
+  {
+    name: 'Lucide',
+    license: 'ISC (some icons: MIT)',
+    copyright: 'Copyright (c) 2026 Lucide Icons and Contributors',
+    url: 'https://github.com/lucide-icons/lucide/blob/main/LICENSE',
+  },
+];
+
+const FONT_LICENSES: ThirdPartyLicense[] = [
+  {
+    name: 'Zen Maru Gothic',
+    license: 'SIL Open Font License 1.1',
+    copyright: 'Copyright 2021 The Zen Maru Gothic Project Authors',
+    url: 'https://github.com/google/fonts/blob/main/ofl/zenmarugothic/OFL.txt',
+  },
+  {
+    name: 'Noto Sans JP',
+    license: 'SIL Open Font License 1.1',
+    copyright:
+      "Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'",
+    url: 'https://github.com/google/fonts/blob/main/ofl/notosansjp/OFL.txt',
+  },
+  {
+    name: 'M PLUS Rounded 1c',
+    license: 'SIL Open Font License 1.1',
+    copyright: 'Copyright 2016 The Rounded M+ Project Authors',
+    url: 'https://github.com/google/fonts/blob/main/ofl/roundedmplus1c/OFL.txt',
+  },
+  {
+    name: 'Zen Kaku Gothic New',
+    license: 'SIL Open Font License 1.1',
+    copyright: 'Copyright 2022 The Zen Kaku Gothic Project Authors',
+    url: 'https://github.com/google/fonts/blob/main/ofl/zenkakugothicnew/OFL.txt',
+  },
+  {
+    name: 'BIZ UDPGothic',
+    license: 'SIL Open Font License 1.1',
+    copyright: 'Copyright 2022 The BIZ UDGothic Project Authors',
+    url: 'https://github.com/google/fonts/blob/main/ofl/bizudpgothic/OFL.txt',
+  },
+  {
+    name: 'IBM Plex Sans JP',
+    license: 'SIL Open Font License 1.1',
+    copyright: 'Copyright © 2017 IBM Corp. with Reserved Font Name "Plex"',
+    url: 'https://github.com/google/fonts/blob/main/ofl/ibmplexsansjp/OFL.txt',
+  },
 ];
 
 export interface SettingsLicensesModalProps {
-  overlayEl:      HTMLElement | null;
-  mounted:        boolean;
-  closing:        boolean;
-  modalRootRef:   RefObject<HTMLDivElement | null>;
+  overlayEl: HTMLElement | null;
+  mounted: boolean;
+  closing: boolean;
+  modalRootRef: RefObject<HTMLDivElement | null>;
   closeButtonRef: RefObject<HTMLButtonElement | null>;
   onRequestClose: () => void;
+}
+
+function LicenseList({
+  items,
+  licenseTypeLabel,
+  copyrightLabel,
+}: {
+  items: ThirdPartyLicense[];
+  licenseTypeLabel: string;
+  copyrightLabel: string;
+}) {
+  return (
+    <div className="p-licenses-list">
+      {items.map((item) => (
+        <article className="p-license-item" key={item.name}>
+          <h3 className="p-license-name">
+            <a href={item.url} target="_blank" rel="noopener noreferrer">
+              {item.name}
+            </a>
+          </h3>
+          <dl className="p-license-meta">
+            <div>
+              <dt>{licenseTypeLabel}</dt>
+              <dd>{item.license}</dd>
+            </div>
+            <div>
+              <dt>{copyrightLabel}</dt>
+              <dd>{item.copyright}</dd>
+            </div>
+          </dl>
+        </article>
+      ))}
+    </div>
+  );
 }
 
 export function SettingsLicensesModal({
@@ -64,7 +153,19 @@ export function SettingsLicensesModal({
   onRequestClose,
 }: SettingsLicensesModalProps) {
   const { t } = useI18n();
+  const [tab, setTab] = useState<LicensesTab>('libraries');
   if (!mounted || !overlayEl) return null;
+
+  const intro =
+    tab === 'libraries' ? t.settings.licensesIntroLibraries : t.settings.licensesIntroFonts;
+  const items = tab === 'libraries' ? LIBRARY_LICENSES : FONT_LICENSES;
+  const selectTab = (next: LicensesTab) => {
+    setTab(next);
+    window.requestAnimationFrame(() => {
+      document.getElementById(`p-licenses-tab-${next}`)?.focus();
+    });
+  };
+
   return createPortal(
     <div
       ref={modalRootRef}
@@ -97,27 +198,54 @@ export function SettingsLicensesModal({
           </button>
         </div>
         <div className="p-changelog-modal-body">
-          <p className="p-licenses-intro">{t.settings.licensesIntro}</p>
-          <div className="p-licenses-list">
-            {THIRD_PARTY_LICENSES.map((item) => (
-              <article className="p-license-item" key={item.name}>
-                <h3 className="p-license-name">
-                  <a href={item.url} target="_blank" rel="noopener noreferrer">
-                    {item.name}
-                  </a>
-                </h3>
-                <dl className="p-license-meta">
-                  <div>
-                    <dt>{t.settings.licenseType}</dt>
-                    <dd>{item.license}</dd>
-                  </div>
-                  <div>
-                    <dt>{t.settings.licenseCopyright}</dt>
-                    <dd>{item.copyright}</dd>
-                  </div>
-                </dl>
-              </article>
-            ))}
+          <div
+            className="p-licenses-tabs"
+            role="tablist"
+            aria-label={t.settings.licensesTitle}
+            onKeyDown={(event) => {
+              if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+              event.preventDefault();
+              selectTab(tab === 'libraries' ? 'fonts' : 'libraries');
+            }}
+          >
+            <button
+              type="button"
+              role="tab"
+              id="p-licenses-tab-libraries"
+              aria-selected={tab === 'libraries'}
+              aria-controls="p-licenses-panel"
+              tabIndex={tab === 'libraries' ? 0 : -1}
+              className={tab === 'libraries' ? 'is-active' : undefined}
+              onClick={() => setTab('libraries')}
+            >
+              {t.settings.licensesTabLibraries}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="p-licenses-tab-fonts"
+              aria-selected={tab === 'fonts'}
+              aria-controls="p-licenses-panel"
+              tabIndex={tab === 'fonts' ? 0 : -1}
+              className={tab === 'fonts' ? 'is-active' : undefined}
+              onClick={() => setTab('fonts')}
+            >
+              {t.settings.licensesTabFonts}
+            </button>
+          </div>
+          <div
+            id="p-licenses-panel"
+            role="tabpanel"
+            aria-labelledby={
+              tab === 'libraries' ? 'p-licenses-tab-libraries' : 'p-licenses-tab-fonts'
+            }
+          >
+            <p className="p-licenses-intro">{intro}</p>
+            <LicenseList
+              items={items}
+              licenseTypeLabel={t.settings.licenseType}
+              copyrightLabel={t.settings.licenseCopyright}
+            />
           </div>
         </div>
       </div>

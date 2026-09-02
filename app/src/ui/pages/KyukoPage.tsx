@@ -92,16 +92,41 @@ function KcRow({ row }: { row: Row }) {
 }
 
 /** ローディング/空/データ の 3 状態を切り替えるテーブル tbody ヘルパー */
-function TableBody({ rows, emptyMsg, colSpan, RowComp }: {
-  rows:     Row[] | null;
+function TableBody({
+  rows,
+  emptyMsg,
+  colSpan,
+  RowComp,
+}: {
+  rows: Row[] | null;
   emptyMsg: string;
-  colSpan:  number;
-  RowComp:  React.ComponentType<{ row: Row }>;
+  colSpan: number;
+  RowComp: React.ComponentType<{ row: Row }>;
 }) {
   const { t } = useI18n();
-  if (rows === null) return <tr><td colSpan={colSpan}><p className="p-news-empty">{t.common.loading}</p></td></tr>;
-  if (rows.length === 0) return <tr><td colSpan={colSpan}><p className="p-news-empty">{emptyMsg}</p></td></tr>;
-  return <>{rows.map((row, i) => <RowComp key={i} row={row} />)}</>;
+  if (rows === null)
+    return (
+      <tr>
+        <td colSpan={colSpan}>
+          <p className="p-news-empty">{t.common.loading}</p>
+        </td>
+      </tr>
+    );
+  if (rows.length === 0)
+    return (
+      <tr>
+        <td colSpan={colSpan}>
+          <p className="p-news-empty">{emptyMsg}</p>
+        </td>
+      </tr>
+    );
+  return (
+    <>
+      {rows.map((row, i) => (
+        <RowComp key={i} row={row} />
+      ))}
+    </>
+  );
 }
 
 // ─── コンポーネント ────────────────────────────────────────────────────────
@@ -110,15 +135,12 @@ export function KyukoPage() {
   const { t } = useI18n();
   const nendo = String(currentNendo());
 
-  const [state, dispatch] = useReducer(reduceKyukoPortalMessage, undefined, initialKyukoPortalState);
-  const {
-    kinoData,
-    kkRaw,
-    hkRaw,
-    kcRaw,
-    rishuToken,
-    rishuReady,
-  } = state;
+  const [state, dispatch] = useReducer(
+    reduceKyukoPortalMessage,
+    undefined,
+    initialKyukoPortalState,
+  );
+  const { kinoData, kkRaw, hkRaw, kcRaw, rishuToken, rishuReady } = state;
 
   const [onlyRishu, setOnlyRishu] = useState(false);
   const didBootstrapRishu = useRef(false);
@@ -145,44 +167,60 @@ export function KyukoPage() {
 
   const kkFiltered = token
     ? filterByRishuToken(kkRaw, token, PORTAL_KYUKO_RISHU_KEYS)
-    : kkRaw ?? [];
+    : (kkRaw ?? []);
   const hkFiltered = token
     ? filterByRishuToken(hkRaw, token, PORTAL_HOKO_RISHU_KEYS)
-    : hkRaw ?? [];
+    : (hkRaw ?? []);
   const kcFiltered = token
     ? filterByRishuToken(kcRaw, token, PORTAL_KYOSHITSU_CHANGE_RISHU_KEYS)
-    : kcRaw ?? [];
+    : (kcRaw ?? []);
 
   return (
-    <PageShell
-      variant="news"
-      title={t.kyukoPage.title(nendo)}
-    >
+    <PageShell variant="news" title={t.kyukoPage.title(nendo)}>
       <KinoPanel data={kinoData} />
 
       <div className="p-news-page p-kyuko-page">
         <div className="p-news-primary">
           {/* ページ内ジャンプナビ */}
           <nav className="p-kyuko-jump" aria-label={t.kyukoPage.jumpAria}>
-            <a className="p-nav-btn" href="#p-kyuko-section">{t.kyukoPage.kyukoList}</a>
-            <a className="p-nav-btn" href="#p-hoko-section">{t.kyukoPage.hokoList}</a>
-            <a className="p-nav-btn" href="#p-kc-section">{t.kyukoPage.classroomChangeList}</a>
+            <a className="p-nav-btn" href="#p-kyuko-section">
+              {t.kyukoPage.kyukoList}
+            </a>
+            <a className="p-nav-btn" href="#p-hoko-section">
+              {t.kyukoPage.hokoList}
+            </a>
+            <a className="p-nav-btn" href="#p-kc-section">
+              {t.kyukoPage.classroomChangeList}
+            </a>
           </nav>
 
           <section className="p-panel p-news-table-wrap" id="p-kyuko-section">
             <span className="p-panel-head">{t.kyukoPage.kyukoList}</span>
             <div className="p-news-table-scroll">
               <table className="p-news-table p-kyuko-table" aria-label={t.kyukoPage.kyukoList}>
-                <thead><tr>
-                  <th scope="col">{t.kyukoPage.date}</th><th scope="col">{t.kyukoPage.weekday}</th><th scope="col">{t.kyukoPage.period}</th>
-                  <th scope="col">{t.kyukoPage.lecture}</th>
-                  <th scope="col" className="p-kyuko-hide-narrow">{t.kyukoPage.teacher}</th>
-                  <th scope="col" className="p-kyuko-hide-narrow">{t.kyukoPage.note}</th>
-                  <th scope="col">{t.kyukoPage.teacherCode}</th>
-                  <th scope="col">{t.kyukoPage.rishuFlag}</th>
-                </tr></thead>
+                <thead>
+                  <tr>
+                    <th scope="col">{t.kyukoPage.date}</th>
+                    <th scope="col">{t.kyukoPage.weekday}</th>
+                    <th scope="col">{t.kyukoPage.period}</th>
+                    <th scope="col">{t.kyukoPage.lecture}</th>
+                    <th scope="col" className="p-kyuko-hide-narrow">
+                      {t.kyukoPage.teacher}
+                    </th>
+                    <th scope="col" className="p-kyuko-hide-narrow">
+                      {t.kyukoPage.note}
+                    </th>
+                    <th scope="col">{t.kyukoPage.teacherCode}</th>
+                    <th scope="col">{t.kyukoPage.rishuFlag}</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  <TableBody rows={kkRaw === null ? null : kkFiltered} emptyMsg={t.kyukoPage.emptyKyuko} colSpan={8} RowComp={KyukoRow} />
+                  <TableBody
+                    rows={kkRaw === null ? null : kkFiltered}
+                    emptyMsg={t.kyukoPage.emptyKyuko}
+                    colSpan={8}
+                    RowComp={KyukoRow}
+                  />
                 </tbody>
               </table>
             </div>
@@ -192,17 +230,32 @@ export function KyukoPage() {
             <span className="p-panel-head">{t.kyukoPage.hokoList}</span>
             <div className="p-news-table-scroll">
               <table className="p-news-table p-kyuko-table" aria-label={t.kyukoPage.hokoList}>
-                <thead><tr>
-                  <th scope="col">{t.kyukoPage.date}</th><th scope="col">{t.kyukoPage.weekday}</th><th scope="col">{t.kyukoPage.period}</th>
-                  <th scope="col">{t.kyukoPage.lecture}</th>
-                  <th scope="col" className="p-kyuko-hide-narrow">{t.kyukoPage.teacher}</th>
-                  <th scope="col" className="p-kyuko-hide-narrow">{t.kyukoPage.classroom}</th>
-                  <th scope="col" className="p-kyuko-hide-narrow">{t.kyukoPage.note}</th>
-                  <th scope="col">{t.kyukoPage.teacherCode}</th>
-                  <th scope="col">{t.kyukoPage.rishuFlag}</th>
-                </tr></thead>
+                <thead>
+                  <tr>
+                    <th scope="col">{t.kyukoPage.date}</th>
+                    <th scope="col">{t.kyukoPage.weekday}</th>
+                    <th scope="col">{t.kyukoPage.period}</th>
+                    <th scope="col">{t.kyukoPage.lecture}</th>
+                    <th scope="col" className="p-kyuko-hide-narrow">
+                      {t.kyukoPage.teacher}
+                    </th>
+                    <th scope="col" className="p-kyuko-hide-narrow">
+                      {t.kyukoPage.classroom}
+                    </th>
+                    <th scope="col" className="p-kyuko-hide-narrow">
+                      {t.kyukoPage.note}
+                    </th>
+                    <th scope="col">{t.kyukoPage.teacherCode}</th>
+                    <th scope="col">{t.kyukoPage.rishuFlag}</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  <TableBody rows={hkRaw === null ? null : hkFiltered} emptyMsg={t.kyukoPage.emptyHoko} colSpan={9} RowComp={HokoRow} />
+                  <TableBody
+                    rows={hkRaw === null ? null : hkFiltered}
+                    emptyMsg={t.kyukoPage.emptyHoko}
+                    colSpan={9}
+                    RowComp={HokoRow}
+                  />
                 </tbody>
               </table>
             </div>
@@ -211,19 +264,39 @@ export function KyukoPage() {
           <section className="p-panel p-news-table-wrap" id="p-kc-section">
             <span className="p-panel-head">{t.kyukoPage.classroomChangeList}</span>
             <div className="p-news-table-scroll">
-              <table className="p-news-table p-kyuko-table" aria-label={t.kyukoPage.classroomChangeList}>
-                <thead><tr>
-                  <th scope="col">{t.kyukoPage.date}</th><th scope="col">{t.kyukoPage.weekday}</th><th scope="col">{t.kyukoPage.period}</th>
-                  <th scope="col">{t.kyukoPage.lecture}</th>
-                  <th scope="col" className="p-kyuko-hide-narrow">{t.kyukoPage.teacher}</th>
-                  <th scope="col" className="p-kyuko-hide-narrow">{t.kyukoPage.before}</th>
-                  <th scope="col" className="p-kyuko-hide-narrow">{t.kyukoPage.after}</th>
-                  <th scope="col" className="p-kyuko-hide-narrow">{t.kyukoPage.note}</th>
-                  <th scope="col">{t.kyukoPage.teacherCode}</th>
-                  <th scope="col">{t.kyukoPage.rishuFlag}</th>
-                </tr></thead>
+              <table
+                className="p-news-table p-kyuko-table"
+                aria-label={t.kyukoPage.classroomChangeList}
+              >
+                <thead>
+                  <tr>
+                    <th scope="col">{t.kyukoPage.date}</th>
+                    <th scope="col">{t.kyukoPage.weekday}</th>
+                    <th scope="col">{t.kyukoPage.period}</th>
+                    <th scope="col">{t.kyukoPage.lecture}</th>
+                    <th scope="col" className="p-kyuko-hide-narrow">
+                      {t.kyukoPage.teacher}
+                    </th>
+                    <th scope="col" className="p-kyuko-hide-narrow">
+                      {t.kyukoPage.before}
+                    </th>
+                    <th scope="col" className="p-kyuko-hide-narrow">
+                      {t.kyukoPage.after}
+                    </th>
+                    <th scope="col" className="p-kyuko-hide-narrow">
+                      {t.kyukoPage.note}
+                    </th>
+                    <th scope="col">{t.kyukoPage.teacherCode}</th>
+                    <th scope="col">{t.kyukoPage.rishuFlag}</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  <TableBody rows={kcRaw === null ? null : kcFiltered} emptyMsg={t.kyukoPage.emptyClassroomChange} colSpan={10} RowComp={KcRow} />
+                  <TableBody
+                    rows={kcRaw === null ? null : kcFiltered}
+                    emptyMsg={t.kyukoPage.emptyClassroomChange}
+                    colSpan={10}
+                    RowComp={KcRow}
+                  />
                 </tbody>
               </table>
             </div>
@@ -243,11 +316,7 @@ export function KyukoPage() {
               />
               <span>{t.kyukoPage.onlyMyCourses}</span>
             </label>
-            {!rishuReady && (
-              <p className="p-news-mat-hint">
-                {t.kyukoPage.waitForApi}
-              </p>
-            )}
+            {!rishuReady && <p className="p-news-mat-hint">{t.kyukoPage.waitForApi}</p>}
           </div>
         </aside>
       </div>

@@ -5,7 +5,10 @@ describe('findKingLmsUrl', () => {
   it('matches a course URL by the title without the leading period', () => {
     const url = findKingLmsUrl(
       [
-        { displayName: 'Mon1 Intro Programming', externalAccessUrl: 'https://example.test/course-a' },
+        {
+          displayName: 'Mon1 Intro Programming',
+          externalAccessUrl: 'https://example.test/course-a',
+        },
         { displayName: 'Tue2 Databases', externalAccessUrl: 'https://example.test/course-b' },
       ],
       '1 Intro Programming',

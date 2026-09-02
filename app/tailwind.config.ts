@@ -51,6 +51,7 @@ export default {
       },
       fontFamily: {
         portal: [
+          'var(--p-font)',
           'Inter',
           'system-ui',
           '-apple-system',

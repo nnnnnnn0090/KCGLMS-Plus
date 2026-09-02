@@ -67,14 +67,20 @@ export function setHtml(container: Element | null | undefined, html: string): vo
     const t = tag.toLowerCase();
     const doc = new DOMParser().parseFromString(`<table><${t}>${html}</${t}></table>`, 'text/html');
     const inner = doc.querySelector(t);
-    if (inner) { container.replaceChildren(...inner.childNodes); return; }
+    if (inner) {
+      container.replaceChildren(...inner.childNodes);
+      return;
+    }
   }
 
   if (tag === 'UL' || tag === 'OL') {
     const t = tag.toLowerCase();
     const doc = new DOMParser().parseFromString(`<${t}>${html}</${t}>`, 'text/html');
     const inner = doc.querySelector(t);
-    if (inner) { container.replaceChildren(...inner.childNodes); return; }
+    if (inner) {
+      container.replaceChildren(...inner.childNodes);
+      return;
+    }
   }
 
   const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
@@ -84,7 +90,20 @@ export function setHtml(container: Element | null | undefined, html: string): vo
 // ─── HTML → プレーンテキスト ──────────────────────────────────────────────
 
 const BLOCK_TAGS = new Set([
-  'p','div','li','tr','section','article','header','footer','h1','h2','h3','h4','h5','h6',
+  'p',
+  'div',
+  'li',
+  'tr',
+  'section',
+  'article',
+  'header',
+  'footer',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
 ]);
 
 function walkText(node: Node): string {
@@ -93,9 +112,12 @@ function walkText(node: Node): string {
     if (child.nodeType === Node.TEXT_NODE) {
       out += child.textContent;
     } else if (child.nodeType === Node.ELEMENT_NODE) {
-      const el  = child as Element;
+      const el = child as Element;
       const tag = el.tagName.toLowerCase();
-      if (tag === 'br') { out += '\n'; continue; }
+      if (tag === 'br') {
+        out += '\n';
+        continue;
+      }
       const inner = walkText(child);
       if (BLOCK_TAGS.has(tag)) {
         const t = inner.trim();
@@ -144,7 +166,7 @@ export function newsHref(id: string | number): string {
  */
 export function formatMessageBody(raw: string): string {
   const escaped = esc(String(raw ?? ''));
-  const withBr  = escaped.replace(/\r?\n/g, '<br>');
+  const withBr = escaped.replace(/\r?\n/g, '<br>');
   const urlRe = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi;
   return withBr.replace(
     urlRe,

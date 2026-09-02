@@ -1,5 +1,8 @@
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
-import { clearRuntimeElementCss, setRuntimeElementCss } from '../../../../lib/runtime-element-style';
+import {
+  clearRuntimeElementCss,
+  setRuntimeElementCss,
+} from '../../../../lib/runtime-element-style';
 
 export function SpotlightTourCard({
   cardRef,

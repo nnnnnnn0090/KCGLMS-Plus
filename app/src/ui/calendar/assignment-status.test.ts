@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  assignmentStatusLabel,
-  resolveAssignmentDisplayStatus,
-} from './assignment';
+import { assignmentStatusLabel, resolveAssignmentDisplayStatus } from './assignment';
 
 describe('resolveAssignmentDisplayStatus', () => {
   const now = Date.parse('2026-06-20T12:00:00.000Z');
@@ -20,7 +17,9 @@ describe('resolveAssignmentDisplayStatus', () => {
   });
 
   it('returns unknown when submission state is missing', () => {
-    expect(resolveAssignmentDisplayStatus(undefined, '2026-06-10T00:00:00.000Z', now)).toBe('unknown');
+    expect(resolveAssignmentDisplayStatus(undefined, '2026-06-10T00:00:00.000Z', now)).toBe(
+      'unknown',
+    );
   });
 });
 

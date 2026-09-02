@@ -13,14 +13,20 @@ import { removeSyncOverlay } from './bridge-overlay-ui';
 const SYNC_SAFETY_MS = TIMING.kingLmsSyncSafetyMs;
 
 let assignmentSyncTimer: ReturnType<typeof setTimeout> | null = null;
-let courseSyncTimer:     ReturnType<typeof setTimeout> | null = null;
+let courseSyncTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function clearAssignmentTimer(): void {
-  if (assignmentSyncTimer != null) { clearTimeout(assignmentSyncTimer); assignmentSyncTimer = null; }
+  if (assignmentSyncTimer != null) {
+    clearTimeout(assignmentSyncTimer);
+    assignmentSyncTimer = null;
+  }
 }
 
 export function clearCourseTimer(): void {
-  if (courseSyncTimer != null) { clearTimeout(courseSyncTimer); courseSyncTimer = null; }
+  if (courseSyncTimer != null) {
+    clearTimeout(courseSyncTimer);
+    courseSyncTimer = null;
+  }
 }
 
 export function startAssignmentTimer(): void {
@@ -52,8 +58,8 @@ export async function redirectAfterCourse(hash: string): Promise<void> {
   const url = String(data[SK.kingLmsSyncReturnUrl] ?? '');
   if (!url) return;
   await storage.set({
-    [SK.kingLmsSyncPending]:     false,
-    [SK.kingLmsSyncReturnUrl]:   '',
+    [SK.kingLmsSyncPending]: false,
+    [SK.kingLmsSyncReturnUrl]: '',
     [SK.kingLmsSyncAwaitCourse]: false,
   });
   window.location.href = buildRedirectUrl(canonicalPortalHref(url), hash);
@@ -61,13 +67,16 @@ export async function redirectAfterCourse(hash: string): Promise<void> {
 
 export async function redirectAfterAssignment(hash: string): Promise<void> {
   clearAssignmentTimer();
-  const data = await storage.get([SK.kingLmsAssignmentSyncPending, SK.kingLmsAssignmentSyncReturnUrl]);
+  const data = await storage.get([
+    SK.kingLmsAssignmentSyncPending,
+    SK.kingLmsAssignmentSyncReturnUrl,
+  ]);
   if (!data[SK.kingLmsAssignmentSyncPending]) return;
   const url = String(data[SK.kingLmsAssignmentSyncReturnUrl] ?? '');
   if (!url) return;
 
   const toSet: Record<string, unknown> = {
-    [SK.kingLmsAssignmentSyncPending]:   false,
+    [SK.kingLmsAssignmentSyncPending]: false,
     [SK.kingLmsAssignmentSyncReturnUrl]: '',
   };
   if (hash === SYNC_HASH.assignmentDone) {

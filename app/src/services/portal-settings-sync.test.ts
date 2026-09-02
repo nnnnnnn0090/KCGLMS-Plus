@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SK } from '../contract/storage-keys';
 import type { Settings } from '../domain/settings';
-import {
-  createCustomTheme,
-  EMPTY_CUSTOM_THEMES,
-} from '../domain/themes/custom-themes';
+import { createCustomTheme, EMPTY_CUSTOM_THEMES } from '../domain/themes/custom-themes';
 import { THEMES } from '../domain/themes/definitions';
 import { PORTAL_SYNC_WIRE_PREFIX } from '../lib/portal-sync-crypto';
 import {
@@ -14,6 +11,8 @@ import {
   isPortalSettingsMarkerLink,
   PORTAL_SETTINGS_BIKO_MAX,
   PORTAL_SETTINGS_CHUNK_MAX,
+  PORTAL_SETTINGS_MARKER_MAX,
+  retireAllPortalExtensionMarkers,
 } from './portal-settings-sync';
 import type { PortalUserLink } from './user-html-link';
 
@@ -27,6 +26,7 @@ const BASE_SETTINGS: Settings = {
   cplanOverlay: false,
   calendarWeekStart: 'sunday',
   language: 'ja',
+  font: 'default',
 };
 
 function extensionSnapshot(
@@ -46,6 +46,7 @@ function extensionSnapshot(
       [SK.cplanOverlay]: settings.cplanOverlay,
       [SK.calendarWeekStart]: settings.calendarWeekStart,
       [SK.language]: settings.language,
+      [SK.font]: settings.font,
       [SK.customThemes]: EMPTY_CUSTOM_THEMES,
       ...extra,
     },
@@ -54,9 +55,18 @@ function extensionSnapshot(
 
 describe('portal-settings-sync', () => {
   it('detects settings marker links', () => {
-    expect(isPortalSettingsMarkerLink({ midashi: '__KCGLMS::0', url: 'https://example.com' })).toBe(true);
-    expect(isPortalSettingsMarkerLink({ midashi: 'My Link', url: 'https://home.kcg.ac.jp/portal/_kcglms/0' })).toBe(true);
-    expect(isPortalSettingsMarkerLink({ midashi: 'My Link', url: 'https://example.com' })).toBe(false);
+    expect(isPortalSettingsMarkerLink({ midashi: '__KCGLMS::0', url: 'https://example.com' })).toBe(
+      true,
+    );
+    expect(
+      isPortalSettingsMarkerLink({
+        midashi: 'My Link',
+        url: 'https://home.kcg.ac.jp/portal/_kcglms/0',
+      }),
+    ).toBe(true);
+    expect(isPortalSettingsMarkerLink({ midashi: 'My Link', url: 'https://example.com' })).toBe(
+      false,
+    );
   });
 
   it('round-trips extension storage through encrypted marker links', async () => {
@@ -100,16 +110,18 @@ describe('portal-settings-sync', () => {
       },
       ct: EMPTY_CUSTOM_THEMES,
     });
-    const links: PortalUserLink[] = [{
-      id: 'm0',
-      version: 1,
-      linkNo: 99,
-      midashi: '__KCGLMS::0',
-      url: 'https://home.kcg.ac.jp/portal/_kcglms/0',
-      biko: legacy,
-      order: 0,
-      delFlg: false,
-    }];
+    const links: PortalUserLink[] = [
+      {
+        id: 'm0',
+        version: 1,
+        linkNo: 99,
+        midashi: '__KCGLMS::0',
+        url: 'https://home.kcg.ac.jp/portal/_kcglms/0',
+        biko: legacy,
+        order: 0,
+        delFlg: false,
+      },
+    ];
     const decoded = await decodePortalSettingsSnapshot(links);
     expect(decoded?.updatedAt).toBe(42);
     expect(decoded?.settings.hideProfileName).toBe(true);
@@ -127,7 +139,10 @@ describe('portal-settings-sync', () => {
       order: 0,
       delFlg: false,
     };
-    const next = await applyPortalExtensionMarkers([userLink], extensionSnapshot(BASE_SETTINGS, {}, 123));
+    const next = await applyPortalExtensionMarkers(
+      [userLink],
+      extensionSnapshot(BASE_SETTINGS, {}, 123),
+    );
     expect(next.some((link) => link.id === 'u1' && link.linkNo === 7)).toBe(true);
     expect(next.some((link) => isPortalSettingsMarkerLink(link))).toBe(true);
   });
@@ -143,7 +158,10 @@ describe('portal-settings-sync', () => {
       order: 0,
       delFlg: false,
     };
-    const next = await applyPortalExtensionMarkers([userLink], extensionSnapshot(BASE_SETTINGS, {}, 123));
+    const next = await applyPortalExtensionMarkers(
+      [userLink],
+      extensionSnapshot(BASE_SETTINGS, {}, 123),
+    );
     const markers = next.filter((link) => isPortalSettingsMarkerLink(link) && !link.delFlg);
     expect(markers.every((link) => link.linkNo !== 3)).toBe(true);
     expect(new Set(markers.map((link) => link.linkNo)).size).toBe(markers.length);
@@ -180,6 +198,35 @@ describe('portal-settings-sync', () => {
     expect(parseCustomThemes(decoded)).toHaveLength(8);
   });
 
+  it('rejects payloads that would create too many marker links', async () => {
+    let state = 0x12345678;
+    const noise = (length: number) =>
+      Array.from({ length }, () => {
+        state = (state * 1_664_525 + 1_013_904_223) >>> 0;
+        return String.fromCharCode(33 + (state % 90));
+      }).join('');
+    const now = new Date(0).toISOString();
+    const events = Array.from({ length: 100 }, (_, index) => ({
+      id: `event-${String(index).padStart(3, '0')}`,
+      title: `Event ${index}`,
+      note: noise(200),
+      kind: 'once' as const,
+      date: '2026-09-02',
+      createdAt: now,
+      updatedAt: now,
+    }));
+
+    await expect(
+      applyPortalExtensionMarkers([], {
+        updatedAt: 999,
+        storage: {
+          ...extensionSnapshot(BASE_SETTINGS).storage,
+          [SK.customCalEvents]: { schemaVersion: 1, events },
+        },
+      }),
+    ).rejects.toThrow(`/${PORTAL_SETTINGS_MARKER_MAX}`);
+  });
+
   it('soft-deletes obsolete marker chunks', async () => {
     const themes = Array.from({ length: 8 }, (_, index) =>
       createCustomTheme(`Theme ${index}`, 'dark', THEMES.dark),
@@ -195,11 +242,53 @@ describe('portal-settings-sync', () => {
       initial.filter((link) => isPortalSettingsMarkerLink(link) && !link.delFlg).length,
     ).toBeGreaterThan(1);
 
-    const shrunk = await applyPortalExtensionMarkers(initial, extensionSnapshot(BASE_SETTINGS, {}, 2));
+    const shrunk = await applyPortalExtensionMarkers(
+      initial,
+      extensionSnapshot(BASE_SETTINGS, {}, 2),
+    );
     const shrunkActive = shrunk.filter((link) => isPortalSettingsMarkerLink(link) && !link.delFlg);
-    const initialActive = initial.filter((link) => isPortalSettingsMarkerLink(link) && !link.delFlg);
+    const initialActive = initial.filter(
+      (link) => isPortalSettingsMarkerLink(link) && !link.delFlg,
+    );
     expect(shrunkActive.length).toBeLessThan(initialActive.length);
     expect(shrunk.some((link) => isPortalSettingsMarkerLink(link) && link.delFlg)).toBe(true);
+  });
+
+  it('retireAllPortalExtensionMarkers soft-deletes every settings marker and keeps user links', async () => {
+    const userLink: PortalUserLink = {
+      id: 'u1',
+      version: '1',
+      delFlg: false,
+      linkNo: 1,
+      midashi: 'Docs',
+      url: 'https://example.com',
+      biko: '',
+      order: 0,
+    };
+    const withMarkers = await applyPortalExtensionMarkers(
+      [userLink],
+      extensionSnapshot(BASE_SETTINGS),
+    );
+    expect(withMarkers.some((link) => isPortalSettingsMarkerLink(link) && !link.delFlg)).toBe(true);
+
+    const retired = retireAllPortalExtensionMarkers(withMarkers);
+    expect(retired.find((link) => link.id === 'u1')?.delFlg).toBe(false);
+    expect(
+      retired.filter((link) => isPortalSettingsMarkerLink(link)).every((link) => link.delFlg),
+    ).toBe(true);
+  });
+
+  it('reuses retired marker records instead of accumulating a new set after re-enabling sync', async () => {
+    const active = await applyPortalExtensionMarkers([], extensionSnapshot(BASE_SETTINGS));
+    const retired = retireAllPortalExtensionMarkers(active);
+    const restored = await applyPortalExtensionMarkers(
+      retired,
+      extensionSnapshot({ ...BASE_SETTINGS, theme: 'light' }),
+    );
+
+    expect(restored).toHaveLength(active.length);
+    expect(restored.every((link) => !link.delFlg)).toBe(true);
+    expect(restored.map((link) => link.linkNo)).toEqual(active.map((link) => link.linkNo));
   });
 });
 

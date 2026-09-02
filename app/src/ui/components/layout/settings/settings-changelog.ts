@@ -3,11 +3,11 @@
  */
 
 export type ParsedChangelogRelease = {
-  version:    string;
-  date:       string;
-  title:      string;
+  version: string;
+  date: string;
+  title: string;
   highlights: string[];
-  notes:      string[];
+  notes: string[];
 };
 
 export function parseChangelogJson(json: unknown): ParsedChangelogRelease[] | null {

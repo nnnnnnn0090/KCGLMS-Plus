@@ -24,7 +24,8 @@ export default defineContentScript({
       syncCplanSurfaceRuntime();
       const cover = document.createElement('div');
       cover.id = PORTAL_DOM.bootCover;
-      cover.className = 'tw-fixed tw-inset-0 tw-z-boot-cover tw-pointer-events-none tw-m-0 tw-h-full tw-w-full tw-border-0 tw-p-0';
+      cover.className =
+        'tw-fixed tw-inset-0 tw-z-boot-cover tw-pointer-events-none tw-m-0 tw-h-full tw-w-full tw-border-0 tw-p-0';
       cover.setAttribute('aria-hidden', 'true');
       (document.body ?? document.documentElement).appendChild(cover);
     })();

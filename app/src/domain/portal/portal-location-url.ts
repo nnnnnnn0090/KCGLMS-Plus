@@ -23,13 +23,7 @@ export function isPortalHomePathname(pathname = location.pathname): boolean {
   return normalized === '/portal' || normalized === '/';
 }
 
-const LEGACY_CONTACT_FORM_CATEGORIES = new Set([
-  'bug',
-  'feature',
-  'account',
-  'community',
-  'other',
-]);
+const LEGACY_CONTACT_FORM_CATEGORIES = new Set(['bug', 'feature', 'account', 'community', 'other']);
 
 /** 旧実装の HTML フォーム GET 漏れで付いたクエリを除去する */
 function stripLegacyPortalFormSearchParams(url: URL): void {

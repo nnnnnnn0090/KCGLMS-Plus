@@ -18,7 +18,8 @@ function appendHostPlainFooterLine(mount: HTMLElement): void {
     let found: HTMLElement | undefined;
     try {
       found = [...document.querySelectorAll(sel)].find(
-        (n): n is HTMLElement => n instanceof HTMLElement && !n.closest(`#${PORTAL_DOM.overlayRoot}`),
+        (n): n is HTMLElement =>
+          n instanceof HTMLElement && !n.closest(`#${PORTAL_DOM.overlayRoot}`),
       );
     } catch {
       continue;
@@ -68,9 +69,14 @@ export function Footer() {
     const src = selectors.reduce<Element | null>((found, sel) => {
       if (found) return found;
       try {
-        return [...document.querySelectorAll(sel)]
-          .find((c) => !c.closest(`#${PORTAL_DOM.overlayRoot}`) && c.querySelector('small')) ?? null;
-      } catch { return null; }
+        return (
+          [...document.querySelectorAll(sel)].find(
+            (c) => !c.closest(`#${PORTAL_DOM.overlayRoot}`) && c.querySelector('small'),
+          ) ?? null
+        );
+      } catch {
+        return null;
+      }
     }, null);
 
     mount.replaceChildren();
@@ -79,7 +85,9 @@ export function Footer() {
       for (const child of src.children) {
         if (child.tagName !== 'SCRIPT') mount.appendChild(child.cloneNode(true));
       }
-      mount.querySelectorAll('.pageTop, a[href="#top"], a[href="#Top"]').forEach((el) => el.remove());
+      mount
+        .querySelectorAll('.pageTop, a[href="#top"], a[href="#Top"]')
+        .forEach((el) => el.remove());
     } else {
       appendHostPlainFooterLine(mount);
     }

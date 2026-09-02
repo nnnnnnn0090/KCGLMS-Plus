@@ -30,15 +30,15 @@ export function calendarItemToDueItem(row: unknown): DueItem | null {
   if (!dueDate) return null;
 
   const calendarId = r.calendarId;
-  const sourceId   = r.itemSourceId;
-  const title      = r.title;
+  const sourceId = r.itemSourceId;
+  const title = r.title;
 
   return {
-    courseId:   calendarId != null ? String(calendarId).trim() : undefined,
+    courseId: calendarId != null ? String(calendarId).trim() : undefined,
     courseName: calendarItemCourseName(r),
-    title:      title != null ? String(title) : undefined,
+    title: title != null ? String(title) : undefined,
     dueDate,
-    sourceId:   sourceId != null ? String(sourceId).trim() : undefined,
+    sourceId: sourceId != null ? String(sourceId).trim() : undefined,
   };
 }
 

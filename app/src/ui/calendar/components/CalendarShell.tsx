@@ -7,16 +7,16 @@ import type { RefObject } from 'react';
 import { useI18n } from '../../../i18n';
 
 export interface CalendarShellProps {
-  viewMode:       'week' | 'month';
-  modeTitle:      string;
+  viewMode: 'week' | 'month';
+  modeTitle: string;
   modeGroupLabel: string;
-  rangeLabel:     string;
-  switchMode:     (mode: 'week' | 'month') => void;
-  navigate:       (dir: 'prev' | 'next') => void;
-  calBodyRef:     RefObject<HTMLDivElement | null>;
+  rangeLabel: string;
+  switchMode: (mode: 'week' | 'month') => void;
+  navigate: (dir: 'prev' | 'next') => void;
+  calBodyRef: RefObject<HTMLDivElement | null>;
   toolbarHidden?: boolean;
-  bodyHidden?:    boolean;
-  navDisabled?:   boolean;
+  bodyHidden?: boolean;
+  navDisabled?: boolean;
   /** true のとき週/月・前後ナビを無効化（課題未取り込みなど） */
   controlsDisabled?: boolean;
 }
@@ -29,10 +29,10 @@ export function CalendarShell({
   switchMode,
   navigate,
   calBodyRef,
-  toolbarHidden     = false,
-  bodyHidden        = false,
-  navDisabled       = false,
-  controlsDisabled  = false,
+  toolbarHidden = false,
+  bodyHidden = false,
+  navDisabled = false,
+  controlsDisabled = false,
 }: CalendarShellProps) {
   const { t } = useI18n();
   const navLocked = navDisabled || controlsDisabled;

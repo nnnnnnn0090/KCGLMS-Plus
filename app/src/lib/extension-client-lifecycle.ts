@@ -33,9 +33,8 @@ async function ensureClientLifecycleTimestamps(): Promise<ClientLifecycleTimesta
   let installAt = normalizeIso(data[SK.clientInstallAt]);
   let lastUpdatedAt = normalizeIso(data[SK.clientLastUpdatedAt]);
   const clientLastKnownVersion = data[SK.clientLastKnownVersion];
-  const lastKnownVersion = typeof clientLastKnownVersion === 'string'
-    ? clientLastKnownVersion.trim()
-    : '';
+  const lastKnownVersion =
+    typeof clientLastKnownVersion === 'string' ? clientLastKnownVersion.trim() : '';
 
   const now = new Date().toISOString();
   const toSet: Record<string, string> = {};

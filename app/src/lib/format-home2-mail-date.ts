@@ -3,7 +3,10 @@ import { localeForLanguage, type AppLanguage } from '../i18n/messages';
 /** Home2 メール一覧・本文の日時セル用（RFC 2822 風・末尾の括弧注記を除去してパース） */
 
 export function parseHome2MailDateMs(raw: string): number {
-  const s = raw.replace(/\s+/g, ' ').trim().replace(/\s*\([^)]*\)\s*$/, '');
+  const s = raw
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\s*\([^)]*\)\s*$/, '');
   const ms = Date.parse(s);
   return Number.isFinite(ms) ? ms : NaN;
 }

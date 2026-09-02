@@ -3,10 +3,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import {
-  subscribePortalInbox,
-  type PortalCapturedMessage,
-} from '../services/portal-inbox';
+import { subscribePortalInbox, type PortalCapturedMessage } from '../services/portal-inbox';
 
 export type { PortalCapturedMessage };
 
@@ -18,17 +15,16 @@ export interface UsePortalMessageOptions {
 }
 
 export function usePortalMessage(handler: Handler, options?: UsePortalMessageOptions): void {
-  const types        = options?.msgTypes;
-  const typesKey     = types?.join('\0') ?? '';
+  const types = options?.msgTypes;
+  const typesKey = types?.join('\0') ?? '';
   const typesListRef = useRef(types);
   typesListRef.current = types;
-  const handlerRef   = useRef(handler);
+  const handlerRef = useRef(handler);
   handlerRef.current = handler;
 
   useEffect(() => {
-    return subscribePortalInbox(
-      (msg) => handlerRef.current(msg),
-      { msgTypes: typesListRef.current },
-    );
+    return subscribePortalInbox((msg) => handlerRef.current(msg), {
+      msgTypes: typesListRef.current,
+    });
   }, [typesKey]);
 }

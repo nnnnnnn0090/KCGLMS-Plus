@@ -102,7 +102,8 @@ export async function savePortalUserLinks(links: readonly PortalUserLink[]): Pro
     payload,
   );
   if (!res.ok) {
-    const message = res.json?.userMessage || res.json?.fullMessage || 'failed to save portal user links';
+    const message =
+      res.json?.userMessage || res.json?.fullMessage || 'failed to save portal user links';
     throw new Error(message);
   }
 }

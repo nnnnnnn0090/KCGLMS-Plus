@@ -15,17 +15,25 @@ export function isLoginRedirectPage(): boolean {
     const path = location.pathname ?? '';
     if (path !== '/' && path !== '') return false;
     return new URLSearchParams(location.search).has('new_loc');
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 export function isCoursePage(): boolean {
-  try { return location.hostname === KING_LMS_HOSTNAME && /\/ultra\/course/.test(location.pathname); }
-  catch { return false; }
+  try {
+    return location.hostname === KING_LMS_HOSTNAME && /\/ultra\/course/.test(location.pathname);
+  } catch {
+    return false;
+  }
 }
 
 export function isAssignmentSyncPage(): boolean {
-  try { return location.hostname === KING_LMS_HOSTNAME && /\/ultra\/calendar/.test(location.pathname); }
-  catch { return false; }
+  try {
+    return location.hostname === KING_LMS_HOSTNAME && /\/ultra\/calendar/.test(location.pathname);
+  } catch {
+    return false;
+  }
 }
 
 export function buildRedirectUrl(base: string, hash: string): string {

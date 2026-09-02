@@ -6,8 +6,8 @@ import { useI18n } from '../../i18n';
 
 const ID_USER = 'MainContent_txtUserID';
 const ID_PASS = 'MainContent_txtPasswd';
-const ID_CHK  = 'MainContent_chkShowLastPage';
-const ID_BTN  = 'MainContent_butLogin';
+const ID_CHK = 'MainContent_chkShowLastPage';
+const ID_BTN = 'MainContent_butLogin';
 
 function getNative<T extends HTMLElement>(id: string): T | null {
   const el = document.getElementById(id);
@@ -39,8 +39,8 @@ function forceNativeShowLastPageOn(): void {
 
 export function Home2WebMailLoginPage() {
   const { t } = useI18n();
-  const [userId, setUserId]   = useState('');
-  const [passwd, setPasswd]   = useState('');
+  const [userId, setUserId] = useState('');
+  const [passwd, setPasswd] = useState('');
   const nativeReadyRef = useRef(false);
 
   // 初回: ネイティブ（サーバ返却値・オートフィル）→ state
@@ -84,30 +84,37 @@ export function Home2WebMailLoginPage() {
     };
   }, []);
 
-  const onSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    const u = getNative<HTMLInputElement>(ID_USER);
-    const p = getNative<HTMLInputElement>(ID_PASS);
-    const c = getNative<HTMLInputElement>(ID_CHK);
-    const btn = getNative<HTMLInputElement>(ID_BTN);
-    if (!u || !p || !btn) return;
-    setNativeValue(u, userId);
-    setNativeValue(p, passwd);
-    if (c) {
-      c.checked = true;
-      c.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    if (typeof (btn as HTMLInputElement & { click: () => void }).click === 'function') {
-      btn.click();
-    }
-  }, [userId, passwd]);
+  const onSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const u = getNative<HTMLInputElement>(ID_USER);
+      const p = getNative<HTMLInputElement>(ID_PASS);
+      const c = getNative<HTMLInputElement>(ID_CHK);
+      const btn = getNative<HTMLInputElement>(ID_BTN);
+      if (!u || !p || !btn) return;
+      setNativeValue(u, userId);
+      setNativeValue(p, passwd);
+      if (c) {
+        c.checked = true;
+        c.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (typeof (btn as HTMLInputElement & { click: () => void }).click === 'function') {
+        btn.click();
+      }
+    },
+    [userId, passwd],
+  );
 
   return (
     <main className="p-main p-home2-mail-login-screen" id="p-home2-mail-login">
       <div className="p-home2-mail-login-backdrop" aria-hidden />
       <div className="p-home2-mail-login-card">
         <header className="p-home2-mail-login-card-head">
-          <a className="p-home2-mail-login-mark" href={HOME2_MAIL_DEFAULT_URL} title={t.home2.loginTopTitle}>
+          <a
+            className="p-home2-mail-login-mark"
+            href={HOME2_MAIL_DEFAULT_URL}
+            title={t.home2.loginTopTitle}
+          >
             <img src={`${HOME2_ORIGIN}/ic.bmp`} width={44} height={44} alt="" />
           </a>
           <div className="p-home2-mail-login-brand-text">

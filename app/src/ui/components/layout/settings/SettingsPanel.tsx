@@ -35,11 +35,9 @@ import {
   SettingsThemeSection,
   SettingsWebMailSection,
 } from './SettingsPanelSections';
+import { SettingsFontSection } from './SettingsFontSection';
 import { ThemeStudio } from './ThemeStudio';
-import {
-  clearSettingsPopoverLayout,
-  layoutSettingsPopover,
-} from './settings-popover-layout';
+import { clearSettingsPopoverLayout, layoutSettingsPopover } from './settings-popover-layout';
 
 const extensionVersion = readExtensionVersion();
 type SettingsTab = 'appearance' | 'connections' | 'support';
@@ -89,6 +87,9 @@ export const SettingsPanel = forwardRef<SettingsPanelHandle, SettingsPanelProps>
     const licensesCloseRef = useRef<HTMLButtonElement>(null);
     const licensesModalRootRef = useRef<HTMLDivElement>(null);
     const changelogFetchGenRef = useRef(0);
+    const closingRef = useRef(false);
+    const closeFrameRef = useRef<number | null>(null);
+    const closeTimerRef = useRef<number | null>(null);
     const [closing, setClosing] = useState(false);
     const [changelogModalOpen, setChangelogModalOpen] = useState(false);
     const [changelogModalClosing, setChangelogModalClosing] = useState(false);
@@ -169,17 +170,6 @@ export const SettingsPanel = forwardRef<SettingsPanelHandle, SettingsPanelProps>
       setLicensesModalClosing(true);
     }, [licensesModalOpen, licensesModalClosing]);
 
-    const openThemeStudio = useCallback(
-      (theme: CustomTheme | 'new') => {
-        setThemeStudioEditing(theme);
-        // 実画面プレビューのため設定ポップを閉じる（スタジオは親 state で維持）
-        resetChangelogModal();
-        resetLicensesModal();
-        if (isOpen && !closing) setClosing(true);
-      },
-      [isOpen, closing, resetChangelogModal, resetLicensesModal],
-    );
-
     useEffect(() => {
       if (!changelogModalClosing) return;
       const el = changelogModalRootRef.current;
@@ -247,20 +237,94 @@ export const SettingsPanel = forwardRef<SettingsPanelHandle, SettingsPanelProps>
       if (btn) btn.focus();
     }, [licensesModalOpen, licensesModalClosing]);
 
-    // 閉じるアニメーションを開始する（外部からも呼べるように ref 経由で公開）
+    const finishClose = useCallback(() => {
+      if (!closingRef.current) return;
+      closingRef.current = false;
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+      if (closeFrameRef.current !== null) {
+        window.cancelAnimationFrame(closeFrameRef.current);
+        closeFrameRef.current = null;
+      }
+      setClosing(false);
+      onClose();
+    }, [onClose]);
+
+    // 閉じる操作と同じイベント内でブラウザのアニメーションを開始する。
+    // React の再描画や CSS class の反映順に依存させない。
     const requestClose = useCallback(() => {
       resetChangelogModal();
       resetLicensesModal();
-      if (!isOpen || closing) return;
+      if (!isOpen || closingRef.current) return;
+      closingRef.current = true;
       setClosing(true);
-    }, [isOpen, closing, resetChangelogModal, resetLicensesModal]);
+
+      const dialog = popRef.current?.querySelector<HTMLElement>('.p-settings-dialog') ?? null;
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!dialog) {
+        closeTimerRef.current = window.setTimeout(finishClose, 300);
+        return;
+      }
+
+      const duration = reduceMotion ? 140 : 240;
+      const startedAt = performance.now();
+      dialog.style.opacity = '1';
+      dialog.style.willChange = reduceMotion ? 'opacity' : 'opacity, transform';
+      if (!reduceMotion) dialog.style.transform = 'translateY(0) scale(1)';
+
+      const renderCloseFrame = (now: number) => {
+        if (!closingRef.current) return;
+        const progress = Math.min(1, Math.max(0, (now - startedAt) / duration));
+        const eased = progress * progress;
+        dialog.style.opacity = String(1 - eased);
+        if (!reduceMotion) {
+          dialog.style.transform = `translateY(${-8 * eased}px) scale(${1 - 0.04 * eased})`;
+        }
+        if (progress < 1) {
+          closeFrameRef.current = window.requestAnimationFrame(renderCloseFrame);
+          return;
+        }
+        finishClose();
+      };
+      closeFrameRef.current = window.requestAnimationFrame(renderCloseFrame);
+      closeTimerRef.current = window.setTimeout(finishClose, duration + 80);
+    }, [finishClose, isOpen, resetChangelogModal, resetLicensesModal]);
 
     useImperativeHandle(ref, () => ({ requestClose }), [requestClose]);
 
-    // isOpen が false になったら closing 状態をリセット
+    const openThemeStudio = useCallback(
+      (theme: CustomTheme | 'new') => {
+        setThemeStudioEditing(theme);
+        // 実画面プレビューのため設定ポップを閉じる（スタジオは親 state で維持）
+        requestClose();
+      },
+      [requestClose],
+    );
+
+    // 親から閉じられた場合や unmount 時に、保留中の終了処理を破棄する。
     useEffect(() => {
-      if (!isOpen) setClosing(false);
+      if (isOpen) return;
+      closingRef.current = false;
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+      if (closeFrameRef.current !== null) {
+        window.cancelAnimationFrame(closeFrameRef.current);
+        closeFrameRef.current = null;
+      }
+      setClosing(false);
     }, [isOpen]);
+
+    useEffect(
+      () => () => {
+        if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+        if (closeFrameRef.current !== null) window.cancelAnimationFrame(closeFrameRef.current);
+      },
+      [],
+    );
 
     // 設定ボタン基準で viewport 内に収める（#portal-overlay .p-settings-pop の left:0 より CSS 変数を優先）。
     useLayoutEffect(() => {
@@ -280,50 +344,19 @@ export const SettingsPanel = forwardRef<SettingsPanelHandle, SettingsPanelProps>
       window.addEventListener('resize', clamp);
       window.addEventListener('scroll', clamp, true);
       const headerActions = document.querySelector('#portal-overlay .p-header-actions');
-      const roHeader = headerActions instanceof HTMLElement ? new ResizeObserver(clamp) : null;
-      roHeader?.observe(headerActions);
-      const roDialog = dialog ? new ResizeObserver(clamp) : null;
-      roDialog?.observe(dialog);
+      const roHeader = new ResizeObserver(clamp);
+      if (headerActions instanceof HTMLElement) roHeader.observe(headerActions);
+      const roDialog = new ResizeObserver(clamp);
+      if (dialog) roDialog.observe(dialog);
       return () => {
         window.cancelAnimationFrame(raf);
         window.removeEventListener('resize', clamp);
         window.removeEventListener('scroll', clamp, true);
-        roHeader?.disconnect();
-        roDialog?.disconnect();
+        roHeader.disconnect();
+        roDialog.disconnect();
         clearSettingsPopoverLayout(el, dialog);
       };
     }, [isOpen, activeTab, updateAvailable, latestVersion, variant]);
-
-    // 閉じるアニメーション終了後に親へ通知
-    useEffect(() => {
-      if (!closing) return;
-      const el = popRef.current;
-      const finish = () => {
-        setClosing(false);
-        onClose();
-      };
-      if (!el) {
-        finish();
-        return;
-      }
-
-      // reduced-motion 環境では animationend が発火しないため 30ms でフォールバック。
-      // 通常は CSS の閉じアニメーション（約 200ms）が終わる前に animationend が来るが、
-      // 220ms はその保険タイムアウト。
-      const ms = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 30 : 220;
-      const timer = window.setTimeout(finish, ms);
-      const onAnimEnd = (e: AnimationEvent) => {
-        if (e.target !== el) return;
-        window.clearTimeout(timer);
-        el.removeEventListener('animationend', onAnimEnd);
-        finish();
-      };
-      el.addEventListener('animationend', onAnimEnd);
-      return () => {
-        window.clearTimeout(timer);
-        el.removeEventListener('animationend', onAnimEnd);
-      };
-    }, [closing, onClose]);
 
     // パネル外クリックで閉じる（設定ボタン自体はヘッダー側でトグル処理するため除外）
     useEffect(() => {
@@ -441,21 +474,22 @@ export const SettingsPanel = forwardRef<SettingsPanelHandle, SettingsPanelProps>
       </div>
     );
 
-    const settingsPop = (isOpen || closing) ? (
-      <div
-        ref={assignPopSurface}
-        className={`p-settings-pop${closing ? ' is-closing' : ''}`}
-        id="p-settings-pop"
-        aria-hidden={!isOpen}
-      >
+    const settingsPop =
+      isOpen || closing ? (
         <div
-          className="p-settings-dialog"
-          id="p-settings-dialog"
-          role="dialog"
-          aria-modal={false}
-          aria-labelledby="p-settings-heading"
-          tabIndex={-1}
+          ref={assignPopSurface}
+          className={`p-settings-pop${closing ? ' is-closing' : ''}`}
+          id="p-settings-pop"
+          aria-hidden={!isOpen}
         >
+          <div
+            className="p-settings-dialog"
+            id="p-settings-dialog"
+            role="dialog"
+            aria-modal={false}
+            aria-labelledby="p-settings-heading"
+            tabIndex={-1}
+          >
             <div className="p-settings-nav">
               <h2 id="p-settings-heading">{t.settings.title}</h2>
               {variant === 'portal' ? (
@@ -515,6 +549,7 @@ export const SettingsPanel = forwardRef<SettingsPanelHandle, SettingsPanelProps>
                         settings={settings}
                         onSettingChange={onSettingChange}
                       />
+                      <SettingsFontSection settings={settings} onSettingChange={onSettingChange} />
                       <SettingsPortalOnlySections
                         group="appearance"
                         settings={settings}
@@ -561,6 +596,7 @@ export const SettingsPanel = forwardRef<SettingsPanelHandle, SettingsPanelProps>
             ) : (
               <>
                 <SettingsLanguageSection settings={settings} onSettingChange={onSettingChange} />
+                <SettingsFontSection settings={settings} onSettingChange={onSettingChange} />
                 <SettingsThemeSection
                   settings={settings}
                   onThemeChange={onThemeChange}
@@ -597,7 +633,7 @@ export const SettingsPanel = forwardRef<SettingsPanelHandle, SettingsPanelProps>
             ) : null}
           </div>
         </div>
-    ) : null;
+      ) : null;
 
     return (
       <>

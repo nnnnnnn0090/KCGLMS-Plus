@@ -41,7 +41,11 @@ export function storeFromParsed(
     // 中央日（21 日目 = 第 4 週月曜付近）から月参照を求める。
     const midDate = parseIsoLocal(addDaysIso(parsed.start, 21));
     const mid: MonthRef = { y: midDate.getFullYear(), m: midDate.getMonth() };
-    const wp = weekParams ?? { uKbn: parsed.uKbn, start: parsed.start, end: addDaysIso(parsed.start, 7) };
+    const wp = weekParams ?? {
+      uKbn: parsed.uKbn,
+      start: parsed.start,
+      end: addDaysIso(parsed.start, 7),
+    };
     return { weekParams: wp, monthRef: monthRef ?? mid };
   }
   return { weekParams: parsed, monthRef: monthRef ?? isoToMonthRef(parsed.start) };
@@ -61,7 +65,11 @@ export function storePassive(
   if (isMonth) {
     const midDate = parseIsoLocal(addDaysIso(parsed.start, 21));
     const mid: MonthRef = monthRef ?? { y: midDate.getFullYear(), m: midDate.getMonth() };
-    const wp = weekParams ?? { uKbn: parsed.uKbn, start: parsed.start, end: addDaysIso(parsed.start, 7) };
+    const wp = weekParams ?? {
+      uKbn: parsed.uKbn,
+      start: parsed.start,
+      end: addDaysIso(parsed.start, 7),
+    };
     return { weekParams: wp, monthRef: mid };
   }
   if (weekParams === null) {

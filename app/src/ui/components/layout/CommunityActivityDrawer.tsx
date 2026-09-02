@@ -23,11 +23,31 @@ import '../../../styles/tailwind-overlay.css';
 type LoadState = 'checking' | 'loading' | 'ready' | 'unavailable';
 
 const THEME_VARS = [
-  '--p-bg', '--p-bg2', '--p-bg3', '--p-bg-hover', '--p-border', '--p-border-light',
-  '--p-border-hover', '--p-text', '--p-text-muted', '--p-text-dim', '--p-text-dimmer',
-  '--p-text-bright', '--p-accent', '--p-accent-light', '--p-accent-bg', '--p-accent-border',
-  '--p-on-accent', '--p-avatar-ring', '--p-danger', '--p-danger-hover', '--p-shadow',
-  '--p-shadow-strong', '--p-enter-dur', '--p-enter-ease', '--p-pop-dur',
+  '--p-bg',
+  '--p-bg2',
+  '--p-bg3',
+  '--p-bg-hover',
+  '--p-border',
+  '--p-border-light',
+  '--p-border-hover',
+  '--p-text',
+  '--p-text-muted',
+  '--p-text-dim',
+  '--p-text-dimmer',
+  '--p-text-bright',
+  '--p-accent',
+  '--p-accent-light',
+  '--p-accent-bg',
+  '--p-accent-border',
+  '--p-on-accent',
+  '--p-avatar-ring',
+  '--p-danger',
+  '--p-danger-hover',
+  '--p-shadow',
+  '--p-shadow-strong',
+  '--p-enter-dur',
+  '--p-enter-ease',
+  '--p-pop-dur',
 ] as const;
 
 function communityIframeLang(language: AppLanguage): 'ja' | 'en' {
@@ -110,10 +130,7 @@ export function CommunityActivityDrawer({
   const requestClose = useCallback(() => {
     if (closing) return;
     setClosing(true);
-    closeTimerRef.current = window.setTimeout(
-      finishClose,
-      COMMUNITY_BOUNDARY_TIMING.drawerCloseMs,
-    );
+    closeTimerRef.current = window.setTimeout(finishClose, COMMUNITY_BOUNDARY_TIMING.drawerCloseMs);
   }, [closing, finishClose]);
 
   const markReady = useCallback(() => {

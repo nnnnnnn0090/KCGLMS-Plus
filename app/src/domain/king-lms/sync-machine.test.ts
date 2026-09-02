@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  initialSyncMachine,
-  isSyncActive,
-  transitionSyncMachine,
-} from './sync-machine';
+import { initialSyncMachine, isSyncActive, transitionSyncMachine } from './sync-machine';
 
 describe('sync-machine', () => {
   it('starts course sync from idle', () => {

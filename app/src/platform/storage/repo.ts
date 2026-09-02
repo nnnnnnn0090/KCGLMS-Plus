@@ -16,6 +16,8 @@ import {
   parseShortcutConfig,
   parseStorageBool,
   parseThemeId,
+  parseUiFont,
+  parseSyncViaMyLinks,
   type CalendarWeekStart,
   type KingLmsAssignmentDuePayload,
   type KingLmsCourseEntry,
@@ -23,6 +25,7 @@ import {
 } from './parsers';
 import type { StoredCustomThemeCollection } from '../../domain/themes/custom-themes';
 import type { AppLanguage } from '../../domain/i18n/messages';
+import type { UiFont } from '../../domain/ui-font';
 
 type KeyListener = (value: unknown) => void;
 const keyListeners = new Map<string, Set<KeyListener>>();
@@ -65,7 +68,8 @@ async function writeKey(key: string, value: unknown): Promise<void> {
 }
 
 export const storageRepo = {
-  getHideProfileName: () => readKey(SK.hideProfileName, (r) => parseStorageBool(SK.hideProfileName, r)),
+  getHideProfileName: () =>
+    readKey(SK.hideProfileName, (r) => parseStorageBool(SK.hideProfileName, r)),
   setHideProfileName: (v: boolean) => writeKey(SK.hideProfileName, v),
 
   getTheme: () => readKey(SK.theme, parseThemeId),
@@ -74,13 +78,16 @@ export const storageRepo = {
   getCustomThemes: () => readKey(SK.customThemes, parseCustomThemes),
   setCustomThemes: (v: StoredCustomThemeCollection) => writeKey(SK.customThemes, v),
 
-  getShowKogiCalMascot: () => readKey(SK.showKogiCalMascot, (r) => parseStorageBool(SK.showKogiCalMascot, r)),
+  getShowKogiCalMascot: () =>
+    readKey(SK.showKogiCalMascot, (r) => parseStorageBool(SK.showKogiCalMascot, r)),
   setShowKogiCalMascot: (v: boolean) => writeKey(SK.showKogiCalMascot, v),
 
-  getShowHomeCornerCharacter: () => readKey(SK.showHomeCornerCharacter, (r) => parseStorageBool(SK.showHomeCornerCharacter, r)),
+  getShowHomeCornerCharacter: () =>
+    readKey(SK.showHomeCornerCharacter, (r) => parseStorageBool(SK.showHomeCornerCharacter, r)),
   setShowHomeCornerCharacter: (v: boolean) => writeKey(SK.showHomeCornerCharacter, v),
 
-  getHideAssignmentCalendar: () => readKey(SK.hideAssignmentCalendar, (r) => parseStorageBool(SK.hideAssignmentCalendar, r)),
+  getHideAssignmentCalendar: () =>
+    readKey(SK.hideAssignmentCalendar, (r) => parseStorageBool(SK.hideAssignmentCalendar, r)),
   setHideAssignmentCalendar: (v: boolean) => writeKey(SK.hideAssignmentCalendar, v),
 
   getKingLmsCourses: () => readKey(SK.kingLmsCourses, parseKingLmsCourses),
@@ -89,43 +96,63 @@ export const storageRepo = {
   getKingLmsAssignmentDue: () => readKey(SK.kingLmsAssignmentDue, parseKingLmsAssignmentDue),
   setKingLmsAssignmentDue: (v: KingLmsAssignmentDuePayload) => writeKey(SK.kingLmsAssignmentDue, v),
 
-  getKingLmsSyncPending: () => readKey(SK.kingLmsSyncPending, (r) => parseStorageBool(SK.kingLmsSyncPending, r)),
+  getKingLmsSyncPending: () =>
+    readKey(SK.kingLmsSyncPending, (r) => parseStorageBool(SK.kingLmsSyncPending, r)),
   setKingLmsSyncPending: (v: boolean) => writeKey(SK.kingLmsSyncPending, v),
 
   getKingLmsSyncReturnUrl: () => readKey(SK.kingLmsSyncReturnUrl, parseOptionalString),
-  setKingLmsSyncReturnUrl: (v: string | undefined) => v ? writeKey(SK.kingLmsSyncReturnUrl, v) : storageClient.remove(SK.kingLmsSyncReturnUrl),
+  setKingLmsSyncReturnUrl: (v: string | undefined) =>
+    v ? writeKey(SK.kingLmsSyncReturnUrl, v) : storageClient.remove(SK.kingLmsSyncReturnUrl),
 
-  getKingLmsSyncAwaitCourse: () => readKey(SK.kingLmsSyncAwaitCourse, (r) => parseStorageBool(SK.kingLmsSyncAwaitCourse, r)),
+  getKingLmsSyncAwaitCourse: () =>
+    readKey(SK.kingLmsSyncAwaitCourse, (r) => parseStorageBool(SK.kingLmsSyncAwaitCourse, r)),
   setKingLmsSyncAwaitCourse: (v: boolean) => writeKey(SK.kingLmsSyncAwaitCourse, v),
 
-  getKingLmsCourseSyncToastQuiet: () => readKey(SK.kingLmsCourseSyncToastQuiet, (r) => parseStorageBool(SK.kingLmsCourseSyncToastQuiet, r)),
+  getKingLmsCourseSyncToastQuiet: () =>
+    readKey(SK.kingLmsCourseSyncToastQuiet, (r) =>
+      parseStorageBool(SK.kingLmsCourseSyncToastQuiet, r),
+    ),
   setKingLmsCourseSyncToastQuiet: (v: boolean) => writeKey(SK.kingLmsCourseSyncToastQuiet, v),
 
-  getKingLmsAssignmentSyncPending: () => readKey(SK.kingLmsAssignmentSyncPending, (r) => parseStorageBool(SK.kingLmsAssignmentSyncPending, r)),
+  getKingLmsAssignmentSyncPending: () =>
+    readKey(SK.kingLmsAssignmentSyncPending, (r) =>
+      parseStorageBool(SK.kingLmsAssignmentSyncPending, r),
+    ),
   setKingLmsAssignmentSyncPending: (v: boolean) => writeKey(SK.kingLmsAssignmentSyncPending, v),
 
-  getKingLmsAssignmentSyncReturnUrl: () => readKey(SK.kingLmsAssignmentSyncReturnUrl, parseOptionalString),
+  getKingLmsAssignmentSyncReturnUrl: () =>
+    readKey(SK.kingLmsAssignmentSyncReturnUrl, parseOptionalString),
   setKingLmsAssignmentSyncReturnUrl: (v: string | undefined) =>
-    v ? writeKey(SK.kingLmsAssignmentSyncReturnUrl, v) : storageClient.remove(SK.kingLmsAssignmentSyncReturnUrl),
+    v
+      ? writeKey(SK.kingLmsAssignmentSyncReturnUrl, v)
+      : storageClient.remove(SK.kingLmsAssignmentSyncReturnUrl),
 
   getKingLmsAssignmentSyncAwaitCalendar: () =>
-    readKey(SK.kingLmsAssignmentSyncAwaitCalendar, (r) => parseStorageBool(SK.kingLmsAssignmentSyncAwaitCalendar, r)),
-  setKingLmsAssignmentSyncAwaitCalendar: (v: boolean) => writeKey(SK.kingLmsAssignmentSyncAwaitCalendar, v),
+    readKey(SK.kingLmsAssignmentSyncAwaitCalendar, (r) =>
+      parseStorageBool(SK.kingLmsAssignmentSyncAwaitCalendar, r),
+    ),
+  setKingLmsAssignmentSyncAwaitCalendar: (v: boolean) =>
+    writeKey(SK.kingLmsAssignmentSyncAwaitCalendar, v),
 
   getPortalScrollToAssignmentOnce: () =>
-    readKey(SK.portalScrollToAssignmentOnce, (r) => parseStorageBool(SK.portalScrollToAssignmentOnce, r)),
+    readKey(SK.portalScrollToAssignmentOnce, (r) =>
+      parseStorageBool(SK.portalScrollToAssignmentOnce, r),
+    ),
   setPortalScrollToAssignmentOnce: (v: boolean) => writeKey(SK.portalScrollToAssignmentOnce, v),
 
   getShortcutConfig: () => readKey(SK.shortcutConfig, parseShortcutConfig),
   setShortcutConfig: (v: ShortcutConfig) => writeKey(SK.shortcutConfig, v),
 
-  getPortalGuidedTourDone: () => readKey(SK.portalGuidedTourDone, (r) => parseStorageBool(SK.portalGuidedTourDone, r)),
+  getPortalGuidedTourDone: () =>
+    readKey(SK.portalGuidedTourDone, (r) => parseStorageBool(SK.portalGuidedTourDone, r)),
   setPortalGuidedTourDone: (v: boolean) => writeKey(SK.portalGuidedTourDone, v),
 
-  getPortalLanguagePickerDone: () => readKey(SK.portalLanguagePickerDone, (r) => parseStorageBool(SK.portalLanguagePickerDone, r)),
+  getPortalLanguagePickerDone: () =>
+    readKey(SK.portalLanguagePickerDone, (r) => parseStorageBool(SK.portalLanguagePickerDone, r)),
   setPortalLanguagePickerDone: (v: boolean) => writeKey(SK.portalLanguagePickerDone, v),
 
-  getHome2WebMailOverlay: () => readKey(SK.home2WebMailOverlay, (r) => parseStorageBool(SK.home2WebMailOverlay, r)),
+  getHome2WebMailOverlay: () =>
+    readKey(SK.home2WebMailOverlay, (r) => parseStorageBool(SK.home2WebMailOverlay, r)),
   setHome2WebMailOverlay: (v: boolean) => writeKey(SK.home2WebMailOverlay, v),
 
   getCplanOverlay: () => readKey(SK.cplanOverlay, (r) => parseStorageBool(SK.cplanOverlay, r)),
@@ -137,6 +164,12 @@ export const storageRepo = {
   getLanguage: () => readKey(SK.language, parseLanguage),
   setLanguage: (v: AppLanguage) => writeKey(SK.language, v),
 
+  getFont: () => readKey(SK.font, parseUiFont),
+  setFont: (v: UiFont) => writeKey(SK.font, v),
+
+  getSyncViaMyLinks: () => readKey(SK.syncViaMyLinks, parseSyncViaMyLinks),
+  setSyncViaMyLinks: (v: boolean) => writeKey(SK.syncViaMyLinks, v),
+
   getExtensionVersionSeen: () => readKey(SK.extensionVersionSeen, parseOptionalString),
   setExtensionVersionSeen: (v: string) => writeKey(SK.extensionVersionSeen, v),
 
@@ -147,7 +180,8 @@ export const storageRepo = {
   },
   setDeveloperNoticeLang: (v: AppLanguage) => writeKey(SK.developerNoticeLang, v),
 
-  getDeveloperSurveyAnswered: () => readKey(SK.developerSurveyAnswered, parseDeveloperSurveyAnswered),
+  getDeveloperSurveyAnswered: () =>
+    readKey(SK.developerSurveyAnswered, parseDeveloperSurveyAnswered),
   setDeveloperSurveyAnswered: (v: string[]) => writeKey(SK.developerSurveyAnswered, v),
 
   getClientUserId: () => readKey(SK.clientUserId, parseOptionalString),
@@ -163,10 +197,13 @@ export const storageRepo = {
   setClientLastKnownVersion: (v: string) => writeKey(SK.clientLastKnownVersion, v),
 
   getCommunityDisclaimerAccepted: () =>
-    readKey(SK.communityDisclaimerAccepted, (r) => parseStorageBool(SK.communityDisclaimerAccepted, r)),
+    readKey(SK.communityDisclaimerAccepted, (r) =>
+      parseStorageBool(SK.communityDisclaimerAccepted, r),
+    ),
   setCommunityDisclaimerAccepted: (v: boolean) => writeKey(SK.communityDisclaimerAccepted, v),
 
-  getInstallOpenPending: () => readKey(INSTALL_OPEN_PENDING_KEY, (r) => parseStorageBool(INSTALL_OPEN_PENDING_KEY, r)),
+  getInstallOpenPending: () =>
+    readKey(INSTALL_OPEN_PENDING_KEY, (r) => parseStorageBool(INSTALL_OPEN_PENDING_KEY, r)),
   setInstallOpenPending: (v: boolean) => writeKey(INSTALL_OPEN_PENDING_KEY, v),
   clearInstallOpenPending: () => storageClient.remove(INSTALL_OPEN_PENDING_KEY),
 };

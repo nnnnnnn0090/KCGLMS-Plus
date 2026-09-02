@@ -24,18 +24,21 @@ export function captureHeaders(url: string, headers: HeadersInit | undefined): v
   if (!isPortalApiUrl(url) || !headers) return;
   try {
     const h = new Headers(headers);
-    const cap = window.__portalCapturedApiHeaders ??= {};
+    const cap = (window.__portalCapturedApiHeaders ??= {});
     for (const k of CAPTURE_HEADERS) {
       const v = h.get(k);
       if (v) cap[k] = v;
     }
-  } catch { /* 不正な Headers 等は無視 */ }
+  } catch {
+    /* 不正な Headers 等は無視 */
+  }
   notifyCpAuthorizeReadyIfPresent();
 }
 
 export function captureXhrHeader(url: string, name: string, value: string): void {
   if (!isPortalApiUrl(url)) return;
-  if (!['x-cpauthorize', 'x-requested-with', 'content-type', 'accept'].includes(name.toLowerCase())) return;
+  if (!['x-cpauthorize', 'x-requested-with', 'content-type', 'accept'].includes(name.toLowerCase()))
+    return;
   (window.__portalCapturedApiHeaders ??= {})[name] = value;
   notifyCpAuthorizeReadyIfPresent();
 }

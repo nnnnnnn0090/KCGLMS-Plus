@@ -6,7 +6,7 @@ import { SK } from '../contract/storage-keys';
 import storage from '../lib/storage';
 
 export interface ShortcutLayout {
-  order:  string[];
+  order: string[];
   hidden: string[];
 }
 

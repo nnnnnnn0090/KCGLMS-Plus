@@ -18,7 +18,9 @@ export interface CommunityAccessResult {
 
 type CommunityAccessResponse = { enabled?: unknown; apiOrigin?: unknown };
 
-export function parseCommunityAccessResponse(result: CommunityAccessResponse): CommunityAccessResult {
+export function parseCommunityAccessResponse(
+  result: CommunityAccessResponse,
+): CommunityAccessResult {
   const apiOrigin = normalizeCommunityApiOrigin(result.apiOrigin);
   const enabled =
     result.enabled === true && apiOrigin.length > 0 && isAllowedCommunityApiOrigin(apiOrigin);

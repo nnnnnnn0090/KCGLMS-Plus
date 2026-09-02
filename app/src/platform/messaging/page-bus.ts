@@ -10,7 +10,9 @@ const TARGET_ORIGIN = '*';
 export function postPageMessage(msg: PageMessage): void {
   try {
     window.postMessage(msg, TARGET_ORIGIN);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 export function postReplayRequest(): void {

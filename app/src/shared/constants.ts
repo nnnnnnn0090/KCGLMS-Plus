@@ -18,14 +18,9 @@ export {
   pathLastSegment,
 } from '../contract/api-paths';
 
-export {
-  TIMING,
-  pageFetchRetryDelayMs,
-} from '../contract/timing';
+export { TIMING, pageFetchRetryDelayMs } from '../contract/timing';
 
-export {
-  ZINDEX,
-} from '../contract/zindex';
+export { ZINDEX } from '../contract/zindex';
 
 export {
   KING_LMS_SAML_LOGIN_PATH,

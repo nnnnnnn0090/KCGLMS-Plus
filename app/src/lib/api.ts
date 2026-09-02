@@ -14,9 +14,9 @@ export { pageFetch } from '../services/page-fetch';
 
 function calUrl(endpoint: string, params: CalParams): string {
   const u = new URL(`/portal/api/${endpoint}/`, location.origin);
-  u.searchParams.set('uKbn',  params.uKbn);
+  u.searchParams.set('uKbn', params.uKbn);
   u.searchParams.set('start', params.start);
-  u.searchParams.set('end',   params.end);
+  u.searchParams.set('end', params.end);
   return u.href;
 }
 
@@ -31,8 +31,8 @@ export function portalLastLoginCollapsed(): string {
 }
 
 export const urls = {
-  kogiCalendar:   (p: CalParams) => calUrl(PORTAL_API.kogiCalendar,   p),
-  hoshuCalendar:  (p: CalParams) => calUrl(PORTAL_API.hoshuCalendar,  p),
+  kogiCalendar: (p: CalParams) => calUrl(PORTAL_API.kogiCalendar, p),
+  hoshuCalendar: (p: CalParams) => calUrl(PORTAL_API.hoshuCalendar, p),
   campusCalendar: (p: CalParams) => calUrl(PORTAL_API.campusCalendar, p),
 
   kogiNews(): string {
@@ -97,8 +97,8 @@ export function parseCalendarRequest(href: string): CalParams | null {
     const abs = /^https?:\/\//i.test(href);
     const u = abs ? new URL(href) : new URL(href, location.origin);
     const start = u.searchParams.get('start');
-    const end   = u.searchParams.get('end');
-    const uKbn  = u.searchParams.get('uKbn') ?? '1';
+    const end = u.searchParams.get('end');
+    const uKbn = u.searchParams.get('uKbn') ?? '1';
     if (!start || !end) return null;
     return { uKbn, start, end };
   } catch {

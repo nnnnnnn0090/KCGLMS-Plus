@@ -28,10 +28,7 @@ export interface SyncMachineContext {
   kind?: SyncKind;
 }
 
-const TRANSITIONS: Record<
-  SyncMachineState,
-  Partial<Record<SyncMachineEvent, SyncMachineState>>
-> = {
+const TRANSITIONS: Record<SyncMachineState, Partial<Record<SyncMachineEvent, SyncMachineState>>> = {
   idle: {
     start: 'pendingCourse',
   },
@@ -80,8 +77,7 @@ export function transitionSyncMachine(
   kind?: SyncKind,
 ): SyncMachineContext {
   if (event === 'start' && kind) {
-    const nextState: SyncMachineState =
-      kind === 'course' ? 'pendingCourse' : 'pendingAssignment';
+    const nextState: SyncMachineState = kind === 'course' ? 'pendingCourse' : 'pendingAssignment';
     return { state: nextState, kind };
   }
 
@@ -93,9 +89,9 @@ export function transitionSyncMachine(
 
 export function isSyncActive(state: SyncMachineState): boolean {
   return (
-    state === 'pendingCourse'
-    || state === 'awaitCourseLogin'
-    || state === 'pendingAssignment'
-    || state === 'awaitCalendarLogin'
+    state === 'pendingCourse' ||
+    state === 'awaitCourseLogin' ||
+    state === 'pendingAssignment' ||
+    state === 'awaitCalendarLogin'
   );
 }

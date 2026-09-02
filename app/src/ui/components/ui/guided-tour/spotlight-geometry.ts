@@ -61,7 +61,10 @@ export function scrollSpotlightToOverlayCenter(
   scrollRoot.scrollTo({ top: nextTop, behavior });
 }
 
-export function scrollThemePreviewToCalendar(scrollRoot: HTMLElement, behavior: ScrollBehavior): void {
+export function scrollThemePreviewToCalendar(
+  scrollRoot: HTMLElement,
+  behavior: ScrollBehavior,
+): void {
   const target =
     scrollRoot.querySelector('.p-panel-cal-wrap:has(section[data-cal-kind="kogi"])') ??
     scrollRoot.querySelector('section.p-panel-cal[data-cal-kind="kogi"]');

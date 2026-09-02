@@ -23,7 +23,9 @@ export function SettingsClientUserIdBlock() {
 
   return (
     <div className="p-settings-client-user-id-block">
-      <p className="p-settings-row-label p-settings-client-user-id-label">{t.settings.clientUserIdLabel}</p>
+      <p className="p-settings-row-label p-settings-client-user-id-label">
+        {t.settings.clientUserIdLabel}
+      </p>
       <p className="p-settings-hint p-settings-hint--tight">{t.settings.clientUserIdHint}</p>
       <div className="p-settings-row p-settings-row-actions p-settings-client-user-id-row">
         <output className="p-settings-client-user-id-code" aria-live="off">
