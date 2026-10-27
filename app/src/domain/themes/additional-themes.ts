@@ -1295,7 +1295,7 @@ export const ADDITIONAL_THEMES: Record<string, ThemeTokens> = {
     textDimmer: '#d97706',
     textBright: '#451a03',
     accent: '#d97706',
-    onAccent: '#000000',
+    onAccent: '#ffffff',
     accentLight: '#f59e0b',
     accentBg: 'rgba(217,119,6,.09)',
     accentBorder: 'rgba(217,119,6,.38)',
