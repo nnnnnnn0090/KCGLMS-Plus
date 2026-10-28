@@ -450,7 +450,12 @@ export function Header({
             </a>
           ) : (
             <a className="p-brand" href="/portal/">
-              <img src="/portal/favicon.ico" width={28} height={28} alt="" />
+              <img
+                src={browser.runtime.getURL('/community/activity-icon.png')}
+                width={28}
+                height={28}
+                alt=""
+              />
               <span>{t.header.portal}</span>
             </a>
           )}

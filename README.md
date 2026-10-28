@@ -23,8 +23,10 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/readme-banner.svg" width="100%" alt="A calmer campus day. 授業・課題・お知らせをまとめるKCGLMS+のコンセプトイラスト">
+  <img src="docs/assets/portal-preview.png" width="100%" alt="KCGLMS+のFirefox実画面。プロフィール・授業・課題・予定はデモデータに差し替えています。">
 </p>
+
+<p align="center"><sub>Firefoxで撮影した実画面です。プロフィール・授業・課題・予定は架空のデモデータです。</sub></p>
 
 > [!IMPORTANT]
 > **個人が開発している非公式のブラウザ拡張機能です。** KCGおよび学校関係者は、開発・運営・審査・サポートに関与していません。
