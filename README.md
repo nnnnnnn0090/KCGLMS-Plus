@@ -1,67 +1,100 @@
 <p align="center">
-  <img src="app/public/icon/128.png" width="96" height="96" alt="KCGLMS+ icon">
+  <img src="docs/assets/mascot-icon.png" width="120" height="120" alt="KCGLMS+のキャラクターアイコン">
 </p>
 
 <h1 align="center">KCGLMS+</h1>
 
 <p align="center">
-  KCGの学生ポータル、King LMS、Webメール、Campus Planを、ひとつの使いやすい画面へまとめる非公式ブラウザ拡張機能。
+  <strong>学生ポータルに、もうひとつの使いやすさ。</strong><br>
+  授業も、課題も、お知らせも。毎日の確認を、ひとつの画面で。
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-5b8fa0?style=flat-square" alt="License: GPLv3"></a>
+  <a href="#対応環境"><img src="https://img.shields.io/badge/Chrome_·_Edge_·_Firefox-4b9fcf?style=flat-square" alt="Chrome・Edge・Firefox対応"></a>
+  <a href="app/wxt.config.ts"><img src="https://img.shields.io/badge/Manifest-V3-2f4a58?style=flat-square" alt="Manifest V3"></a>
+  <a href="#開発"><img src="https://img.shields.io/badge/React_19-·_TypeScript-4b9fcf?style=flat-square" alt="React 19・TypeScript"></a>
+</p>
+
+<p align="center">
+  <a href="#できること">できること</a> &nbsp; · &nbsp;
+  <a href="#開発">開発に参加</a> &nbsp; · &nbsp;
+  <a href="https://github.com/nnnnnnn0090/KCGLMS-Plus/issues">Issueを送る</a>
+</p>
+
+<p align="center">
+  <img src="docs/assets/readme-banner.svg" width="100%" alt="A calmer campus day. 授業・課題・お知らせをまとめるKCGLMS+のコンセプトイラスト">
 </p>
 
 > [!IMPORTANT]
-> KCGLMS+は個人が開発している非公式プロジェクトです。KCGおよび学校関係者は、開発・運営・審査・サポートに関与していません。
+> **個人が開発している非公式のブラウザ拡張機能です。** KCGおよび学校関係者は、開発・運営・審査・サポートに関与していません。
 
-## KCGLMS+について
+## できること
 
-KCGLMS+は、KCGの学生向けWebサービスをブラウザ上で再構成するManifest V3拡張機能です。学校のサーバーや保存データを置き換えるのではなく、ログイン済みのページから必要な情報を読み取り、React製のオーバーレイとして表示します。
+<table>
+<tr>
+<td width="50%" valign="top">
+<h3>01 / Calendar</h3>
+<strong>今日の授業と、次の締め切り。</strong>
+<p>授業・課題・補講・キャンパス予定を週／月カレンダーに集約。シラバスやKing LMSのコースへ、そのまま移動できます。</p>
+</td>
+<td width="50%" valign="top">
+<h3>02 / Portal</h3>
+<strong>探す時間を、もっと短く。</strong>
+<p>お知らせ、拾得物、休講・補講・教室変更、アンケートを整理。よく使うページはショートカットにまとめて並べ替え。</p>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<h3>03 / Personalize</h3>
+<strong>自分の好きな、見やすさに。</strong>
+<p>64種類のテーマと複数の日本語Webフォント。独自テーマの作成・複製・書き出しや、カレンダー・プロフィールの表示調整にも対応。</p>
+</td>
+<td width="50%" valign="top">
+<h3>04 / My schedule</h3>
+<strong>授業の外の予定も、一緒に。</strong>
+<p>繰り返し・日付指定の予定に、時刻、メモ、URLを追加。JSONでの書き出し／読み込みと、マイリンク同期による端末間共有ができます。</p>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<h3>05 / Connected</h3>
+<strong>メールも、時間割も、同じ使い心地。</strong>
+<p>WebメールとCampus Planにも共通のテーマと操作感を適用。それぞれの表示切り替えは、設定から個別に調整できます。</p>
+</td>
+<td width="50%" valign="top">
+<h3>06 / Languages</h3>
+<strong>いつもの言語で、迷わず使う。</strong>
+<p>日本語、英語、中国語（簡体・繁体）、韓国語、インドネシア語、ネパール語、タイ語、ベトナム語のUIと、初回ガイドを用意。</p>
+</td>
+</tr>
+</table>
 
-対象は次のサービスです。
-
-| サービス        | 主な変更                                                         |
-| --------------- | ---------------------------------------------------------------- |
-| 学生ポータル    | ホーム、お知らせ、休講・補講・教室変更、アンケートを再レイアウト |
-| King LMS        | コースと課題期限を取り込み、ポータルの講義・課題カレンダーへ反映 |
-| Home2 Webメール | ログイン、受信箱、閲覧、送信画面を共通デザインで表示             |
-| Campus Plan     | 時間割や出欠情報を読みやすいオーバーレイで表示                   |
-
-利用者向けの案内と配布情報は[プロジェクトページ](https://kcg-portal-redesign-project-web.vercel.app/)にあります。
-
-## 主な機能
-
-### ポータルを一画面に集約
-
-- 授業、課題、補修、キャンパス予定を週・月表示できるカレンダー
-- 授業コマからシラバスや対応するKing LMSコースを開く導線
-- お知らせ、拾得物、休講・補講・教室変更、アンケートの専用画面
-- マイリンクと固定リンクをまとめた、並べ替え可能なショートカット
-- 初回利用者向けの言語選択とガイドツアー
+<details>
+<summary><strong>King LMSとの連携・「みんなの活動」について</strong></summary>
 
 ### King LMSとの連携
 
 King LMSで取得したコース一覧と課題期限をブラウザ内へ保存し、ポータル側のカレンダーへ反映します。再取得が必要な場合は、設定または課題カレンダーからKing LMSへ移動し、完了後にポータルへ戻ります。
 
-### 自分の予定をカレンダーへ追加
-
-- 毎週繰り返す予定と日付指定の予定
-- 開始・終了時刻、メモ、関連URLを登録
-- JSONファイルへの書き出しと読み込み
-- マイリンク同期を有効にした端末間で共有
-
-### 表示を自分向けに調整
-
-- 64種類の組み込みテーマ
-- 色を編集できる独自テーマと、複製・書き出し機能
-- 複数の日本語Webフォント
-- カレンダーの週開始日、プロフィール名、装飾、課題カレンダーなどの表示設定
-- 日本語、英語、中国語（簡体・繁体）、韓国語、インドネシア語、ネパール語、タイ語、ベトナム語のUI
-
-### WebメールとCampus Plan
-
-学生ポータル以外の画面にも同じテーマと操作感を適用します。どちらのオーバーレイも設定から個別に無効化できます。
-
 ### 「みんなの活動」
 
 ポータルから開ける独立したコミュニティ機能です。学校のサービスではなく、投稿とプロフィールは学校とは別のコミュニティサーバーへ送信されます。初回表示時にこの点を説明し、明示的な同意を求めます。学校のログインIDやパスワードを入力しないでください。
+
+</details>
+
+## しくみ
+
+KCGLMS+は、ログイン済みのページから必要な情報を読み取り、React製のオーバーレイとして表示するManifest V3拡張機能です。
+
+```text
+学生ポータル ─┐
+King LMS ─────┤   ログイン済みのページ    KCGLMS+
+Webメール ────┼─→ から情報を読み取り ─→ 使いやすい画面へ
+Campus Plan ──┘
+```
+
+学校のサーバーや保存データを置き換える仕組みではありません。拡張機能を無効にすると元の表示へ戻せます。
 
 ## 対応環境
 
@@ -75,27 +108,14 @@ Firefox Android向けmanifestの最低バージョンは142です。対応値の
 
 KCGLMS+を利用するには、各対象サービスへ通常どおりログインできるKCG学生アカウントが必要です。
 
-## インストール
+## データとプライバシー
 
-通常の利用では[プロジェクトページ](https://kcg-portal-redesign-project-web.vercel.app/)から配布版を入手してください。
+表示設定やKing LMSのコース・課題情報は、ブラウザの拡張機能ストレージに保存します。テーマや予定を共有するマイリンク同期と、任意のコミュニティ機能も利用できます。
 
-ソースからChromium向け開発ビルドを作る場合は、次の手順を使います。
+権限や同期の挙動は以下を確認してください。
 
-```bash
-git clone https://github.com/nnnnnnn0090/KCGLMS-Plus.git
-cd KCGLMS-Plus/app
-npm ci
-npm run build
-```
-
-ChromeまたはEdgeで拡張機能管理画面を開き、デベロッパーモードを有効にして、`app/.output/chrome-mv3` を「パッケージ化されていない拡張機能」として読み込みます。
-
-Firefox向けは `npm run build:firefox` を実行し、`about:debugging` の「一時的なアドオンを読み込む」から `app/.output/firefox-mv3/manifest.json` を選択します。
-
-> [!NOTE]
-> 開発ビルドにはローカルE2Eサーバー用の権限が追加されます。配布用成果物には含まれません。
-
-## 権限、データ、プライバシー
+<details>
+<summary><strong>ブラウザ権限・保存データ・端末間同期の詳細</strong></summary>
 
 ### ブラウザ権限
 
@@ -106,7 +126,7 @@ Firefox向けは `npm run build:firefox` を実行し、`about:debugging` の「
 | `home.kcg.ac.jp`                             | 学生ポータルとCampus Planの表示、ポータルAPI、設定同期 |
 | `king-lms.kcg.edu`                           | コース一覧と課題期限の取り込み                         |
 | `home2.kcg.ac.jp`                            | Webメールの表示                                        |
-| `kcg-portal-redesign-project-web.vercel.app` | 更新情報、お知らせ、アンケート、稼働状態の確認         |
+| 拡張機能の配布サーバー | 更新情報、お知らせ、アンケート、稼働状態の確認         |
 | `portal-community.com`                       | 任意のコミュニティ機能                                 |
 
 生成される正確なmanifestは [`app/wxt.config.ts`](app/wxt.config.ts) と [`app/src/contract/origins.ts`](app/src/contract/origins.ts) から構成され、CIで固定済みmanifestと比較されます。
@@ -126,9 +146,16 @@ Firefox向けは `npm run build:firefox` を実行し、`about:debugging` の「
 
 同期データは、有効な `VITE_TELEMETRY_HMAC_SECRET` がビルド時に設定されている場合、AES-256-GCMで暗号化されます。未設定のビルドでは互換用の非暗号化形式で保存されるため、配布用成果物を作る場合は必ず設定してください。自前ビルドで設定しない場合は、マイリンク同期を無効にすることを推奨します。
 
-詳細は[プライバシーポリシー](https://kcg-portal-redesign-project-web.vercel.app/privacy-policy)を確認してください。
+利用前に、配布元のプライバシーポリシーを確認してください。
+
+</details>
 
 ## 開発
+
+React 19 / TypeScript / WXTを使用しています。開発手順、検証方法、構成の詳細は以下から確認できます。
+
+<details>
+<summary><strong>開発環境・ビルド・品質チェック</strong></summary>
 
 ### 必要なもの
 
@@ -216,7 +243,35 @@ npm run test:e2e
 
 実サービスを使うフローテストには認証情報が必要です。必要な環境変数と実行時の注意事項は [`app/e2e/README.md`](app/e2e/README.md) にまとめています。認証情報をリポジトリへ保存しないでください。
 
-## アーキテクチャ
+</details>
+
+### ソースからインストール
+
+<details>
+<summary><strong>Chrome・Edge・Firefoxで開発ビルドを試す</strong></summary>
+
+ソースからChromium向け開発ビルドを作る場合は、次の手順を使います。
+
+```bash
+git clone https://github.com/nnnnnnn0090/KCGLMS-Plus.git
+cd KCGLMS-Plus/app
+npm ci
+npm run build
+```
+
+ChromeまたはEdgeで拡張機能管理画面を開き、デベロッパーモードを有効にして、`app/.output/chrome-mv3` を「パッケージ化されていない拡張機能」として読み込みます。
+
+Firefox向けは `npm run build:firefox` を実行し、`about:debugging` の「一時的なアドオンを読み込む」から `app/.output/firefox-mv3/manifest.json` を選択します。
+
+> [!NOTE]
+> 開発ビルドにはローカルE2Eサーバー用の権限が追加されます。配布用成果物には含まれません。
+
+</details>
+
+### アーキテクチャ
+
+<details>
+<summary><strong>レイヤ構成・ディレクトリ・データの流れ</strong></summary>
 
 コードは、ブラウザ依存と業務ロジックを分離するレイヤ構成です。
 
@@ -241,6 +296,8 @@ contract → platform / domain → services → ui → entrypoints
 
 レイヤ違反はdependency-cruiser、型の抜けはtype-coverage、外部に見える契約変更はgoldenテストで検出します。
 
+</details>
+
 ## コントリビューション
 
 バグ報告と機能提案は [GitHub Issues](https://github.com/nnnnnnn0090/KCGLMS-Plus/issues) へお願いします。再現手順、対象ページ、ブラウザとバージョン、KCGLMS+のバージョンがあると調査しやすくなります。個人情報、学生番号、授業内容、認証情報がスクリーンショットやログに含まれていないことを確認してください。
@@ -257,3 +314,13 @@ Pull Requestでは、変更範囲を小さく保ち、関連テストを追加�
 ## ライセンス
 
 KCGLMS+は[GPL-3.0 license](LICENSE)で公開されています。使用しているライブラリとWebフォントのライセンスは、拡張機能内の「設定 → サポート → ライセンス情報」から確認できます。
+
+---
+
+<p align="center">
+  <img src="docs/assets/mascot-icon.png" width="48" height="48" alt=""><br>
+  <strong>KCGLMS+</strong><br>
+  <sub>毎日の学生生活に、ちいさなプラス。</sub><br><br>
+  <a href="https://github.com/nnnnnnn0090/KCGLMS-Plus/issues">Issues</a> &nbsp; · &nbsp;
+  <a href="LICENSE">GPL-3.0</a>
+</p>

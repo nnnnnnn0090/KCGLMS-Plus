@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">A calmer campus day.</title>
+  <desc id="desc">KCGLMS+のコンセプトイラスト。空色の背景に、授業・課題・お知らせを表すカードを配置しています。</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1200" y2="380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F2FAFE"/>
+      <stop offset="1" stop-color="#D7EDF9"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="748" y1="64" x2="1096" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="white"/>
+      <stop offset="1" stop-color="#F5FBFF"/>
+    </linearGradient>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#5B8FA0" opacity=".15"/>
+    </pattern>
+    <clipPath id="round"><rect width="1200" height="380" rx="24"/></clipPath>
+  </defs>
+  <g clip-path="url(#round)">
+    <path fill="url(#sky)" d="M0 0h1200v380H0z"/>
+    <path fill="url(#dots)" d="M0 0h1200v380H0z"/>
+    <circle cx="1065" cy="65" r="186" stroke="white" stroke-width="36" opacity=".6"/>
+    <circle cx="681" cy="382" r="170" stroke="#B9DDED" stroke-width="1.5"/>
+    <circle cx="681" cy="382" r="145" stroke="#B9DDED" stroke-width="1.5"/>
+    <circle cx="1081" cy="81" r="27" fill="#FFE38A"/>
+    <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+      <rect x="52" y="50" width="188" height="28" rx="14" fill="white" stroke="#CAE2EE"/>
+      <circle cx="68" cy="64" r="4" fill="#5B8FA0"/>
+      <text x="80" y="68" fill="#4A6675" font-size="10" font-weight="700" letter-spacing="1.6">A LITTLE PLUS, EVERY DAY</text>
+      <text x="50" y="153" fill="#2F4A58" font-size="58" font-weight="750" letter-spacing="-2.7">A calmer</text>
+      <text x="50" y="218" fill="#2F4A58" font-size="58" font-weight="750" letter-spacing="-2.7">campus day.</text>
+      <path d="M53 235c97-8 183-8 285-2" stroke="#F2CA61" stroke-width="5" stroke-linecap="round"/>
+      <text x="53" y="278" fill="#5B8FA0" font-size="14" letter-spacing=".3">Your classes. Your tasks. Your own space.</text>
+      <text x="53" y="332" fill="#6C8E9F" font-size="10" font-weight="600" letter-spacing="2.5">KCGLMS+ / UNOFFICIAL BROWSER EXTENSION</text>
+      <rect x="710" y="59" width="346" height="262" rx="18" fill="#5B8FA0" opacity=".08"/>
+      <rect x="700" y="49" width="346" height="262" rx="18" fill="url(#panel)" stroke="#C5DFEC"/>
+      <text x="724" y="80" fill="#2F4A58" font-size="13" font-weight="700">YOUR WEEK, AT A GLANCE</text>
+      <circle cx="1017" cy="75" r="4" fill="#A9D8F0"/>
+      <path d="M700 98h346" stroke="#DFEDF4"/>
+      <g fill="#7F9AA8" font-size="9" font-weight="600" text-anchor="middle" letter-spacing="1">
+        <text x="754" y="122">MON</text><text x="831" y="122">TUE</text>
+        <text x="908" y="122">WED</text><text x="985" y="122">THU</text>
+      </g>
+      <g stroke="#E4EFF5"><path d="M792 136v149M869 136v149M946 136v149M722 186h302M722 237h302"/></g>
+      <rect x="726" y="140" width="57" height="40" rx="7" fill="#D4EBF8"/>
+      <rect x="803" y="191" width="57" height="40" rx="7" fill="#E3EFF0"/>
+      <rect x="880" y="140" width="57" height="40" rx="7" fill="#FFF0B8"/>
+      <rect x="957" y="242" width="57" height="40" rx="7" fill="#D4EBF8"/>
+      <g stroke="#5B8FA0" stroke-width="2" stroke-linecap="round" opacity=".6">
+        <path d="M738 154h23m-23 10h14M815 205h23m-23 10h14M969 256h23m-23 10h14"/>
+      </g>
+      <path d="m894 160 5 5 9-10" stroke="#B39138" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="615" y="249" width="222" height="71" rx="13" fill="#5B8FA0" opacity=".09"/>
+      <rect x="610" y="243" width="222" height="71" rx="13" fill="white" stroke="#C5DFEC"/>
+      <rect x="626" y="260" width="36" height="36" rx="11" fill="#D4EBF8"/>
+      <path d="M637 270h14v15h-14zm0 5h14m-10-7v4m6-4v4" stroke="#4B9FCF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="674" y="273" fill="#2F4A58" font-size="11" font-weight="700">Classes &amp; deadlines</text>
+      <text x="674" y="290" fill="#7F9AA8" font-size="10">Everything in one place.</text>
+      <rect x="955" y="193" width="181" height="61" rx="13" fill="#5B8FA0" opacity=".08"/>
+      <rect x="950" y="187" width="181" height="61" rx="13" fill="white" stroke="#C5DFEC"/>
+      <circle cx="976" cy="217" r="13" fill="#FFF0B8"/>
+      <path d="m971 217 3.5 3.5 6-7" stroke="#B39138" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="998" y="214" fill="#2F4A58" font-size="11" font-weight="700">Make it yours.</text>
+      <text x="998" y="230" fill="#7F9AA8" font-size="10">64 built-in themes</text>
+    </g>
+    <path d="M1113 293v14m-7-7h14M647 96v14m-7-7h14" stroke="#7DB9D5" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="883" cy="345" r="4" fill="#F2CA61"/>
+    <rect x=".5" y=".5" width="1199" height="379" rx="23.5" stroke="#C5DFEC"/>
+  </g>
+</svg>
