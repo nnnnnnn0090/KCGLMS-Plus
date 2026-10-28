@@ -2,6 +2,10 @@ import { EXTENSION_ENABLED_URL } from '../contract/origins';
 import { KING_LMS_SYNC_DOM, PORTAL_DOM } from '../contract/dom';
 import { removePortalBackdrop } from '../domain/themes';
 import { teardownHome2Overlay } from './home2-host';
+import {
+  hideExtensionDisabledNotice,
+  showExtensionDisabledNotice,
+} from './extension-disabled-notice';
 
 type ExtensionEnabledResponse = { enabled?: unknown };
 
@@ -31,16 +35,21 @@ export function isExtensionBlockedByRemoteKillSwitch(): boolean {
   return readRemoteKillSwitchFlag();
 }
 
-/** Web のマスタースイッチ。取得失敗時は fail-open（従来どおり動作）。 */
+/** 取得失敗時は直前の状態を維持する。未停止のタブでは従来どおり動作する。 */
 export async function isExtensionOperationallyEnabled(): Promise<boolean> {
   try {
     const response = await fetch(EXTENSION_ENABLED_URL, { cache: 'no-store' });
-    if (!response.ok) return true;
+    if (!response.ok) return !readRemoteKillSwitchFlag();
     const payload = (await response.json()) as ExtensionEnabledResponse;
-    return payload.enabled !== false;
+    return typeof payload.enabled === 'boolean' ? payload.enabled : !readRemoteKillSwitchFlag();
   } catch {
-    return true;
+    return !readRemoteKillSwitchFlag();
   }
+}
+
+function syncDisabledNotice(): void {
+  if (readRemoteKillSwitchFlag()) showExtensionDisabledNotice();
+  else hideExtensionDisabledNotice();
 }
 
 /**
@@ -49,20 +58,26 @@ export async function isExtensionOperationallyEnabled(): Promise<boolean> {
  * ブロック中に ON に戻ったらフラグを消してリロードする。
  */
 export function startExtensionOperationalWatch(): void {
+  syncDisabledNotice();
   if (document.documentElement.dataset[OPERATIONAL_WATCH_DATASET_KEY]) return;
   document.documentElement.dataset[OPERATIONAL_WATCH_DATASET_KEY] = '1';
+  if (!document.body) {
+    document.addEventListener('DOMContentLoaded', syncDisabledNotice, { once: true });
+  }
 
   void (async () => {
     const enabled = await isExtensionOperationallyEnabled();
     if (!enabled) {
       if (!readRemoteKillSwitchFlag()) {
         writeRemoteKillSwitchFlag(true);
+        syncDisabledNotice();
         location.reload();
       }
       return;
     }
     if (readRemoteKillSwitchFlag()) {
       writeRemoteKillSwitchFlag(false);
+      syncDisabledNotice();
       location.reload();
     }
   })();
