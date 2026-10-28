@@ -20,7 +20,11 @@ import { createPortal } from 'react-dom';
 import type { Settings } from '../../../../context/settings';
 import type { CustomTheme } from '../../../../domain/themes';
 import { readExtensionVersion } from '../../../../lib/extension-version';
-import { CHANGELOG_JSON_URL, PORTAL_DOM } from '../../../../shared/constants';
+import {
+  CHANGELOG_JSON_URL,
+  EXTENSION_PROMO_ORIGIN,
+  PORTAL_DOM,
+} from '../../../../shared/constants';
 import { useExtensionUpdateAvailable } from '../../../../hooks/useExtensionUpdateAvailable';
 import { useI18n } from '../../../../i18n';
 import { parseChangelogJson, type ParsedChangelogRelease } from './settings-changelog';
@@ -463,7 +467,7 @@ export const SettingsPanel = forwardRef<SettingsPanelHandle, SettingsPanelProps>
           <div className="p-settings-row p-settings-row-actions p-settings-tour-replay">
             <a
               className="p-settings-tour-replay-btn"
-              href="https://kcg-portal-redesign-project-web.vercel.app/privacy-policy"
+              href={`${EXTENSION_PROMO_ORIGIN}/privacy-policy`}
               target="_blank"
               rel="noopener noreferrer"
             >

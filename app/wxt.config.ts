@@ -13,7 +13,9 @@ import {
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const communityBoundaryDir = path.resolve(rootDir, '../../shared/community-boundary');
 
-const { version } = JSON.parse(readFileSync(new URL('./version.json', import.meta.url), 'utf8')) as {
+const { version } = JSON.parse(
+  readFileSync(new URL('./version.json', import.meta.url), 'utf8'),
+) as {
   version: string;
 };
 
@@ -82,7 +84,7 @@ export default defineConfig({
         id: 'kcg-portal-redesign-project@nnnnnnn0090.com',
         strict_min_version: '140.0',
         data_collection_permissions: { required: ['none'] },
-        update_url: 'https://kcg-portal-redesign-project-web.vercel.app/updates.json',
+        update_url: `${EXTENSION_PROMO_ORIGIN}/updates.json`,
       } as WxtGeckoBaseline,
       gecko_android: { strict_min_version: '142.0' },
     },

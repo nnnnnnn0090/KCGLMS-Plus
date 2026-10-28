@@ -41,7 +41,7 @@ export const KING_LMS_ORIGIN = 'https://king-lms.kcg.edu' as const;
 export const KING_LMS_HOSTNAME = new URL(KING_LMS_ORIGIN).hostname;
 
 /** 拡張紹介ページ・開発者お知らせ JSON のオリジン（host_permissions と URL 生成用） */
-export const EXTENSION_PROMO_ORIGIN = 'https://kcg-portal-redesign-project-web.vercel.app' as const;
+export const EXTENSION_PROMO_ORIGIN = 'https://kcglms-plus.vercel.app' as const;
 
 /** みんなの活動 API（host_permissions と community-access 許可リスト用） */
 export const COMMUNITY_API_ORIGIN = 'https://portal-community.com' as const;

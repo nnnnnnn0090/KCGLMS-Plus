@@ -8,7 +8,7 @@
     "src/contract/index.ts": "39312c0e2a2d1023f2692e7fda1679bb64b7aa866a6da722dcdf40b2eabd20a5",
     "src/contract/limits.ts": "dc279e74262072b0e3b323b089cccd9da44ad9f816dea402f34c0e92f5b9b578",
     "src/contract/messages.ts": "808d04a69da925dbfabc2f20c53c8b86abfad6b491372187b17246b9d16417f0",
-    "src/contract/origins.ts": "6276f9401f4751d5d3ed124f5150feedac299b659813b671181c4a48213de000",
+    "src/contract/origins.ts": "949acad1c978a07f5b90a51ddd853519dec18db9e8a2225d8b86be0cb3d8a8bf",
     "src/contract/portal-student-key.ts": "ee54e11e574c16bb40172d806d0e42472fa2b8bd3671a18551ac80eb01c2246f",
     "src/contract/portal-sync-secret.ts": "0e7d2d6d82d68da4cc866f73e2ed5cfd2c9e0aa3d40d1dbf3eb902f802bc2751",
     "src/contract/portal-synced-storage.ts": "87df9935ca8b4909ebfba0cddfa024220dbf69843a78d33e84475327c732d46c",
@@ -37,7 +37,7 @@
     "src/domain/themes/theme-tokens.ts": "8f02a11b14f3ba37934c04ce493e7331e9218f5e22476158e389a4013805b5ab"
   },
   "groups": {
-    "contract": "d95f5306d0bf32176f2afaee7faa43895f31fe08c2de0695c1f0125c50cde0f4",
+    "contract": "5ac3d7b031bfb21615503cfc47101021fd4e75d69da87f79d227eecf4c42b9d9",
     "i18n": "be5f181d88603cdc29d63e9c270c9ac70884fa11107fbba0062909476c88ca61",
     "themeSources": "71206094440a03342ab8d84666e433dd1a042b6d95fb1e62608665bf5a412c6f"
   },
