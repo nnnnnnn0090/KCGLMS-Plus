@@ -75,7 +75,7 @@ export function installFetchBridge(): void {
           setTimeout(() => doPortalApi(id, method, url, body, attempt + 1), delay);
           return;
         }
-        let json: unknown = null;
+        let json: unknown;
         try {
           json = await response.json();
         } catch {

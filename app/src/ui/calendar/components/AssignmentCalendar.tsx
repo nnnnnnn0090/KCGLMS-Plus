@@ -185,7 +185,7 @@ export function AssignmentCalendar({ payload, titles, demoTodayIso }: Assignment
 
       // 次の表示範囲を計算してステートを更新
       let nextWp = weekParams;
-      let nextMr = monthRef;
+      let nextMr: typeof monthRef;
       if (viewMode === 'week') {
         nextWp = dir === 'prev' ? prevWeekRange(weekParams) : nextWeekRange(weekParams);
         nextMr = isoToMonthRef(nextWp.start);

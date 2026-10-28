@@ -9,6 +9,7 @@ export default tseslint.config(
       'node_modules/**',
       '.output/**',
       '.wxt/**',
+      'coverage/**',
       'e2e/**',
       'scripts/**',
       '**/*.cjs',
@@ -21,7 +22,8 @@ export default tseslint.config(
     files: ['src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
     rules: {
-      ...reactHooks.configs.recommended.rules,
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },

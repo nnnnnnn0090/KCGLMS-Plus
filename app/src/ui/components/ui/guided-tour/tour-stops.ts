@@ -48,7 +48,7 @@ function isVisible(el: Element): el is HTMLElement {
 
 export function findStopTarget(stop: TourStop, root: ParentNode): HTMLElement | null {
   for (const selector of stop.selectors) {
-    let el: Element | null = null;
+    let el: Element | null;
     try {
       el = root.querySelector(selector);
     } catch {
