@@ -167,7 +167,7 @@ React 19 / TypeScript / WXTを使用しています。開発手順、検証方�
 
 ### 必要なもの
 
-- Node.js 22.12以降（CIと同じバージョンを推奨）
+- Node.js 22.23.4以降（CIと同じバージョンを推奨）
 - npm
 - ChromeまたはFirefox
 
