@@ -7,7 +7,35 @@
 
 import { MSG, FETCH_HOOK } from '../contract/messages';
 import { urls, pageFetch } from '../lib/api';
+import { withWebLock } from '../lib/web-lock';
 import { portalApiRequest } from './portal-api-client';
+
+/** マイリンクを書き換える処理（通常リンクの編集・設定同期）を全タブで直列化するロック */
+const PORTAL_USER_LINKS_LOCK = 'kcglms-portal-user-links';
+
+export type PortalUserLinksFailure = 'signed-out' | 'network' | 'rejected';
+
+export class PortalUserLinksError extends Error {
+  constructor(
+    message: string,
+    readonly reason: PortalUserLinksFailure,
+    /** HTTP ステータス（応答がなければ 0） */
+    readonly status = 0,
+  ) {
+    super(message);
+    this.name = 'PortalUserLinksError';
+  }
+}
+
+function describeError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function failureFromStatus(status: number, rejectedOtherwise: boolean): PortalUserLinksFailure {
+  if (status === 401 || status === 403) return 'signed-out';
+  if (status === 0 || status >= 500) return 'network';
+  return rejectedOtherwise ? 'rejected' : 'network';
+}
 
 export interface PortalUserLink {
   id: string;
@@ -89,23 +117,71 @@ export function createPortalUserLinkDraft(
 }
 
 export async function fetchPortalUserLinks(): Promise<PortalUserLink[]> {
-  const res = await portalApiRequest<unknown>('GET', urls.userHtmlLinkMe());
-  if (!res.ok) throw new Error('failed to load portal user links');
+  let res;
+  try {
+    res = await portalApiRequest<unknown>('GET', urls.userHtmlLinkMe());
+  } catch (error) {
+    throw new PortalUserLinksError(`load: ${describeError(error)}`, 'network');
+  }
+  if (!res.ok) {
+    throw new PortalUserLinksError(
+      `load: HTTP ${res.status}`,
+      failureFromStatus(res.status, false),
+      res.status,
+    );
+  }
+  // ログイン切れではログイン画面などが返り、配列にならない。
+  if (!Array.isArray(res.json)) {
+    const kind = res.json === null ? 'empty or not JSON' : typeof res.json;
+    throw new PortalUserLinksError(
+      `load: HTTP ${res.status}, response is ${kind}`,
+      'signed-out',
+      res.status,
+    );
+  }
   return parsePortalUserLinks(res.json);
 }
 
 export async function savePortalUserLinks(links: readonly PortalUserLink[]): Promise<void> {
   const payload = buildPortalUserLinkSavePayload(links);
-  const res = await portalApiRequest<PortalUserLinkSaveResponse>(
-    'POST',
-    urls.updateUserHtmlLink(),
-    payload,
-  );
-  if (!res.ok) {
-    const message =
-      res.json?.userMessage || res.json?.fullMessage || 'failed to save portal user links';
-    throw new Error(message);
+  let res;
+  try {
+    res = await portalApiRequest<PortalUserLinkSaveResponse>(
+      'POST',
+      urls.updateUserHtmlLink(),
+      payload,
+    );
+  } catch (error) {
+    throw new PortalUserLinksError(`save: ${describeError(error)}`, 'network');
   }
+  if (!res.ok) {
+    const message = res.json?.userMessage || res.json?.fullMessage || '';
+    throw new PortalUserLinksError(
+      `save: HTTP ${res.status}${message ? ` ${message}` : ''}`,
+      failureFromStatus(res.status, true),
+      res.status,
+    );
+  }
+}
+
+/** マイリンクの読み書きを、全タブで1つずつ実行する。 */
+export function withPortalUserLinksLock<T>(task: () => Promise<T>): Promise<T> {
+  return withWebLock(PORTAL_USER_LINKS_LOCK, task);
+}
+
+/**
+ * 最新のマイリンクを取得し直してから変更を加えて保存する。
+ * 画面が持っている古い一覧で上書きしないため、変更は必ずこの関数を通す。
+ */
+export async function mutatePortalUserLinks(
+  mutate: (latest: PortalUserLink[]) => PortalUserLink[],
+): Promise<PortalUserLink[]> {
+  return withPortalUserLinksLock(async () => {
+    const latest = await fetchPortalUserLinks();
+    const next = mutate(latest);
+    await savePortalUserLinks(next);
+    return next;
+  });
 }
 
 export function refreshPortalUserLinks(): void {
@@ -140,23 +216,19 @@ async function refreshPortalUserLinksDirect(): Promise<void> {
   }
 }
 
-export async function addPortalUserLink(
-  links: readonly PortalUserLink[],
-  midashi: string,
-  url: string,
-): Promise<PortalUserLink[]> {
-  const next = [...links, createPortalUserLinkDraft(links, midashi, url)];
-  await savePortalUserLinks(next);
+export async function addPortalUserLink(midashi: string, url: string): Promise<PortalUserLink[]> {
+  const next = await mutatePortalUserLinks((latest) => [
+    ...latest,
+    createPortalUserLinkDraft(latest, midashi, url),
+  ]);
   refreshPortalUserLinks();
   return next;
 }
 
-export async function deletePortalUserLink(
-  links: readonly PortalUserLink[],
-  id: string,
-): Promise<PortalUserLink[]> {
-  const next = links.map((link) => (link.id === id ? { ...link, delFlg: true } : link));
-  await savePortalUserLinks(next);
+export async function deletePortalUserLink(id: string): Promise<PortalUserLink[]> {
+  const next = await mutatePortalUserLinks((latest) =>
+    latest.map((link) => (link.id === id ? { ...link, delFlg: true } : link)),
+  );
   refreshPortalUserLinks();
   return next;
 }
@@ -166,13 +238,15 @@ export async function migrateLocalCustomLinks(
   custom: ReadonlyArray<{ midashi: string; url: string }>,
 ): Promise<void> {
   if (custom.length === 0) return;
-  let links = await fetchPortalUserLinks();
-  for (const item of custom) {
-    const midashi = item.midashi.trim();
-    const url = item.url.trim();
-    if (!midashi || !url) continue;
-    links = [...links, createPortalUserLinkDraft(links, midashi, url)];
-  }
-  await savePortalUserLinks(links);
+  await mutatePortalUserLinks((latest) => {
+    let links = latest;
+    for (const item of custom) {
+      const midashi = item.midashi.trim();
+      const url = item.url.trim();
+      if (!midashi || !url) continue;
+      links = [...links, createPortalUserLinkDraft(links, midashi, url)];
+    }
+    return links;
+  });
   refreshPortalUserLinks();
 }

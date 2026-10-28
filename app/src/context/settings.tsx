@@ -9,6 +9,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -55,6 +56,16 @@ const SETTINGS_TO_SK = {
   language: SK.language,
   font: SK.font,
 } satisfies Record<keyof Settings, string>;
+
+/** 設定画面・テーマに関わる storage キー（これ以外の同期キーの変更では描き直さない） */
+const UI_STORAGE_KEYS: ReadonlySet<string> = new Set([
+  ...Object.values(SETTINGS_TO_SK),
+  SK.customThemes,
+]);
+
+function sameJson(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
 
 function parseSettings(data: Record<string, unknown>): Settings {
   return parseSettingsFromExtensionStorage(data);
@@ -106,6 +117,43 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [applyStorageToUi]);
+
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+
+  // 同期で他の端末の変更が届いたとき・別タブで変えたときも、表示を最新に保つ。
+  // 自分の書き込みや値の変わらない通知（Firefox は同じ値でも通知する）では何もしない。
+  // 画面全体の描き直しとテーマ CSS の差し替えは重いので、実際に変わったときだけ行う。
+  useEffect(() => {
+    if (!settingsReady) return;
+    let scheduled = false;
+
+    const applyIfChanged = (data: Record<string, unknown>) => {
+      const next = loadUiStateFromStorage(data);
+      const sameSettings = sameJson(next.settings, settingsRef.current);
+      const sameThemes = sameJson(next.customThemes, customThemesRef.current);
+      if (sameSettings && sameThemes) return;
+      const themeChanged = !sameThemes || next.settings.theme !== settingsRef.current.theme;
+      const fontChanged = next.settings.font !== settingsRef.current.font;
+      if (!sameSettings) setSettings(next.settings);
+      if (!sameThemes) setCustomThemes(next.customThemes);
+      if (themeChanged) syncPortalTheme(next.settings.theme, next.customThemes);
+      if (fontChanged) syncPortalFont(next.settings.font);
+    };
+
+    return storage.onChanged((changes) => {
+      const relevant = Object.entries(changes).some(
+        ([key, change]) => UI_STORAGE_KEYS.has(key) && !sameJson(change.oldValue, change.newValue),
+      );
+      if (!relevant || scheduled) return;
+      // 続けて届いた通知は1回の読み直しにまとめる。
+      scheduled = true;
+      setTimeout(() => {
+        scheduled = false;
+        void storage.get([...UI_STORAGE_KEYS]).then(applyIfChanged);
+      }, 0);
+    });
+  }, [settingsReady, customThemesRef]);
 
   const updateSetting = useCallback(
     async <K extends keyof Settings>(key: K, value: Settings[K]) => {

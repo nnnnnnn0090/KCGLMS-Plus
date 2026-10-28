@@ -6,6 +6,7 @@ import {
 } from '../domain/themes';
 import { matchHome2MailRoute } from '../domain/home2/router';
 import { storageRepo } from '../platform/storage/repo';
+import { DEFAULT_THEME } from '../domain/themes/definitions';
 
 /** home2-early: 黒カバー + overlay 判定（F-034） */
 export async function applyHome2EarlyBootCover(): Promise<void> {
@@ -17,7 +18,7 @@ export async function applyHome2EarlyBootCover(): Promise<void> {
     storageRepo.getCustomThemes(),
   ]);
   const customThemes = parseCustomThemeCollection(customThemesRaw);
-  ensurePortalBackdrop(themeName || 'dark', customThemes);
+  ensurePortalBackdrop(themeName || DEFAULT_THEME, customThemes);
 }
 
 /** home2.content: ルート判定（F-034〜F-039） */

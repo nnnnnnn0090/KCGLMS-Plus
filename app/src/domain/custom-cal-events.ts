@@ -280,12 +280,13 @@ export function parseCustomCalEventCollectionWithReport(raw: unknown): CustomCal
       rejectedCount += 1;
       continue;
     }
-    if (events.length >= CUSTOM_CAL_EVENTS_MAX) continue;
     seen.add(event.id);
     events.push(event);
   }
 
-  const truncated = input.events.length - rejectedCount > CUSTOM_CAL_EVENTS_MAX;
+  // 保存済みの予定は上限を超えても捨てない（同期で2台分が合わさった場合など）。
+  // 捨てると、次の保存で「削除」として全端末に広がってしまう。上限は追加・読み込み時に守る。
+  const truncated = events.length > CUSTOM_CAL_EVENTS_MAX;
   return {
     collection: { schemaVersion: CUSTOM_CAL_EVENTS_SCHEMA_VERSION, events },
     rejectedCount,

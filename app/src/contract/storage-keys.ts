@@ -39,7 +39,7 @@ export const SK = {
   font: 'portalThemeUiFont',
   /**
    * マイリンク経由で設定を端末間同期するか。
-   * 端末ローカルのみ（マイリンク同期対象外）。未設定時は true。
+   * 端末ローカルのみ（マイリンク同期対象外）。未設定時は false（最初のチュートリアルで選ぶ）。
    */
   syncViaMyLinks: 'portalThemeSyncViaMyLinks',
   /** 更新通知済みの拡張 manifest version（`readExtensionVersion()` と比較） */

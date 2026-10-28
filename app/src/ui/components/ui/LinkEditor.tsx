@@ -33,15 +33,21 @@ export function LinkEditor({ items, userLinks, editing }: LinkEditorProps) {
   const [layoutReady, setLayoutReady] = useState(false);
   const [dragUi, setDragUi] = useState<{ from: number; over: number | null } | null>(null);
   const [busy, setBusy] = useState(false);
+  /** 保存に失敗したときの理由（null なら表示しない） */
+  const [saveError, setSaveError] = useState<string | null>(null);
+  /** 削除に成功したリンク。ポータルから一覧を取り直す前でも、すぐ画面から消す。 */
+  const [removedIds, setRemovedIds] = useState<ReadonlySet<string>>(() => new Set());
   const dragSrcIdx = useRef(-1);
   const layoutRef = useRef({ order: [] as string[], hidden: [] as string[] });
 
   const rebuildRows = useCallback(
     (order: string[]) => {
-      const built = buildLinkEditorRows(items, LINK_EDITOR_EXTRAS, userLinks);
+      const built = buildLinkEditorRows(items, LINK_EDITOR_EXTRAS, userLinks).filter(
+        (row) => !(row.portalId && removedIds.has(row.portalId)),
+      );
       setRows(orderLinkEditorRows(built, order));
     },
-    [items, userLinks],
+    [items, userLinks, removedIds],
   );
 
   useEffect(() => {
@@ -80,8 +86,13 @@ export function LinkEditor({ items, userLinks, editing }: LinkEditorProps) {
   async function deleteCustom(portalId: string): Promise<void> {
     if (busy) return;
     setBusy(true);
+    setSaveError(null);
     try {
-      await deletePortalUserLink(userLinks, portalId);
+      await deletePortalUserLink(portalId);
+      setRemovedIds((prev) => new Set(prev).add(portalId));
+      setRows((prev) => prev.filter((row) => row.portalId !== portalId));
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : String(error));
     } finally {
       setBusy(false);
     }
@@ -97,10 +108,13 @@ export function LinkEditor({ items, userLinks, editing }: LinkEditorProps) {
       return;
     }
     setBusy(true);
+    setSaveError(null);
     try {
-      await addPortalUserLink(userLinks, name, url);
+      await addPortalUserLink(name, url);
       setAddName('');
       setAddUrl('');
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : String(error));
     } finally {
       setBusy(false);
     }
@@ -223,6 +237,12 @@ export function LinkEditor({ items, userLinks, editing }: LinkEditorProps) {
           </div>
         ))}
       </div>
+      {saveError !== null ? (
+        <p className="p-link-edit-error" role="alert">
+          {t.linkEditor.saveFailed}
+          {saveError ? <span className="p-link-edit-error-detail"> ({saveError})</span> : null}
+        </p>
+      ) : null}
       <div className="p-link-add-form">
         <input
           type="text"

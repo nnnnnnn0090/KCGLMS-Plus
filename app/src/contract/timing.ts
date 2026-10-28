@@ -34,3 +34,18 @@ export function pageFetchRetryDelayMs(attempt: number): number {
     TIMING.pageFetchRetryMaxMs,
   );
 }
+
+/** 1回の通信にかかりうる時間の目安 */
+const PORTAL_API_REQUEST_ALLOWANCE_MS = 20000;
+
+/**
+ * portalApiRequest が応答を待つ上限。
+ * ページ側のブリッジは「認証ヘッダーが揃うまでの待機」と「401 の再試行」を行うので、
+ * それより先に呼び出し側が諦めないよう、両方の最大時間に通信時間を足した値にする。
+ */
+export const PORTAL_API_RESPONSE_DEADLINE_MS =
+  TIMING.pageFetchDeadlineMs +
+  Array.from({ length: TIMING.pageFetchMaxAttempts }, (_, attempt) =>
+    pageFetchRetryDelayMs(attempt),
+  ).reduce((sum, delay) => sum + delay, 0) +
+  PORTAL_API_REQUEST_ALLOWANCE_MS;

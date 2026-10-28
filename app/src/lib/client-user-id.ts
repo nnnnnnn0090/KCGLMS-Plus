@@ -27,8 +27,9 @@ export async function ensureClientUserIdInMemory(): Promise<string> {
   const cached = normalizeClientUserId((await storage.get(SK.clientUserId))[SK.clientUserId]);
   if (cached) return cached;
 
+  // 他の端末で作られた ID が同期で届いたら、そちらを優先する。
   const id = generateClientUserId();
-  await storage.set({ [SK.clientUserId]: id });
+  await storage.setDefaults({ [SK.clientUserId]: id });
   return id;
 }
 

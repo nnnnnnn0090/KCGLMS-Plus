@@ -3,7 +3,7 @@
  */
 
 import { FETCH_HOOK } from '../contract/messages';
-import { TIMING } from '../contract/timing';
+import { PORTAL_API_RESPONSE_DEADLINE_MS } from '../contract/timing';
 import { postPortalApiRequest } from '../platform/messaging/page-bus';
 
 export interface PortalApiResponse<T = unknown> {
@@ -29,7 +29,7 @@ export function portalApiRequest<T = unknown>(
     const timeout = window.setTimeout(() => {
       window.removeEventListener('message', onMessage);
       reject(new Error('portal API request timed out'));
-    }, TIMING.pageFetchDeadlineMs);
+    }, PORTAL_API_RESPONSE_DEADLINE_MS);
 
     const onMessage = (event: MessageEvent) => {
       if (event.source !== window) return;

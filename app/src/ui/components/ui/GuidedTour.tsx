@@ -1,9 +1,11 @@
 /**
  * 初回ホーム表示時のオンボーディング。
- * 言語とテーマの初期設定後、実画面上で主要機能を短く案内する。
+ *
+ *   言語の選択 → 初期設定（テーマ・週の始まり・キャラクター・同期）
+ *   → ホームの案内（SpotlightTour）→ 完了
  */
 
-import { useState, useEffect, useLayoutEffect, useCallback, useId, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { PAGE, SK } from '../../../shared/constants';
 import storage from '../../../lib/storage';
 import { usePortalDom } from '../../../context/portalDom';
@@ -12,57 +14,34 @@ import { useI18n } from '../../../i18n';
 import { LanguagePicker } from './LanguagePicker';
 import type { AppLanguage } from '../../../i18n/messages';
 import {
-  ASSIGNMENT_STEP_IDS,
-  CALENDAR_OVERVIEW_STEP_IDS,
   DOCK_EXIT_MS,
+  DONE_STEP,
   FINISH_FADE_MS,
   FINISH_WAIT_MS,
-  HOLE_RETRY_MAX,
-  HOLE_RETRY_MS,
-  SCROLL_SETTLE_MS,
   STEPS,
 } from './guided-tour/constants';
 import { GuidedTourSteps } from './guided-tour/GuidedTourSteps';
-import {
-  computeSpotlightCardCss,
-  isSetupDockStep,
-  querySpotlightElement,
-  readSpotlightHole,
-  sameHole,
-  scrollSpotlightToOverlayCenter,
-  scrollThemePreviewToCalendar,
-} from './guided-tour/spotlight-geometry';
-import type { GuidedTourProps, Hole, TourPhase } from './guided-tour/types';
+import { isSetupDockStep, scrollThemePreviewToCalendar } from './guided-tour/setup-scroll';
+import { SpotlightTour } from './guided-tour/SpotlightTour';
+import type { GuidedTourProps, TourPhase } from './guided-tour/types';
 
 export type { GuidedTourProps } from './guided-tour/types';
 
-export function GuidedTour({
-  route,
-  settingsReady,
-  hideAssignmentCalendar = false,
-  guidedTourReplayToken = 0,
-}: GuidedTourProps) {
+function prefersReducedMotion(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+export function GuidedTour({ route, settingsReady, guidedTourReplayToken = 0 }: GuidedTourProps) {
   const { language, t } = useI18n();
   const { settings, updateSetting, updateTheme } = useSettings();
   const { overlayRoot } = usePortalDom();
-  const steps = useMemo(
-    () =>
-      hideAssignmentCalendar ? STEPS.filter((step) => !ASSIGNMENT_STEP_IDS.has(step.id)) : STEPS,
-    [hideAssignmentCalendar],
-  );
+  const steps = STEPS;
   const [phase, setPhase] = useState<TourPhase>('loading');
   const [stepIndex, setStepIndex] = useState(0);
-  const [viewport, setViewport] = useState({ w: 0, h: 0 });
-  const [hole, setHole] = useState<Hole | null>(null);
-  const [cardSize, setCardSize] = useState({ w: 0, h: 0 });
   const [dockExiting, setDockExiting] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
   const [finishingFade, setFinishingFade] = useState(false);
-  const maskSuffix = useId().replace(/:/g, '');
-  const maskId = `p-tour-mask-${maskSuffix}`;
   const cardRef = useRef<HTMLDivElement>(null);
-  const outlinedTargetRef = useRef<HTMLElement | null>(null);
-  const retryRef = useRef(0);
   const dockTransitionTimerRef = useRef<number | null>(null);
   const celebrationTimerRef = useRef<number | null>(null);
 
@@ -104,34 +83,17 @@ export function GuidedTour({
   const handleLanguageConfirm = useCallback(
     (nextLanguage: AppLanguage) => {
       updateSetting('language', nextLanguage);
-      void storage.set({ [SK.portalLanguagePickerDone]: true }).then(() => {
-        setStepIndex(0);
-        setPhase('tour');
-      });
+      // 保存の完了を待たずに次へ進む。保存に時間がかかっても、空の枠のまま止まらないようにする。
+      setStepIndex(0);
+      setPhase('tour');
+      void storage.set({ [SK.portalLanguagePickerDone]: true });
     },
     [updateSetting],
   );
 
-  const updateViewport = useCallback(() => {
-    const next = { w: window.innerWidth, h: window.innerHeight };
-    setViewport((current) => (current.w === next.w && current.h === next.h ? current : next));
-  }, []);
+  const currentStep = phase === 'done' ? DONE_STEP : steps[stepIndex];
 
-  const commitHole = useCallback((next: Hole | null) => {
-    setHole((current) => (sameHole(current, next) ? current : next));
-  }, []);
-
-  const currentStep = steps[stepIndex];
-
-  const refreshHole = useCallback(() => {
-    if (!currentStep || phase !== 'tour' || currentStep.kind !== 'spotlight') {
-      commitHole(null);
-      return;
-    }
-    commitHole(readSpotlightHole(currentStep, overlayRoot));
-  }, [commitHole, currentStep, overlayRoot, phase]);
-
-  const finishTour = useCallback(() => {
+  const clearTimers = useCallback(() => {
     if (dockTransitionTimerRef.current !== null) {
       window.clearTimeout(dockTransitionTimerRef.current);
       dockTransitionTimerRef.current = null;
@@ -140,19 +102,24 @@ export function GuidedTour({
       window.clearTimeout(celebrationTimerRef.current);
       celebrationTimerRef.current = null;
     }
+  }, []);
+
+  const finishTour = useCallback(() => {
+    clearTimers();
     void storage.set({ [SK.portalGuidedTourDone]: true });
     overlayRoot.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     setCelebrating(false);
     setFinishingFade(false);
+    setDockExiting(false);
     setPhase('off');
-  }, [overlayRoot]);
+  }, [clearTimers, overlayRoot]);
 
   const celebrateAndFinishTour = useCallback(() => {
     if (celebrating) return;
     void storage.set({ [SK.portalGuidedTourDone]: true });
     setCelebrating(true);
     celebrationTimerRef.current = window.setTimeout(() => {
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (prefersReducedMotion()) {
         celebrationTimerRef.current = null;
         overlayRoot.scrollTo({ top: 0, left: 0, behavior: 'auto' });
         setPhase('off');
@@ -167,174 +134,64 @@ export function GuidedTour({
     }, FINISH_WAIT_MS);
   }, [celebrating, overlayRoot]);
 
-  const moveToStep = useCallback(
-    (nextIndex: number) => {
+  /** 下のドックを閉じるアニメーションのあとで次へ進む */
+  const leaveStep = useCallback(
+    (next: () => void) => {
       if (dockExiting) return;
-      const boundedIndex = Math.min(steps.length - 1, Math.max(0, nextIndex));
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!isSetupDockStep(currentStep) || reduceMotion) {
-        setStepIndex(boundedIndex);
+      if (!isSetupDockStep(currentStep) || prefersReducedMotion()) {
+        next();
         return;
       }
       setDockExiting(true);
       dockTransitionTimerRef.current = window.setTimeout(() => {
         dockTransitionTimerRef.current = null;
-        setStepIndex(boundedIndex);
+        next();
         setDockExiting(false);
       }, DOCK_EXIT_MS);
     },
-    [currentStep, dockExiting, steps.length],
+    [currentStep, dockExiting],
   );
 
   const goNext = useCallback(() => {
     if (stepIndex >= steps.length - 1) {
-      finishTour();
+      leaveStep(() => setPhase('spotlight'));
       return;
     }
-    moveToStep(stepIndex + 1);
-  }, [finishTour, moveToStep, stepIndex, steps.length]);
+    leaveStep(() => setStepIndex(stepIndex + 1));
+  }, [leaveStep, stepIndex, steps.length]);
 
   const goBack = useCallback(() => {
-    moveToStep(stepIndex - 1);
-  }, [moveToStep, stepIndex]);
+    if (stepIndex <= 0) return;
+    leaveStep(() => setStepIndex(stepIndex - 1));
+  }, [leaveStep, stepIndex]);
 
-  useEffect(
-    () => () => {
-      if (dockTransitionTimerRef.current !== null) {
-        window.clearTimeout(dockTransitionTimerRef.current);
-      }
-      if (celebrationTimerRef.current !== null) {
-        window.clearTimeout(celebrationTimerRef.current);
-      }
-    },
-    [],
-  );
+  const backFromSpotlight = useCallback(() => {
+    setStepIndex(steps.length - 1);
+    setPhase('tour');
+  }, [steps.length]);
 
+  const completeSpotlight = useCallback(() => {
+    overlayRoot.scrollTo({ top: 0, left: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+    setPhase('done');
+  }, [overlayRoot]);
+
+  useEffect(() => clearTimers, [clearTimers]);
+
+  // 初期設定の手順では、選んだテーマが確かめやすい位置へスクロールする。
   useLayoutEffect(() => {
-    updateViewport();
-  }, [updateViewport, phase, stepIndex]);
-
-  useLayoutEffect(() => {
-    if (phase !== 'tour' || !currentStep) return;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (
-      currentStep.kind === 'theme' ||
-      currentStep.kind === 'weekStart' ||
-      currentStep.kind === 'character'
-    ) {
-      scrollThemePreviewToCalendar(overlayRoot, reduceMotion ? 'auto' : 'smooth');
-      return;
-    }
-    if (currentStep.kind === 'done') {
-      overlayRoot.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    }
+    if (phase !== 'tour' || !isSetupDockStep(currentStep) || currentStep?.kind === 'sync') return;
+    scrollThemePreviewToCalendar(overlayRoot, prefersReducedMotion() ? 'auto' : 'smooth');
   }, [currentStep, overlayRoot, phase]);
 
   useLayoutEffect(() => {
-    if (phase !== 'tour' || !currentStep) return;
-    retryRef.current = 0;
-    outlinedTargetRef.current?.classList.remove('p-tour-target-outline');
-    outlinedTargetRef.current = null;
-
-    if (currentStep.kind !== 'spotlight') {
-      commitHole(null);
-      return;
-    }
-
-    const target = querySpotlightElement(currentStep, overlayRoot);
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const keepCurrentScroll = [
-      'calendar-mode',
-      'kogi-hover',
-      'kogi-context',
-      'assignment',
-    ].includes(currentStep.id);
-    if (target) {
-      if (CALENDAR_OVERVIEW_STEP_IDS.has(currentStep.id)) {
-        target.classList.add('p-tour-target-outline');
-        outlinedTargetRef.current = target;
-      }
-      if (!keepCurrentScroll) {
-        scrollSpotlightToOverlayCenter(target, overlayRoot, reduceMotion ? 'auto' : 'smooth');
-      }
-    }
-    commitHole(readSpotlightHole(currentStep, overlayRoot));
-
-    let settleTimer: number | null = null;
-    if (target && !reduceMotion && !keepCurrentScroll) {
-      settleTimer = window.setTimeout(() => {
-        updateViewport();
-        commitHole(readSpotlightHole(currentStep, overlayRoot));
-      }, SCROLL_SETTLE_MS);
-    }
-    return () => {
-      if (settleTimer !== null) window.clearTimeout(settleTimer);
-      target?.classList.remove('p-tour-target-outline');
-      if (outlinedTargetRef.current === target) outlinedTargetRef.current = null;
-    };
-  }, [commitHole, currentStep, overlayRoot, phase, updateViewport]);
-
-  useEffect(() => {
-    if (phase !== 'tour' || currentStep?.kind !== 'spotlight') return;
-    let frame = 0;
-    const onResize = () => {
-      updateViewport();
-      refreshHole();
-    };
-    const onScroll = () => {
-      if (frame !== 0) return;
-      frame = window.requestAnimationFrame(() => {
-        frame = 0;
-        refreshHole();
-      });
-    };
-    window.addEventListener('resize', onResize);
-    overlayRoot.addEventListener('scroll', onScroll, { capture: true, passive: true });
-    return () => {
-      window.removeEventListener('resize', onResize);
-      overlayRoot.removeEventListener('scroll', onScroll, true);
-      if (frame !== 0) window.cancelAnimationFrame(frame);
-    };
-  }, [currentStep, overlayRoot, phase, refreshHole, updateViewport]);
-
-  useEffect(() => {
-    if (phase !== 'tour' || currentStep?.kind !== 'spotlight') return;
-    if (hole !== null) {
-      retryRef.current = 0;
-      return;
-    }
-    if (retryRef.current >= HOLE_RETRY_MAX) return;
-    retryRef.current += 1;
-    const timer = window.setTimeout(() => {
-      commitHole(readSpotlightHole(currentStep, overlayRoot));
-    }, HOLE_RETRY_MS);
-    return () => window.clearTimeout(timer);
-  }, [commitHole, currentStep, hole, overlayRoot, phase]);
-
-  useLayoutEffect(() => {
-    if (phase !== 'tour') return;
-    const card = cardRef.current;
-    if (!card) return;
-    const measure = () => {
-      const r = card.getBoundingClientRect();
-      setCardSize((current) =>
-        current.w === r.width && current.h === r.height ? current : { w: r.width, h: r.height },
-      );
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(card);
-    return () => observer.disconnect();
-  }, [phase, stepIndex]);
-
-  useLayoutEffect(() => {
-    if (phase !== 'tour') return;
+    if (phase !== 'tour' && phase !== 'done') return;
     const primary = cardRef.current?.querySelector('button.p-tour-primary');
-    if (primary instanceof HTMLElement) primary.focus();
+    if (primary instanceof HTMLElement) primary.focus({ preventScroll: true });
   }, [phase, stepIndex]);
 
+  // ホームの案内は SpotlightTour が自分でキーを扱う。
   useEffect(() => {
-    if (phase !== 'tour') return;
+    if (phase !== 'tour' && phase !== 'done') return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
@@ -354,29 +211,29 @@ export function GuidedTour({
     );
   }
 
-  if (phase !== 'tour' || !currentStep) return null;
+  if (phase === 'spotlight') {
+    return (
+      <SpotlightTour
+        overlayRoot={overlayRoot}
+        t={t}
+        onBack={backFromSpotlight}
+        onComplete={completeSpotlight}
+        onClose={finishTour}
+      />
+    );
+  }
 
-  const vw = viewport.w || (typeof window !== 'undefined' ? window.innerWidth : 400);
-  const vh = viewport.h || (typeof window !== 'undefined' ? window.innerHeight : 600);
-  const spotlightCardCss =
-    currentStep.kind === 'spotlight'
-      ? computeSpotlightCardCss(currentStep, hole, vw, vh, cardSize, CALENDAR_OVERVIEW_STEP_IDS)
-      : undefined;
+  if ((phase !== 'tour' && phase !== 'done') || !currentStep) return null;
 
   return (
     <GuidedTourSteps
       currentStep={currentStep}
-      steps={steps}
-      stepIndex={stepIndex}
-      hole={hole}
+      steps={phase === 'done' ? [DONE_STEP] : steps}
+      stepIndex={phase === 'done' ? 0 : stepIndex}
       cardRef={cardRef}
-      cardSize={cardSize}
       dockExiting={dockExiting}
       celebrating={celebrating}
       finishingFade={finishingFade}
-      maskId={maskId}
-      viewport={{ w: vw, h: vh }}
-      spotlightCardCss={spotlightCardCss}
       overlayRoot={overlayRoot}
       settings={settings}
       language={language}

@@ -8,7 +8,7 @@ import { ADDITIONAL_THEMES } from './additional-themes';
 
 export type { ThemeTokens } from './theme-tokens';
 
-export const DEFAULT_THEME = 'dark';
+export const DEFAULT_THEME = 'powder';
 
 export const THEMES: Record<string, ThemeTokens> = {
   dark: {

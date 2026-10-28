@@ -1,497 +1,402 @@
 /**
- * 拡張機能の状態をポータル「マイリンク」の biko フィールドへ保存する。
+ * 拡張機能の設定をポータル「マイリンク」経由で端末間同期する。
  *
- * マーカーリンク（midashi: __KCGLMS::{n}）は UI から非表示。
- * biko は 200 文字制限のため、暗号化済みペイロードをチャンク分割して複数行に載せる。
+ * - 端末側は値ごとに変更スタンプを持ち（portal-sync-ledger）、
+ * - 同期はエントリごとに新しい方を採用して統合する（portal-sync-engine）。
+ * - マイリンクへの書き込みは全タブで直列化し、保存後に読み直して確認する。
+ *
+ * このモジュールは、いつ同期するか（起動時・変更時・タブ復帰時・定期）と、
+ * 設定画面に見せる状態を管理する。
  */
 
-import { SK } from '../contract/storage-keys';
 import { PORTAL_HOSTNAME } from '../contract/origins';
 import {
-  isPortalSyncedStorageKey,
-  pickPortalSyncedStorage,
-  PORTAL_SYNCED_STORAGE_KEYS,
-} from '../contract/portal-synced-storage';
-import { storageClient } from '../platform/storage/client';
+  addPortalSyncEvent,
+  isPortalSyncRunning,
+  parsePortalSyncStatus,
+  PORTAL_SYNC_STATUS_KEY,
+  type PortalSyncEvent,
+  type PortalSyncEventKind,
+  type PortalSyncIssue,
+  type PortalSyncStatus,
+} from '../contract/portal-sync-status';
+import { SK } from '../contract/storage-keys';
 import { chromeStorageClient } from '../platform/storage/chrome-storage-client';
 import { parseSyncViaMyLinks } from '../platform/storage/parsers';
 import {
-  decidePortalSyncBootstrap,
-  markPortalSyncCacheClean,
-  PORTAL_SYNC_CACHE_META_KEY,
-  readPortalSyncCache,
-  replacePortalSyncCache,
-  type PortalSyncCacheMeta,
-} from '../platform/storage/portal-sync-cache';
-import { ensureClientUserIdInMemory, normalizeClientUserId } from '../lib/client-user-id';
+  backupLocalPortalSyncState,
+  commitLocalPortalSyncDoc,
+  countPendingPortalSyncChanges,
+  restorePortalSyncBackup as restoreLedgerBackup,
+  createPortalSyncId,
+  ensurePortalSyncLedger,
+  hasPendingPortalSyncChanges,
+  isPortalSyncLedgerKey,
+  readLocalPortalSyncState,
+  updatePortalSyncLedgerMeta,
+} from '../platform/storage/portal-sync-ledger';
+import {
+  deletePortalSyncRemote,
+  portalSyncFailure,
+  runPortalSync,
+  type PortalSyncIo,
+  type PortalSyncMode,
+} from './portal-sync-engine';
 import {
   fetchPortalUserLinks,
-  nextPortalLinkNo,
   savePortalUserLinks,
-  type PortalUserLink,
+  withPortalUserLinksLock,
 } from './user-html-link';
 import {
   customThemesFromPortalStorage,
-  decodePortalSettingsPayloadWire,
-  defaultPortalSettingsStorage,
-  encodePortalSettingsPayloadWire,
   settingsFromPortalStorage,
-  type PortalExtensionSnapshot,
-  type PortalSettingsSnapshot,
 } from './portal-settings-payload';
 
-/** マイリンク UI に表示しない設定用マーカー */
-export const PORTAL_SETTINGS_MARKER_PREFIX = '__KCGLMS::';
+export {
+  isPortalSettingsMarkerLink,
+  PORTAL_SETTINGS_MARKER_MAX,
+  PORTAL_SETTINGS_MARKER_PREFIX,
+} from './portal-sync-markers';
+export {
+  PORTAL_SYNCED_STORAGE_KEYS,
+  isPortalSyncedStorageKey,
+} from '../contract/portal-synced-storage';
+export { countPendingPortalSyncChanges, hasPendingPortalSyncChanges, isPortalSyncLedgerKey };
+export {
+  listPortalSyncBackups,
+  PORTAL_SYNC_BACKUP_LIMIT,
+  PORTAL_SYNC_BACKUPS_KEY,
+  type PortalSyncBackup,
+} from '../platform/storage/portal-sync-ledger';
 
-/** ポータル側の biko 上限（Profile 保存 API の検証） */
-export const PORTAL_SETTINGS_BIKO_MAX = 200;
+/** ローカルの変更から同期を始めるまでの待ち時間（連続した変更をまとめる） */
+const LOCAL_CHANGE_DELAY_MS = 1500;
+/** 起動時、同期を待ってから画面を出す最大時間 */
+const BOOTSTRAP_WAIT_MS = 5000;
+/** ポータルのタブを開いている間の定期同期 */
+const PERIODIC_SYNC_MS = 5 * 60_000;
+/** タブに戻ったとき、前回からこれ以上経っていれば同期する */
+const REFOCUS_SYNC_MIN_MS = 30_000;
+/** 保存後、他の端末と同時に保存していないか確かめ直すまでの時間 */
+const FOLLOW_UP_SYNC_MS = 15_000;
+/** 通信エラー時の再試行間隔 */
+const RETRY_DELAYS_MS = [5_000, 30_000, 2 * 60_000, 5 * 60_000];
+/** 一時的な通信失敗は、この回数続くまで画面にエラーとして出さない */
+const QUIET_NETWORK_FAILURES = 2;
 
-/** チャンク分割時の安全マージン */
-export const PORTAL_SETTINGS_CHUNK_MAX = 190;
+const portalSyncIo: PortalSyncIo = {
+  fetchLinks: fetchPortalUserLinks,
+  saveLinks: savePortalUserLinks,
+  withLock: withPortalUserLinksLock,
+  readLocal: readLocalPortalSyncState,
+  commitLocal: commitLocalPortalSyncDoc,
+  backupLocal: backupLocalPortalSyncState,
+  updateMeta: updatePortalSyncLedgerMeta,
+  newId: () => createPortalSyncId(8),
+};
 
-/** マイリンクの同期用レコードを増やしすぎないための上限 */
-export const PORTAL_SETTINGS_MARKER_MAX = 64;
-
-const PORTAL_SETTINGS_URL_PREFIX = 'https://home.kcg.ac.jp/portal/_kcglms/';
-
-export { PORTAL_SYNCED_STORAGE_KEYS, isPortalSyncedStorageKey };
-export type { PortalExtensionSnapshot, PortalSettingsSnapshot };
-
-let suppressPortalSync = false;
-let saveTimer: ReturnType<typeof setTimeout> | null = null;
-let listenerInstalled = false;
 let bootstrapPromise: Promise<void> | null = null;
-let portalSyncReady = false;
-/** マイリンク同期トグル（未設定は true）。schedule の同期判定用 */
-let myLinksSyncEnabledCache = true;
-let myLinksSyncPreferenceInitialized = false;
-let myLinksSyncTransition: Promise<void> = Promise.resolve();
-/** マイリンクへの書き込みを直列化し、同期停止時の削除を最後に確定させる。 */
-let portalSyncMutationQueue: Promise<void> = Promise.resolve();
-/**
- * 同期オフ／マーカー削除のたびに進める。
- * 進行中の upload が削除後にマーカーを書き戻さないようにする。
- */
-let portalSyncWriteEpoch = 0;
-
-const PORTAL_EXTENSION_SAVE_DELAY_MS = 800;
-
-function enqueuePortalSyncMutation<T>(mutation: () => Promise<T>): Promise<T> {
-  const result = portalSyncMutationQueue.then(mutation, mutation);
-  portalSyncMutationQueue = result.then(
-    () => undefined,
-    () => undefined,
-  );
-  return result;
-}
-
-export function isPortalSettingsMarkerLink(link: Pick<PortalUserLink, 'midashi' | 'url'>): boolean {
-  return (
-    link.midashi.startsWith(PORTAL_SETTINGS_MARKER_PREFIX) ||
-    link.url.startsWith(PORTAL_SETTINGS_URL_PREFIX)
-  );
-}
+let listenersInstalled = false;
+let running: Promise<PortalSyncStatus> | null = null;
+let rerunRequested = false;
+let localChangeTimer: ReturnType<typeof setTimeout> | null = null;
+let followUpTimer: ReturnType<typeof setTimeout> | null = null;
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
+let retryCount = 0;
 
 function isOnPortalHost(): boolean {
   return typeof location !== 'undefined' && location.hostname === PORTAL_HOSTNAME;
 }
 
-async function readMyLinksSyncEnabled(): Promise<boolean> {
+/** この端末で同期が有効か（未設定は有効） */
+export async function getPortalMyLinksSyncEnabled(): Promise<boolean> {
   const snap = await chromeStorageClient.get(SK.syncViaMyLinks);
   return parseSyncViaMyLinks(snap[SK.syncViaMyLinks]);
 }
 
-function canSyncPortalExtension(): boolean {
-  return isOnPortalHost() && myLinksSyncPreferenceInitialized && myLinksSyncEnabledCache;
+export async function readPortalSyncStatus(): Promise<PortalSyncStatus> {
+  const snap = await chromeStorageClient.get(PORTAL_SYNC_STATUS_KEY);
+  return parsePortalSyncStatus(snap[PORTAL_SYNC_STATUS_KEY]);
 }
 
-async function clearDirtyWithoutUpload(expectedEpoch: number): Promise<void> {
-  const cache = await readPortalSyncCache();
-  if (expectedEpoch !== portalSyncWriteEpoch || myLinksSyncEnabledCache) return;
-  if (!cache.meta.dirty) return;
-  await chromeStorageClient.set({
-    [PORTAL_SYNC_CACHE_META_KEY]: {
-      ...cache.meta,
-      version: 1,
-      dirty: false,
-    } satisfies PortalSyncCacheMeta,
-  });
+async function patchStatus(
+  patch: Partial<Omit<PortalSyncStatus, 'version'>>,
+  event?: PortalSyncEvent,
+) {
+  const current = await readPortalSyncStatus();
+  const history = event ? addPortalSyncEvent(current.history, event) : current.history;
+  const next: PortalSyncStatus = { ...current, ...patch, history, version: 1 };
+  await chromeStorageClient.set({ [PORTAL_SYNC_STATUS_KEY]: next });
+  return next;
 }
 
-async function markLocalCacheForSyncResume(expectedEpoch: number): Promise<boolean> {
-  const cache = await readPortalSyncCache();
-  if (expectedEpoch !== portalSyncWriteEpoch || !myLinksSyncEnabledCache) return false;
-  await chromeStorageClient.set({
-    [PORTAL_SYNC_CACHE_META_KEY]: {
-      ...cache.meta,
-      version: 1,
-      updatedAt: Math.max(Date.now(), cache.meta.updatedAt + 1),
-      dirty: true,
-    } satisfies PortalSyncCacheMeta,
-  });
-  return expectedEpoch === portalSyncWriteEpoch && myLinksSyncEnabledCache;
+function clearTimer(timer: ReturnType<typeof setTimeout> | null): null {
+  if (timer) clearTimeout(timer);
+  return null;
 }
 
-async function applyPortalMyLinksSyncEnabled(enabled: boolean): Promise<void> {
-  if (myLinksSyncPreferenceInitialized && myLinksSyncEnabledCache === enabled) {
-    return myLinksSyncTransition;
+/** 自動で再試行する理由なら、再試行の時刻を返す */
+function scheduleRetry(issue: PortalSyncIssue): number | null {
+  retryTimer = clearTimer(retryTimer);
+  if (issue !== 'network' && issue !== 'save-failed' && issue !== 'unexpected') {
+    retryCount = 0;
+    return null;
+  }
+  const delay = RETRY_DELAYS_MS[Math.min(retryCount, RETRY_DELAYS_MS.length - 1)];
+  retryCount += 1;
+  retryTimer = setTimeout(() => {
+    retryTimer = null;
+    void syncPortalSettingsNow();
+  }, delay);
+  return Date.now() + delay;
+}
+
+const EVENT_FOR_MODE: Partial<Record<PortalSyncMode, PortalSyncEventKind>> = {
+  'use-remote': 'used-remote',
+  'use-local': 'used-local',
+  restart: 'rebuilt',
+};
+
+function hasChanges(counts: Record<string, number>): boolean {
+  return Object.keys(counts).length > 0;
+}
+
+async function runOnce(mode: PortalSyncMode): Promise<PortalSyncStatus> {
+  const startedAt = Date.now();
+  await patchStatus({ syncingSince: startedAt, lastAttemptAt: startedAt });
+  let result;
+  try {
+    result = await runPortalSync(portalSyncIo, mode);
+  } catch (error) {
+    result = portalSyncFailure(error);
   }
 
-  const resumesLocalCache = myLinksSyncPreferenceInitialized && !myLinksSyncEnabledCache && enabled;
-  myLinksSyncPreferenceInitialized = true;
-  myLinksSyncEnabledCache = enabled;
-  const writeEpoch = ++portalSyncWriteEpoch;
-  portalSyncReady = false;
-  if (saveTimer) {
-    clearTimeout(saveTimer);
-    saveTimer = null;
-  }
-
-  myLinksSyncTransition = (async () => {
-    if (!enabled) {
-      await clearDirtyWithoutUpload(writeEpoch);
-      if (isOnPortalHost() && writeEpoch === portalSyncWriteEpoch) {
-        await removePortalExtensionSyncFromMyLinks();
-      }
-      return;
+  if (result.ok) {
+    retryCount = 0;
+    retryTimer = clearTimer(retryTimer);
+    if (result.wrote) {
+      followUpTimer = clearTimer(followUpTimer);
+      followUpTimer = setTimeout(() => {
+        followUpTimer = null;
+        void syncPortalSettingsNow();
+      }, FOLLOW_UP_SYNC_MS);
     }
-
-    if (!isOnPortalHost() || writeEpoch !== portalSyncWriteEpoch) return;
-    installPortalExtensionSyncListener();
-    if (resumesLocalCache && !(await markLocalCacheForSyncResume(writeEpoch))) return;
-    const ready = await reconcilePortalExtensionCache(
-      fetchPortalExtensionSnapshot,
-      savePortalExtensionSnapshot,
+    const kind = EVENT_FOR_MODE[mode];
+    const changed = hasChanges(result.received) || hasChanges(result.sent);
+    const now = Date.now();
+    return patchStatus(
+      {
+        syncingSince: null,
+        lastSuccessAt: now,
+        issue: null,
+        usedRows: result.usedRows,
+        choice: null,
+        detail: null,
+        nextRetryAt: null,
+      },
+      kind || changed
+        ? { at: now, kind: kind ?? 'synced', received: result.received, sent: result.sent }
+        : undefined,
     );
-    if (!myLinksSyncEnabledCache || writeEpoch !== portalSyncWriteEpoch) {
-      await removePortalExtensionSyncFromMyLinks();
-      return;
-    }
-    portalSyncReady = ready;
-    if (ready) {
-      const cache = await readPortalSyncCache();
-      if (cache.meta.dirty && myLinksSyncEnabledCache && writeEpoch === portalSyncWriteEpoch) {
-        schedulePortalExtensionSync();
-      }
-    }
-  })();
+  }
 
-  return myLinksSyncTransition;
+  // 開発者ツールのコンソールから原因を追えるようにする。
+  console.warn('[KCGLMS+] My Links sync failed:', result.issue, result.detail ?? '');
+  const failuresBefore = retryCount;
+  const nextRetryAt = scheduleRetry(result.issue);
+  // ページを開いた直後などの一時的な失敗では、エラー表示を出さずに再試行する。
+  if (result.issue === 'network' && failuresBefore < QUIET_NETWORK_FAILURES) {
+    return patchStatus({ syncingSince: null, nextRetryAt });
+  }
+  // 確認待ち（どちらに合わせるか等）は失敗ではないので、履歴には残さない。
+  const event: PortalSyncEvent | undefined =
+    result.issue === 'needs-choice'
+      ? undefined
+      : { at: Date.now(), kind: 'failed', issue: result.issue };
+  return patchStatus(
+    {
+      syncingSince: null,
+      issue: result.issue,
+      choice: result.choice ?? null,
+      detail: result.detail ?? null,
+      nextRetryAt,
+      ...(result.usedRows !== undefined ? { usedRows: result.usedRows } : {}),
+    },
+    event,
+  );
 }
 
 /**
- * マイリンク同期の有効/無効を切り替える（端末ローカル設定）。
- * 無効化時はポータル上の同期用マーカーも削除（soft-delete）する。
- * 再有効化すると、残っていなければ新規に同期データが作られる。
+ * 今すぐ同期する。ポータル上でのみ動き、同じページ内で重なった呼び出しは1回にまとめる。
+ * mode の意味は PortalSyncMode を参照。
  */
-export async function setPortalMyLinksSyncEnabled(enabled: boolean): Promise<void> {
-  await chromeStorageClient.set({ [SK.syncViaMyLinks]: enabled });
-  await applyPortalMyLinksSyncEnabled(enabled);
-}
+export async function syncPortalSettingsNow(
+  mode: PortalSyncMode = 'normal',
+): Promise<PortalSyncStatus> {
+  if (!isOnPortalHost()) return readPortalSyncStatus();
+  if (mode === 'normal' && !(await getPortalMyLinksSyncEnabled())) return readPortalSyncStatus();
+  await ensurePortalSyncLedger();
 
-export async function getPortalMyLinksSyncEnabled(): Promise<boolean> {
-  return readMyLinksSyncEnabled();
-}
+  if (running) {
+    if (mode === 'normal') {
+      rerunRequested = true;
+      return running;
+    }
+    await running.catch(() => undefined);
+  }
 
-function snapshotOwnerId(snapshot: PortalExtensionSnapshot | null): string | null {
-  return normalizeClientUserId(snapshot?.storage[SK.clientUserId]);
-}
-
-function markerMidashi(index: number): string {
-  return `${PORTAL_SETTINGS_MARKER_PREFIX}${index}`;
-}
-
-function markerUrl(index: number): string {
-  return `${PORTAL_SETTINGS_URL_PREFIX}${index}`;
-}
-
-function markerIndex(link: PortalUserLink): number {
-  const fromTitle = link.midashi.slice(PORTAL_SETTINGS_MARKER_PREFIX.length);
-  const parsed = Number(fromTitle);
-  if (Number.isFinite(parsed) && parsed >= 0) return parsed;
-  const fromUrl = link.url.slice(PORTAL_SETTINGS_URL_PREFIX.length);
-  const parsedUrl = Number(fromUrl);
-  return Number.isFinite(parsedUrl) && parsedUrl >= 0 ? parsedUrl : 0;
-}
-
-export async function writeSyncedLocalStorage(snapshot: PortalExtensionSnapshot): Promise<void> {
-  suppressPortalSync = true;
+  const task = (async () => {
+    let status = await runOnce(mode);
+    while (rerunRequested) {
+      rerunRequested = false;
+      status = await runOnce('normal');
+    }
+    return status;
+  })();
+  running = task;
   try {
-    await replacePortalSyncCache(snapshot, snapshotOwnerId(snapshot), false);
+    return await task;
   } finally {
-    suppressPortalSync = false;
+    if (running === task) running = null;
   }
 }
 
-function splitIntoChunks(text: string): string[] {
-  if (!text) return [''];
-  const chunks: string[] = [];
-  for (let i = 0; i < text.length; i += PORTAL_SETTINGS_CHUNK_MAX) {
-    chunks.push(text.slice(i, i + PORTAL_SETTINGS_CHUNK_MAX));
-  }
-  return chunks;
+function scheduleLocalChangeSync(): void {
+  localChangeTimer = clearTimer(localChangeTimer);
+  localChangeTimer = setTimeout(() => {
+    localChangeTimer = null;
+    void (async () => {
+      if (!(await getPortalMyLinksSyncEnabled())) return;
+      if (await hasPendingPortalSyncChanges()) await syncPortalSettingsNow();
+    })();
+  }, LOCAL_CHANGE_DELAY_MS);
 }
 
-export async function decodePortalExtensionSnapshot(
-  links: readonly PortalUserLink[],
-): Promise<PortalExtensionSnapshot | null> {
-  const markers = links
-    .filter((link) => !link.delFlg && isPortalSettingsMarkerLink(link))
-    .sort((a, b) => markerIndex(a) - markerIndex(b));
-  if (markers.length === 0 || markers.length > PORTAL_SETTINGS_MARKER_MAX) return null;
-  for (const marker of markers) {
-    if (marker.biko.length > PORTAL_SETTINGS_BIKO_MAX) return null;
-  }
-  return decodePortalSettingsPayloadWire(markers.map((marker) => marker.biko).join(''));
-}
+function installPortalSyncTriggers(): void {
+  if (listenersInstalled || !isOnPortalHost()) return;
+  listenersInstalled = true;
 
-/** @deprecated PortalSettingsSnapshot 互換 */
-export async function decodePortalSettingsSnapshot(
-  links: readonly PortalUserLink[],
-): Promise<PortalSettingsSnapshot | null> {
-  const snapshot = await decodePortalExtensionSnapshot(links);
-  if (!snapshot) return null;
-  return {
-    updatedAt: snapshot.updatedAt,
-    settings: settingsFromPortalStorage(snapshot.storage),
-    customThemes: customThemesFromPortalStorage(snapshot.storage),
-  };
-}
-
-export async function applyPortalExtensionMarkers(
-  links: readonly PortalUserLink[],
-  snapshot: PortalExtensionSnapshot,
-): Promise<PortalUserLink[]> {
-  const chunks = splitIntoChunks(await encodePortalSettingsPayloadWire(snapshot));
-  if (chunks.length > PORTAL_SETTINGS_MARKER_MAX) {
-    throw new Error(
-      `同期データが上限を超えました（${chunks.length}/${PORTAL_SETTINGS_MARKER_MAX}）`,
-    );
-  }
-  const nonMarkers = links.filter((link) => !isPortalSettingsMarkerLink(link));
-  const allMarkers = links.filter((link) => isPortalSettingsMarkerLink(link));
-  const activeMarkers = allMarkers.filter((link) => !link.delFlg);
-  const usedMarkers = new Set<PortalUserLink>();
-
-  let nextLinkNo = nextPortalLinkNo(links);
-
-  const updatedActiveMarkers: PortalUserLink[] = chunks.map((biko, index) => {
-    const existing =
-      activeMarkers.find((link) => markerIndex(link) === index && !usedMarkers.has(link)) ??
-      allMarkers.find(
-        (link) => link.delFlg && markerIndex(link) === index && !usedMarkers.has(link),
-      );
-    if (existing) {
-      usedMarkers.add(existing);
-      return {
-        ...existing,
-        midashi: markerMidashi(index),
-        url: markerUrl(index),
-        biko,
-        delFlg: false,
-      };
+  chromeStorageClient.onChanged((changes, area) => {
+    if (area !== 'local') return;
+    if (changes[SK.syncViaMyLinks]) {
+      if (parseSyncViaMyLinks(changes[SK.syncViaMyLinks].newValue)) void syncPortalSettingsNow();
+      return;
     }
-    return {
-      id: '',
-      version: '',
-      delFlg: false,
-      linkNo: nextLinkNo++,
-      midashi: markerMidashi(index),
-      url: markerUrl(index),
-      biko,
-      order: -1,
-    };
+    if (Object.keys(changes).some(isPortalSyncLedgerKey)) scheduleLocalChangeSync();
   });
 
-  const retiredMarkers = activeMarkers
-    .filter((link) => !usedMarkers.has(link))
-    .map((link) => ({ ...link, delFlg: true }));
-
-  const unchangedDeletedMarkers = allMarkers.filter(
-    (link) => link.delFlg && !usedMarkers.has(link),
-  );
-
-  return [...nonMarkers, ...updatedActiveMarkers, ...retiredMarkers, ...unchangedDeletedMarkers];
-}
-
-/** 同期用マーカーをすべて soft-delete（ユーザーの通常マイリンクは残す） */
-export function retireAllPortalExtensionMarkers(
-  links: readonly PortalUserLink[],
-): PortalUserLink[] {
-  return links.map((link) =>
-    isPortalSettingsMarkerLink(link) && !link.delFlg ? { ...link, delFlg: true } : link,
-  );
-}
-
-async function removePortalExtensionSyncFromMyLinks(): Promise<boolean> {
-  return enqueuePortalSyncMutation(async () => {
-    const writeEpoch = portalSyncWriteEpoch;
-    try {
-      const links = await fetchPortalUserLinks();
-      if (writeEpoch !== portalSyncWriteEpoch || myLinksSyncEnabledCache) return false;
-      const next = retireAllPortalExtensionMarkers(links);
-      const changed = next.some((link, index) => link.delFlg !== links[index]?.delFlg);
-      if (!changed) return true;
-      if (writeEpoch !== portalSyncWriteEpoch || myLinksSyncEnabledCache) return false;
-      await savePortalUserLinks(next);
-      return writeEpoch === portalSyncWriteEpoch && !myLinksSyncEnabledCache;
-    } catch {
-      return false;
-    }
-  });
-}
-
-export async function fetchPortalExtensionSnapshot(): Promise<PortalExtensionSnapshot | null> {
-  const links = await fetchPortalUserLinks();
-  return decodePortalExtensionSnapshot(links);
-}
-
-export async function savePortalExtensionSnapshot(
-  snapshot: PortalExtensionSnapshot,
-): Promise<void> {
-  if (!myLinksSyncEnabledCache) return;
-  await enqueuePortalSyncMutation(async () => {
-    const writeEpoch = portalSyncWriteEpoch;
-    if (!myLinksSyncEnabledCache) return;
-    const links = await fetchPortalUserLinks();
-    if (!myLinksSyncEnabledCache || writeEpoch !== portalSyncWriteEpoch) return;
-    const next = await applyPortalExtensionMarkers(links, snapshot);
-    if (!myLinksSyncEnabledCache || writeEpoch !== portalSyncWriteEpoch) return;
-    await savePortalUserLinks(next);
-  });
-}
-
-export async function persistDirtyPortalSyncCache(
-  saveSnapshot: (snapshot: PortalExtensionSnapshot) => Promise<void>,
-): Promise<boolean> {
-  try {
-    if (!myLinksSyncEnabledCache) return false;
-    const writeEpoch = portalSyncWriteEpoch;
-    const cache = await readPortalSyncCache();
-    if (!cache.meta.dirty) return true;
-    if (!myLinksSyncEnabledCache || writeEpoch !== portalSyncWriteEpoch) return false;
-    const snapshot: PortalExtensionSnapshot = {
-      updatedAt: cache.meta.updatedAt || Date.now(),
-      storage: pickPortalSyncedStorage(cache.storage),
-    };
-    await saveSnapshot(snapshot);
-    if (!myLinksSyncEnabledCache || writeEpoch !== portalSyncWriteEpoch) return false;
-    suppressPortalSync = true;
-    try {
-      await markPortalSyncCacheClean(snapshot.updatedAt, snapshotOwnerId(snapshot));
-    } finally {
-      suppressPortalSync = false;
-    }
-    return true;
-  } catch {
-    /* 未ログイン等 */
-    return false;
-  }
-}
-
-export async function savePortalExtensionSyncNow(): Promise<boolean> {
-  if (!canSyncPortalExtension()) return false;
-  return persistDirtyPortalSyncCache(savePortalExtensionSnapshot);
-}
-
-export function schedulePortalExtensionSync(): void {
-  if (suppressPortalSync || !portalSyncReady || !canSyncPortalExtension()) return;
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    saveTimer = null;
-    void savePortalExtensionSyncNow();
-  }, PORTAL_EXTENSION_SAVE_DELAY_MS);
-}
-
-export function installPortalExtensionSyncListener(): () => void {
-  if (listenerInstalled) return () => undefined;
-  listenerInstalled = true;
-  return storageClient.onChanged((changes, area) => {
-    if (area !== 'local' || suppressPortalSync) return;
-    const syncPreferenceChange = changes[SK.syncViaMyLinks];
-    if (syncPreferenceChange) {
-      const enabled = parseSyncViaMyLinks(syncPreferenceChange.newValue);
-      void applyPortalMyLinksSyncEnabled(enabled);
-    }
-    const relevant = Object.keys(changes).some(
-      (key) => key === PORTAL_SYNC_CACHE_META_KEY || isPortalSyncedStorageKey(key),
-    );
-    if (!relevant) return;
-    void readPortalSyncCache().then((cache) => {
-      if (cache.meta.dirty) schedulePortalExtensionSync();
+  const syncIfStale = () => {
+    if (document.visibilityState !== 'visible') return;
+    void readPortalSyncStatus().then((status) => {
+      const last = status.lastAttemptAt ?? 0;
+      if (Date.now() - last >= REFOCUS_SYNC_MIN_MS) void syncPortalSettingsNow();
     });
-  });
+  };
+  document.addEventListener('visibilitychange', syncIfStale);
+  window.addEventListener('online', () => void syncPortalSettingsNow());
+  setInterval(() => {
+    if (document.visibilityState === 'visible') void syncPortalSettingsNow();
+  }, PERIODIC_SYNC_MS);
 }
 
-/** 起動時に1回だけ: マイリンク復元 → clientUserId 確定 → 必要なら保存 */
+async function runPortalExtensionBootstrap(): Promise<void> {
+  await ensurePortalSyncLedger();
+  if (!isOnPortalHost()) return;
+  installPortalSyncTriggers();
+  // 前回の同期が途中で閉じられていたら「同期中」を解除する。
+  const status = await readPortalSyncStatus();
+  if (status.syncingSince !== null && !isPortalSyncRunning(status)) {
+    await patchStatus({ syncingSince: null });
+  }
+  if (!(await getPortalMyLinksSyncEnabled())) return;
+  // 他の端末の変更を反映してから画面を出す。遅いときは待たずに表示し、後から反映する。
+  await Promise.race([
+    syncPortalSettingsNow(),
+    new Promise<void>((resolve) => setTimeout(resolve, BOOTSTRAP_WAIT_MS)),
+  ]);
+}
+
+/** 起動時に1回だけ: 台帳の準備 → ポータル上なら同期 */
 export function ensurePortalExtensionBootstrapped(): Promise<void> {
   if (!bootstrapPromise) {
-    bootstrapPromise = runPortalExtensionBootstrap();
+    bootstrapPromise = runPortalExtensionBootstrap().catch(() => undefined);
   }
   return bootstrapPromise;
 }
 
-/** @deprecated ensurePortalExtensionBootstrapped を使用 */
-export async function bootstrapPortalExtensionSync(): Promise<void> {
-  await ensurePortalExtensionBootstrapped();
+/**
+ * この端末での同期の有効/無効を切り替える。
+ * ポータル上の同期データには触れない（削除は deletePortalSyncData）。
+ */
+export async function setPortalMyLinksSyncEnabled(enabled: boolean): Promise<void> {
+  await chromeStorageClient.set({ [SK.syncViaMyLinks]: enabled });
+  if (!enabled) {
+    retryTimer = clearTimer(retryTimer);
+    await patchStatus({ issue: null, syncingSince: null, choice: null });
+    return;
+  }
+  // 自分でオンにしたので、ポータル側が空ならこの端末の内容で始め直してよい。
+  await syncPortalSettingsNow('resume');
 }
 
-async function runPortalExtensionBootstrap(): Promise<void> {
-  if (!isOnPortalHost()) return;
-
-  installPortalExtensionSyncListener();
-  await applyPortalMyLinksSyncEnabled(await readMyLinksSyncEnabled());
+/** ポータル上の同期データがないときに、この端末の内容で同期を再開する。 */
+export async function resumePortalSyncFromThisDevice(): Promise<PortalSyncStatus> {
+  await chromeStorageClient.set({ [SK.syncViaMyLinks]: true });
+  return syncPortalSettingsNow('resume');
 }
 
-/** ポータルAPIと端末キャッシュを照合する。戻り値はAPI取得に成功したか。 */
-export async function reconcilePortalExtensionCache(
-  fetchSnapshot: () => Promise<PortalExtensionSnapshot | null>,
-  saveSnapshot: (snapshot: PortalExtensionSnapshot) => Promise<void>,
-): Promise<boolean> {
-  let portal: PortalExtensionSnapshot | null = null;
-  try {
-    portal = await fetchSnapshot();
-  } catch {
-    // API 取得失敗時は端末キャッシュだけで起動し、このページではアップロードしない。
-    return false;
+/** ポータル上の同期データが読めないときに、この端末の内容で作り直す。 */
+export async function restartPortalSyncFromThisDevice(): Promise<PortalSyncStatus> {
+  await chromeStorageClient.set({ [SK.syncViaMyLinks]: true });
+  return syncPortalSettingsNow('restart');
+}
+
+/**
+ * この端末とポータルの内容が違うとき、どちらに合わせるかを決めて同期する。
+ * どちらを選んでも、書き換える前の端末の内容はバックアップに残る。
+ */
+export function resolvePortalSyncChoice(use: 'remote' | 'local'): Promise<PortalSyncStatus> {
+  return syncPortalSettingsNow(use === 'remote' ? 'use-remote' : 'use-local');
+}
+
+/**
+ * ポータル上の同期データを削除し、この端末の同期をオフにする。
+ * この端末の設定はそのまま残る。
+ */
+export async function deletePortalSyncData(): Promise<{
+  ok: boolean;
+  issue?: PortalSyncIssue;
+  detail?: string;
+}> {
+  if (!isOnPortalHost()) return { ok: false, issue: 'network' };
+  retryTimer = clearTimer(retryTimer);
+  const result = await deletePortalSyncRemote(portalSyncIo);
+  if (result.ok) {
+    // 削除できたときだけ同期を止める（失敗したら今の状態のまま）。
+    await chromeStorageClient.set({ [SK.syncViaMyLinks]: false });
+    await patchStatus(
+      { issue: null, syncingSince: null, usedRows: 0, choice: null, nextRetryAt: null },
+      { at: Date.now(), kind: 'deleted' },
+    );
+    return { ok: true };
   }
+  await patchStatus({ syncingSince: null });
+  console.warn('[KCGLMS+] My Links sync delete failed:', result.issue, result.detail ?? '');
+  return { ok: false, issue: result.issue, detail: result.detail };
+}
 
-  const cache = await readPortalSyncCache();
-  const portalOwnerId = snapshotOwnerId(portal);
-  const decision = decidePortalSyncBootstrap(portal, portalOwnerId, cache);
-
-  if (portal) {
-    if (decision === 'upload-local') {
-      await persistDirtyPortalSyncCache(saveSnapshot);
-      return true;
-    }
-
-    // マイリンクが新しい、所有者不一致、または旧版キャッシュならマイリンクを優先する。
-    await writeSyncedLocalStorage(portal);
-    if (!portalOwnerId) {
-      await ensureClientUserIdInMemory();
-      await persistDirtyPortalSyncCache(saveSnapshot);
-    }
-    return true;
-  }
-
-  // マーカーがない初回利用は旧版のローカル設定を移行し、空なら既定値を作成する。
-  const initialStorage =
-    Object.keys(cache.storage).length > 0 ? cache.storage : defaultPortalSettingsStorage();
-  await replacePortalSyncCache(
-    {
-      updatedAt: Math.max(Date.now(), cache.meta.updatedAt + 1),
-      storage: initialStorage,
-    },
-    cache.meta.ownerId,
-    true,
-  );
-  await ensureClientUserIdInMemory();
-  await persistDirtyPortalSyncCache(saveSnapshot);
-  return true;
+export function canSyncPortalSettingsHere(): boolean {
+  return isOnPortalHost();
 }
 
 export {
   customThemesFromPortalStorage as parseCustomThemesFromExtensionStorage,
   settingsFromPortalStorage as parseSettingsFromExtensionStorage,
 };
+
+/** バックアップの内容に戻し、「最近の同期」に記録する。 */
+export async function restorePortalSyncBackup(id: string): Promise<boolean> {
+  const ok = await restoreLedgerBackup(id);
+  if (ok) await patchStatus({}, { at: Date.now(), kind: 'restored' });
+  return ok;
+}

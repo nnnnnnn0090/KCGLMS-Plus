@@ -95,7 +95,7 @@ describe('portal-sync-compact', () => {
 
     expect(compactPortalSyncStorage({ [SK.font]: 'zen-maru-gothic' })).toEqual({ fn: 'z' });
     expect(compactPortalSyncStorage({ [SK.font]: 'noto-sans-jp' })).toEqual({ fn: 'n' });
-    expect(compactPortalSyncStorage({ [SK.font]: 'default' }).fn).toBeUndefined();
+    expect(compactPortalSyncStorage({ [SK.font]: 'default' }).fn).toBe('d');
     expect(expandPortalSyncStorage({ fn: 'b' })[SK.font]).toBe('biz-udpgothic');
   });
 });

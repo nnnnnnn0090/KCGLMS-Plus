@@ -13,6 +13,7 @@ import {
 import { normalizeUiFont, type UiFont } from '../../domain/ui-font';
 import { INSTALL_OPEN_PENDING_KEY, SK } from '../../contract/storage-keys';
 import { isRecord, parseBool, parseString, parseStringArray } from '../../contract/validation-core';
+import { DEFAULT_THEME } from '../../domain/themes/definitions';
 
 export type CalendarWeekStart = 'monday' | 'sunday';
 
@@ -63,7 +64,7 @@ export function parseStorageBool(key: keyof typeof BOOL_DEFAULTS, raw: unknown):
 }
 
 export function parseThemeId(raw: unknown): string {
-  if (typeof raw !== 'string' || !raw.trim()) return 'dark';
+  if (typeof raw !== 'string' || !raw.trim()) return DEFAULT_THEME;
   return raw.trim();
 }
 
@@ -86,8 +87,9 @@ export function parseUiFont(raw: unknown): UiFont {
 }
 
 /** 未設定・不正値は true（既存ユーザー互換） */
+/** 同期は、利用者が最初のチュートリアルか設定画面でオンにしたときだけ有効（未設定はオフ） */
 export function parseSyncViaMyLinks(raw: unknown): boolean {
-  return raw !== false;
+  return raw === true;
 }
 
 export function parseDeveloperNoticeLang(raw: unknown, languageFallback: AppLanguage): AppLanguage {

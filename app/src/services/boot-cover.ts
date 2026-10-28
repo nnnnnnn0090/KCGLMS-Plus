@@ -1,6 +1,6 @@
 import { PORTAL_CONTENT_SCRIPT_MATCHES } from '../contract/origins';
 import { SK } from '../contract/storage-keys';
-import { ensurePortalBackdrop, parseCustomThemeCollection } from '../domain/themes';
+import { DEFAULT_THEME, ensurePortalBackdrop, parseCustomThemeCollection } from '../domain/themes';
 import { storageRepo } from '../platform/storage/repo';
 
 /** portal-early: テーマ先行適用 + ブートカバー（F-002） */
@@ -22,7 +22,7 @@ export function applyPortalEarlyBootCover(): void {
     .getTheme()
     .then(async (themeName) => {
       const customThemes = await storageRepo.getCustomThemes();
-      ensurePortalBackdrop(themeName || 'dark', customThemes);
+      ensurePortalBackdrop(themeName || DEFAULT_THEME, customThemes);
     })
     .catch(() => {});
 }

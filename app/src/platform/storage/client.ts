@@ -1,11 +1,11 @@
 /**
  * 拡張 storage クライアント。
- * 全キーを `chrome.storage.local` に保持し、マイリンク同期対象の変更には dirty 印を付ける。
+ * 全キーを `chrome.storage.local` に保持し、マイリンク同期対象の変更には変更スタンプを付ける。
  */
 
 import { isPortalSyncedStorageKey } from '../../contract/portal-synced-storage';
 import { chromeStorageClient } from './chrome-storage-client';
-import { removePortalSyncCacheValues, setPortalSyncCacheValues } from './portal-sync-cache';
+import { removePortalSyncedValues, writePortalSyncedValues } from './portal-sync-ledger';
 
 function normalizeKeys(keys: string | string[]): string[] {
   return Array.isArray(keys) ? keys : [keys];
@@ -42,7 +42,21 @@ export const storageClient = {
   async set(obj: Record<string, unknown>): Promise<void> {
     const { synced, local } = splitObject(obj);
     await Promise.all([
-      Object.keys(synced).length > 0 ? setPortalSyncCacheValues(synced) : Promise.resolve(),
+      Object.keys(synced).length > 0 ? writePortalSyncedValues(synced) : Promise.resolve(),
+      Object.keys(local).length > 0 ? chromeStorageClient.set(local) : Promise.resolve(),
+    ]);
+  },
+
+  /**
+   * 自動生成した初期値を保存する。同期対象キーは「どの実際の変更にも負ける」扱いになり、
+   * 他の端末に値があればそちらが優先される。
+   */
+  async setDefaults(obj: Record<string, unknown>): Promise<void> {
+    const { synced, local } = splitObject(obj);
+    await Promise.all([
+      Object.keys(synced).length > 0
+        ? writePortalSyncedValues(synced, { weak: true })
+        : Promise.resolve(),
       Object.keys(local).length > 0 ? chromeStorageClient.set(local) : Promise.resolve(),
     ]);
   },
@@ -51,7 +65,7 @@ export const storageClient = {
     const keyList = normalizeKeys(keys);
     const { synced, local } = splitKeys(keyList);
     await Promise.all([
-      synced.length > 0 ? removePortalSyncCacheValues(synced) : Promise.resolve(),
+      synced.length > 0 ? removePortalSyncedValues(synced) : Promise.resolve(),
       local.length > 0 ? chromeStorageClient.remove(local) : Promise.resolve(),
     ]);
   },

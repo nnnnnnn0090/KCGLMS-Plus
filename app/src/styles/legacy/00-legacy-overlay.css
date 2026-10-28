@@ -5501,22 +5501,6 @@
     transform: translateY(8px) scale(0.985);
   }
 }
-@keyframes p-tour-svg-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-@keyframes p-tour-ring-pulse {
-  from {
-    opacity: 0.7;
-  }
-  to {
-    opacity: 1;
-  }
-}
 @keyframes p-tour-finish-spin {
   from {
     transform: rotate(0deg);
@@ -5549,24 +5533,6 @@
   background: rgba(6, 8, 16, 0.68);
   touch-action: none;
   animation: p-tour-dim-in 0.28s var(--p-enter-ease, cubic-bezier(0.2, 0.8, 0.2, 1)) both;
-}
-#portal-overlay .p-tour-svg {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  pointer-events: auto;
-  touch-action: none;
-  animation: p-tour-svg-in 0.28s var(--p-enter-ease, cubic-bezier(0.2, 0.8, 0.2, 1)) both;
-}
-#portal-overlay .p-tour-spot-ring {
-  opacity: 1;
-}
-#portal-overlay .p-tour-target-outline {
-  outline: 3px solid var(--p-accent-light);
-  outline-offset: -3px;
-  border-radius: 14px;
 }
 
 #portal-overlay .p-tour-card {
@@ -5753,57 +5719,6 @@
 }
 
 /* 導入カード */
-#portal-overlay .p-tour-welcome-card {
-  width: min(42rem, calc(100vw - 1.5rem));
-  padding: 1.55rem;
-}
-#portal-overlay .p-tour-welcome-card h2 {
-  font-size: clamp(1.45rem, 3vw, 2rem);
-}
-#portal-overlay .p-tour-welcome-card > div > p {
-  max-width: 35rem;
-  margin-bottom: 1.2rem;
-}
-#portal-overlay .p-tour-feature-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-#portal-overlay .p-tour-feature {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  min-width: 0;
-  padding: 0.7rem 0.8rem;
-  border: 1px solid var(--p-border-light);
-  border-radius: 12px;
-  background: var(--p-bg3);
-}
-#portal-overlay .p-tour-feature > span {
-  flex: 0 0 auto;
-  color: var(--p-accent);
-  font-size: 0.68rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-#portal-overlay .p-tour-feature > strong {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--p-text);
-  font-size: 0.77rem;
-  font-weight: 650;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* スポットライト説明 */
-#portal-overlay .p-tour-spotlight-card {
-  width: min(24.375rem, calc(100vw - 1.5rem));
-}
-#portal-overlay .p-tour-spotlight-card p {
-  margin-bottom: 0.2rem;
-}
 
 /* 完了 */
 #portal-overlay .p-tour-done-card {
@@ -6265,6 +6180,14 @@
 }
 #portal-overlay .p-tour-root.is-exiting .p-tour-card {
   pointer-events: none;
+  /* 中身だけでなく枠ごと消す（次の画面が出るまでに空の枠が残らないように）。
+     中央寄せに transform を使っているので、不透明度だけを変える。 */
+  animation: p-tour-frame-out 0.3s var(--p-enter-ease, cubic-bezier(0.4, 0, 0.2, 1)) forwards;
+}
+@keyframes p-tour-frame-out {
+  to {
+    opacity: 0;
+  }
 }
 #portal-overlay .p-tour-root.is-exiting .p-tour-card-inner {
   animation: p-tour-card-out 0.3s var(--p-enter-ease, cubic-bezier(0.4, 0, 0.2, 1)) forwards;
@@ -6287,18 +6210,6 @@
   #portal-overlay .p-tour-card p {
     font-size: 0.82rem;
     line-height: 1.6;
-  }
-  #portal-overlay .p-tour-welcome-card {
-    padding: 1.15rem;
-  }
-  #portal-overlay .p-tour-welcome-card h2 {
-    font-size: 1.45rem;
-  }
-  #portal-overlay .p-tour-feature-grid {
-    grid-template-columns: 1fr;
-  }
-  #portal-overlay .p-tour-feature:nth-child(n + 4) {
-    display: none;
   }
   #portal-overlay .p-tour-card-actions {
     align-items: flex-end;
@@ -6397,15 +6308,10 @@
   #portal-overlay .p-tour-theme-lists {
     max-height: 11rem;
   }
-  #portal-overlay .p-tour-welcome-card {
-    max-height: calc(100dvh - 1.5rem);
-    overflow: auto;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   #portal-overlay .p-tour-dim-full,
-  #portal-overlay .p-tour-svg,
   #portal-overlay .p-tour-card,
   #portal-overlay .p-tour-theme-guard,
   #portal-overlay .p-tour-theme-dock,
@@ -6414,9 +6320,6 @@
   #portal-overlay .p-tour-root.is-exiting .p-tour-card-inner {
     animation-duration: 0.01ms;
     animation-iteration-count: 1;
-  }
-  #portal-overlay .p-tour-spot-ring {
-    animation: none;
   }
   #portal-overlay .p-tour-progress-track > span {
     transition: none;
@@ -8024,5 +7927,878 @@
   #portal-overlay .p-cplan-login-card {
     max-width: 90%;
     padding: 1.5rem;
+  }
+}
+
+/* ── 設定の同期: 状態カード ── */
+#portal-overlay .p-settings-section--my-links-sync {
+  --p-sync-ok: #22c55e;
+  --p-sync-warn: #f59e0b;
+}
+#portal-overlay .p-settings-section--my-links-sync > .p-settings-hint {
+  margin-bottom: 0.6rem;
+  padding: 0 0.55rem;
+}
+#portal-overlay .p-sync-status {
+  --p-sync-tone: var(--p-text-dim);
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  margin: 0 0.55rem 0.6rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--p-sync-tone) 35%, var(--p-border));
+  background: color-mix(in srgb, var(--p-sync-tone) 8%, transparent);
+}
+#portal-overlay .p-sync-status--ok {
+  --p-sync-tone: var(--p-sync-ok);
+}
+#portal-overlay .p-sync-status--busy,
+#portal-overlay .p-sync-status--pending {
+  --p-sync-tone: var(--p-accent);
+}
+#portal-overlay .p-sync-status--warn {
+  --p-sync-tone: var(--p-sync-warn);
+}
+#portal-overlay .p-sync-status--error {
+  --p-sync-tone: var(--p-danger);
+}
+#portal-overlay .p-sync-status-dot {
+  flex: none;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-top: 0.3rem;
+  border-radius: 50%;
+  background: var(--p-sync-tone);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-sync-tone) 22%, transparent);
+}
+#portal-overlay .p-sync-status--busy .p-sync-status-dot {
+  animation: p-sync-pulse 1.1s ease-in-out infinite;
+}
+@keyframes p-sync-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #portal-overlay .p-sync-status--busy .p-sync-status-dot {
+    animation: none;
+  }
+}
+#portal-overlay .p-sync-status-body {
+  min-width: 0;
+  flex: 1;
+}
+#portal-overlay .p-sync-status-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-bright);
+}
+#portal-overlay .p-sync-status-detail,
+#portal-overlay .p-sync-status-meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--p-text-muted);
+}
+#portal-overlay .p-sync-status-meta {
+  color: var(--p-text-dim);
+}
+#portal-overlay .p-sync-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.6rem;
+}
+#portal-overlay .p-sync-usage {
+  margin-top: 0.5rem;
+}
+#portal-overlay .p-sync-usage-bar {
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--p-text-dim) 22%, transparent);
+}
+#portal-overlay .p-sync-usage-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--p-sync-tone);
+}
+#portal-overlay .p-sync-usage-label {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--p-text-dim);
+}
+#portal-overlay .p-sync-link-btn {
+  padding: 0.35rem 0.2rem;
+  border: 0;
+  background: none;
+  color: var(--p-text-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+#portal-overlay .p-sync-link-btn:hover {
+  color: var(--p-text-bright);
+}
+#portal-overlay .p-sync-link-btn--danger {
+  margin-top: 0.4rem;
+  color: var(--p-danger);
+}
+#portal-overlay .p-sync-link-btn--danger:hover {
+  color: var(--p-danger-hover);
+}
+#portal-overlay .p-sync-danger-btn {
+  padding: 0.5rem 0.95rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--p-danger) 45%, var(--p-border));
+  background: color-mix(in srgb, var(--p-danger) 12%, transparent);
+  color: var(--p-danger);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+#portal-overlay .p-sync-danger-btn:hover {
+  background: color-mix(in srgb, var(--p-danger) 20%, transparent);
+}
+#portal-overlay .p-sync-status-actions button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+#portal-overlay .p-sync-details {
+  margin-top: 0.4rem;
+  padding: 0 0.55rem;
+}
+#portal-overlay .p-sync-details > summary {
+  padding: 0.35rem 0;
+  font-size: 0.8125rem;
+  color: var(--p-text-muted);
+  cursor: pointer;
+}
+#portal-overlay .p-sync-details > .p-settings-hint {
+  margin-bottom: 0.4rem;
+}
+#portal-overlay .p-sync-confirm {
+  margin-top: 0.4rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--p-danger) 35%, var(--p-border));
+}
+#portal-overlay .p-sync-backups {
+  margin: 0.6rem 0 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--p-border);
+}
+#portal-overlay .p-sync-backups-title {
+  margin-bottom: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--p-text-bright);
+}
+#portal-overlay .p-sync-backup-list {
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+#portal-overlay .p-sync-backup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--p-border) 60%, transparent);
+}
+#portal-overlay .p-sync-backup > .p-sync-confirm {
+  flex-basis: 100%;
+}
+#portal-overlay .p-sync-backup-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+#portal-overlay .p-sync-backup-when {
+  font-size: 0.78rem;
+  color: var(--p-text-muted);
+}
+#portal-overlay .p-sync-backup-summary {
+  font-size: 0.72rem;
+  color: var(--p-text-dim);
+}
+#portal-overlay .p-link-edit-error {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: var(--p-danger);
+}
+#portal-overlay .p-sync-status-code {
+  margin: 0.35rem 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--p-text-dim);
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+#portal-overlay .p-sync-status-code {
+  margin: 0.35rem 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--p-text-dim);
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+/* ── 設定の同期: わかりやすい表示 ── */
+#portal-overlay .p-settings-section--my-links-sync .p-sync-toggle-hint {
+  margin: -0.15rem 0 0.6rem;
+  padding: 0 0.55rem;
+}
+#portal-overlay .p-sync-status-title {
+  font-size: 0.95rem;
+}
+#portal-overlay .p-sync-tech {
+  margin-top: 0.5rem;
+}
+#portal-overlay .p-sync-tech > summary {
+  font-size: 0.72rem;
+  color: var(--p-text-dim);
+  cursor: pointer;
+}
+#portal-overlay .p-sync-history {
+  margin: 0.2rem 0.55rem 0.4rem;
+}
+#portal-overlay .p-sync-history-title {
+  margin-bottom: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--p-text-muted);
+}
+#portal-overlay .p-sync-history-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#portal-overlay .p-sync-history-item {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.25rem 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--p-text-muted);
+}
+#portal-overlay .p-sync-history-item.is-failed {
+  color: var(--p-danger);
+}
+#portal-overlay .p-sync-history-time {
+  flex: none;
+  min-width: 2.8rem;
+  color: var(--p-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+#portal-overlay .p-sync-history-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+/* 初回チュートリアル: ほかの端末と設定をそろえるか */
+#portal-overlay .p-tour-sync-option {
+  gap: 0.35rem;
+}
+#portal-overlay .p-tour-sync-option:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+#portal-overlay .p-tour-sync-option-title {
+  font-size: 0.9rem;
+}
+#portal-overlay .p-tour-sync-option-hint {
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--p-text-muted);
+}
+
+/* ── ホームの案内（スポットライト） ── */
+#portal-overlay .p-spot-root {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  pointer-events: none;
+  isolation: isolate;
+  color: var(--p-text);
+}
+/* 暗い部分のクリックを受け止める板（光っている所は操作できる） */
+#portal-overlay .p-spot-blocker {
+  position: fixed;
+  z-index: 0;
+  pointer-events: auto;
+  touch-action: none;
+}
+#portal-overlay .p-spot-blocker--full {
+  inset: 0;
+  background: rgba(6, 8, 16, 0.6);
+}
+/* 光る枠。大きな影で周りを暗くする */
+#portal-overlay .p-spot-hole {
+  position: fixed;
+  z-index: 1;
+  border-radius: 14px;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 3px var(--p-accent-light),
+    0 0 0 9px color-mix(in srgb, var(--p-accent) 22%, transparent),
+    0 0 0 200vmax rgba(6, 8, 16, 0.6);
+}
+
+#portal-overlay .p-spot-card {
+  position: fixed;
+  z-index: 2;
+  box-sizing: border-box;
+  max-width: calc(100vw - 1.5rem);
+  padding: 1.1rem 1.15rem 0.95rem;
+  border: 1px solid var(--p-border-hover);
+  border-radius: 18px;
+  background: var(--p-bg);
+  color: var(--p-text);
+  box-shadow: 0 18px 44px var(--p-shadow-strong);
+  /* 移動中は消しておき、枠が着いたら（is-landed）その場でふわっと出す */
+  opacity: 0;
+  transform: var(--p-spot-from, translateY(8px));
+  pointer-events: none;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+}
+#portal-overlay .p-spot-card.is-landed {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition:
+    opacity 0.24s ease,
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+#portal-overlay .p-spot-card.is-bottom {
+  --p-spot-from: translateY(-6px);
+}
+#portal-overlay .p-spot-card.is-top {
+  --p-spot-from: translateY(6px);
+}
+#portal-overlay .p-spot-card.is-right {
+  --p-spot-from: translateX(-6px);
+}
+#portal-overlay .p-spot-card.is-left {
+  --p-spot-from: translateX(6px);
+}
+/* 対象を指す矢印 */
+#portal-overlay .p-spot-arrow {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--p-bg);
+  border: 1px solid var(--p-border-hover);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+#portal-overlay .p-spot-card.is-bottom .p-spot-arrow {
+  top: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+#portal-overlay .p-spot-card.is-top .p-spot-arrow {
+  top: 100%;
+  border-left: 0;
+  border-top: 0;
+}
+#portal-overlay .p-spot-card.is-right .p-spot-arrow {
+  left: 0;
+  border-right: 0;
+  border-top: 0;
+}
+#portal-overlay .p-spot-card.is-left .p-spot-arrow {
+  left: 100%;
+  border-left: 0;
+  border-bottom: 0;
+}
+#portal-overlay .p-spot-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+#portal-overlay .p-spot-count {
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--p-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+#portal-overlay .p-spot-card h2 {
+  margin: 0 0 0.3rem;
+  font-size: 1.12rem;
+  line-height: 1.35;
+  color: var(--p-text-bright);
+}
+#portal-overlay .p-spot-lead {
+  margin: 0 0 0.55rem;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--p-text);
+}
+#portal-overlay .p-spot-tips {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  list-style: none;
+}
+#portal-overlay .p-spot-tips > li {
+  position: relative;
+  padding-left: 1.05rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--p-text-muted);
+}
+#portal-overlay .p-spot-tips > li::before {
+  content: '';
+  position: absolute;
+  left: 0.25rem;
+  top: 0.55em;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: var(--p-accent);
+}
+#portal-overlay .p-spot-note {
+  margin: 0 0 0.6rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  background: var(--p-accent-bg);
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--p-accent-light);
+}
+#portal-overlay .p-spot-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.15rem 0 0.7rem;
+}
+#portal-overlay .p-spot-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--p-border-hover);
+  cursor: pointer;
+  transition:
+    width 0.25s ease,
+    background 0.25s ease;
+}
+#portal-overlay .p-spot-dot.is-done {
+  background: color-mix(in srgb, var(--p-accent) 55%, var(--p-border-hover));
+}
+#portal-overlay .p-spot-dot.is-current {
+  width: 1.4rem;
+  background: var(--p-accent);
+}
+#portal-overlay .p-spot-dot:focus-visible {
+  outline: 2px solid var(--p-accent-light);
+  outline-offset: 2px;
+}
+#portal-overlay .p-spot-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+#portal-overlay .p-spot-actions-main {
+  display: flex;
+  gap: 0.45rem;
+}
+/* スマホ幅: 画面の下（または上）のシートとして出す */
+#portal-overlay .p-spot-card.is-sheet-bottom,
+#portal-overlay .p-spot-card.is-sheet-top {
+  max-height: 46dvh;
+  overflow: auto;
+}
+#portal-overlay .p-spot-card.is-sheet-bottom {
+  --p-spot-from: translateY(12px);
+}
+#portal-overlay .p-spot-card.is-sheet-top {
+  --p-spot-from: translateY(-12px);
+}
+@media (prefers-reduced-motion: reduce) {
+  #portal-overlay .p-spot-card,
+  #portal-overlay .p-spot-card.is-landed {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* 完了のカード: すべて中央にそろえ、最後のボタンを幅いっぱいに */
+#portal-overlay .p-tour-done-card {
+  width: min(27rem, calc(100vw - 1.5rem));
+  padding: 1.75rem 1.6rem 1.5rem;
+}
+#portal-overlay .p-tour-done-card h2 {
+  margin: 0.95rem 0 0.35rem;
+}
+#portal-overlay .p-tour-done-lead {
+  margin: 0 0 1.1rem;
+  color: var(--p-text-muted);
+}
+#portal-overlay .p-tour-done-next {
+  margin: 0 0 1.25rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--p-border);
+  border-radius: 14px;
+  background: var(--p-bg3);
+  text-align: left;
+}
+#portal-overlay .p-tour-done-next h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--p-text-dim);
+}
+#portal-overlay .p-tour-done-next ol {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#portal-overlay .p-tour-done-next li {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+}
+#portal-overlay .p-tour-done-num {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--p-accent-bg);
+  color: var(--p-accent-light);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+#portal-overlay .p-tour-done-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+#portal-overlay .p-tour-done-text strong {
+  font-size: 0.86rem;
+  color: var(--p-text-bright);
+}
+#portal-overlay .p-tour-done-text span {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--p-text-muted);
+}
+#portal-overlay .p-tour-done-start {
+  display: block;
+  width: 100%;
+  min-height: 2.9rem;
+  font-size: 0.92rem;
+}
+
+/* ── ようこそ画面 ── */
+#portal-overlay .p-tour-welcome {
+  width: min(52rem, calc(100vw - 1.5rem));
+  max-height: calc(100dvh - 1.5rem);
+  overflow: auto;
+  padding: 0;
+  border-radius: 24px;
+}
+#portal-overlay .p-tour-welcome-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+}
+#portal-overlay .p-tour-welcome-main {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 2rem 1.6rem;
+}
+#portal-overlay .p-tour-welcome-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.35rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--p-text-bright);
+}
+#portal-overlay .p-tour-welcome-brand img {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--p-accent) 25%, transparent);
+}
+#portal-overlay .p-tour-welcome-kicker {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--p-accent);
+}
+#portal-overlay .p-tour-welcome h2 {
+  margin: 0.25rem 0 0.7rem;
+  font-size: clamp(1.45rem, 2.6vw, 1.95rem);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--p-text-bright);
+}
+#portal-overlay .p-tour-welcome-lead {
+  margin: 0 0 1.4rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--p-text-muted);
+}
+#portal-overlay .p-tour-welcome-flow {
+  margin-bottom: 1.5rem;
+}
+#portal-overlay .p-tour-welcome-flow-title {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--p-text-dim);
+}
+#portal-overlay .p-tour-welcome-flow ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#portal-overlay .p-tour-welcome-flow li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.84rem;
+  font-weight: 650;
+  color: var(--p-text);
+}
+#portal-overlay .p-tour-welcome-flow li + li::before {
+  content: '';
+  width: 1.1rem;
+  height: 1px;
+  margin-right: 0.15rem;
+  background: var(--p-border-hover);
+}
+#portal-overlay .p-tour-welcome-flow li > span {
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--p-accent-bg);
+  color: var(--p-accent-light);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+#portal-overlay .p-tour-welcome-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: auto;
+}
+#portal-overlay .p-tour-welcome-start {
+  flex: 1;
+  min-height: 2.9rem;
+  font-size: 0.95rem;
+}
+#portal-overlay .p-tour-welcome-hint {
+  margin: 0.6rem 0 0;
+  font-size: 0.72rem;
+  color: var(--p-text-dim);
+}
+/* できるようになること（右側） */
+#portal-overlay .p-tour-welcome-highlights {
+  display: grid;
+  align-content: center;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 1.6rem;
+  list-style: none;
+  border-left: 1px solid var(--p-border-light);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--p-accent) 10%, var(--p-bg3)),
+    var(--p-bg3)
+  );
+}
+#portal-overlay .p-tour-welcome-highlights > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.8rem 0.85rem;
+  border: 1px solid var(--p-border-light);
+  border-radius: 14px;
+  background: var(--p-bg);
+  animation: p-tour-welcome-rise 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes p-tour-welcome-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+#portal-overlay .p-tour-welcome-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 11px;
+  background: var(--p-accent-bg);
+  color: var(--p-accent);
+}
+#portal-overlay .p-tour-welcome-highlight-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+#portal-overlay .p-tour-welcome-highlight-text strong {
+  font-size: 0.86rem;
+  line-height: 1.4;
+  color: var(--p-text-bright);
+}
+#portal-overlay .p-tour-welcome-highlight-text span {
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--p-text-muted);
+}
+@media (max-width: 760px) {
+  #portal-overlay .p-tour-welcome-grid {
+    grid-template-columns: 1fr;
+  }
+  #portal-overlay .p-tour-welcome-main {
+    padding: 1.4rem 1.3rem 1.1rem;
+  }
+  #portal-overlay .p-tour-welcome-brand {
+    margin-bottom: 0.9rem;
+  }
+  #portal-overlay .p-tour-welcome-highlights {
+    order: 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 1rem 1.3rem 1.3rem;
+    border-left: 0;
+    border-top: 1px solid var(--p-border-light);
+  }
+  #portal-overlay .p-tour-welcome-highlights > li {
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.7rem;
+  }
+  #portal-overlay .p-tour-welcome-highlight-text span {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #portal-overlay .p-tour-welcome-highlights > li {
+    animation: none;
+  }
+}
+
+/* 初回チュートリアル: フォントを選ぶ */
+#portal-overlay .p-tour-font-options {
+  display: grid;
+  align-items: stretch;
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+  gap: 0.6rem;
+  margin: 0.3rem 0 0.5rem;
+}
+#portal-overlay .p-tour-font-option {
+  position: relative;
+  display: flex;
+  height: auto;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem 0.85rem;
+  border: 2px solid var(--p-border);
+  border-radius: 13px;
+  background: var(--p-bg3);
+  color: var(--p-text);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+#portal-overlay .p-tour-font-option:hover {
+  transform: translateY(-1px);
+  border-color: var(--p-border-hover);
+  background: var(--p-bg-hover);
+}
+#portal-overlay .p-tour-font-option.is-active {
+  border-color: var(--p-accent);
+  background: var(--p-accent-bg);
+  box-shadow: 0 0 0 1px var(--p-accent);
+}
+#portal-overlay .p-tour-font-option:focus-visible {
+  outline: 2px solid var(--p-accent-light);
+  outline-offset: 2px;
+}
+/* 見本は2行（言語ごとの語 / 英数字）。省略せず、長い語は折り返す */
+#portal-overlay .p-tour-font-sample {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  color: var(--p-text-bright);
+}
+#portal-overlay .p-tour-font-sample-main {
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+#portal-overlay .p-tour-font-sample-sub {
+  font-size: 0.92rem;
+  line-height: 1.35;
+  color: var(--p-text-muted);
+}
+#portal-overlay .p-tour-font-name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-top: auto;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--p-text-muted);
+}
+/* フォント名と同じ行の右端に置く（見本の文字に重ねない） */
+#portal-overlay .p-tour-font-badge {
+  flex: none;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--p-accent);
+  color: var(--p-on-accent);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+@media (max-width: 640px) {
+  #portal-overlay .p-tour-font-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

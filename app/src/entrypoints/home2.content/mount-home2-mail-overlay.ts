@@ -23,6 +23,7 @@ import {
   SK,
 } from '../../shared/constants';
 import { hostTweakCssForHome2MailLayout } from './host-tweak-css';
+import { DEFAULT_THEME } from '../../domain/themes/definitions';
 
 function retainPortalBackdropAfterFrames(
   frameCount: number,
@@ -45,7 +46,7 @@ export async function mountHome2MailOverlay(route: Home2MailRoute): Promise<void
       removePortalBackdrop();
       return;
     }
-    const themeName = String(themeSnap[SK.theme] ?? '').trim() || 'dark';
+    const themeName = String(themeSnap[SK.theme] ?? '').trim() || DEFAULT_THEME;
     const customThemes = parseCustomThemeCollection(themeSnap[SK.customThemes]);
 
     const hostTweakCss = hostTweakCssForHome2MailLayout(route.layout);

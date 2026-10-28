@@ -38,3 +38,18 @@ export function pickPortalSyncedStorage(data: Record<string, unknown>): Record<s
   }
   return out;
 }
+
+/**
+ * 利用者が作った内容ではなく、拡張機能が管理する記録。
+ * 「同期で値が置き換わる」確認やバックアップの復元の対象にしない。
+ */
+export const PORTAL_SYNC_HOUSEKEEPING_KEYS: ReadonlySet<string> = new Set([
+  SK.clientUserId,
+  SK.extensionVersionSeen,
+  SK.developerNoticeLang,
+  SK.developerSurveyAnswered,
+  SK.portalGuidedTourDone,
+  SK.portalLanguagePickerDone,
+  SK.communityDisclaimerAccepted,
+  SK.customCalBandCollapsed,
+]);

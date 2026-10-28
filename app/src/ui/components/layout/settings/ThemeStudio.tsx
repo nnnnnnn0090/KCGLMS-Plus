@@ -18,6 +18,7 @@ import {
   type EditableThemeTokens,
 } from '../../../../domain/themes';
 import { useI18n } from '../../../../i18n';
+import { DEFAULT_THEME } from '../../../../domain/themes/definitions';
 
 const TOKEN_GROUPS: { labelJa: string; labelEn: string; keys: (keyof EditableThemeTokens)[] }[] = [
   { labelJa: '背景', labelEn: 'Backgrounds', keys: ['bg', 'bgSecondary', 'bgTertiary', 'bgHover'] },
@@ -146,7 +147,10 @@ export function ThemeStudio({ theme, baseRef, onClose }: ThemeStudioProps) {
       theme && !saveAsNew
         ? { ...theme, name: name.trim().slice(0, 50), tokens, updatedAt: now }
         : {
-            ...createCustomTheme(name, THEMES[baseRef] ? baseRef : 'dark', { name, ...tokens }),
+            ...createCustomTheme(name, THEMES[baseRef] ? baseRef : DEFAULT_THEME, {
+              name,
+              ...tokens,
+            }),
             tokens,
           };
     saveCustomTheme(next);

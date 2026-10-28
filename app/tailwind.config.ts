@@ -1,9 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 export default {
-  content: [
-    './src/**/*.{ts,tsx}',
-  ],
+  content: ['./src/**/*.{ts,tsx}'],
   important: '#portal-overlay',
   prefix: 'tw-',
   corePlugins: {
@@ -64,30 +62,11 @@ export default {
         portal: '1100px',
       },
       width: {
-        'tour-progress-1-12': '8.333333%',
-        'tour-progress-2-12': '16.666667%',
-        'tour-progress-3-12': '25%',
-        'tour-progress-4-12': '33.333333%',
-        'tour-progress-5-12': '41.666667%',
-        'tour-progress-6-12': '50%',
-        'tour-progress-7-12': '58.333333%',
-        'tour-progress-8-12': '66.666667%',
-        'tour-progress-9-12': '75%',
-        'tour-progress-10-12': '83.333333%',
-        'tour-progress-11-12': '91.666667%',
-        'tour-progress-1-14': '7.142857%',
-        'tour-progress-2-14': '14.285714%',
-        'tour-progress-3-14': '21.428571%',
-        'tour-progress-4-14': '28.571429%',
-        'tour-progress-5-14': '35.714286%',
-        'tour-progress-6-14': '42.857143%',
-        'tour-progress-7-14': '50%',
-        'tour-progress-8-14': '57.142857%',
-        'tour-progress-9-14': '64.285714%',
-        'tour-progress-10-14': '71.428571%',
-        'tour-progress-11-14': '78.571429%',
-        'tour-progress-12-14': '85.714286%',
-        'tour-progress-13-14': '92.857143%',
+        'tour-progress-1-6': '16.666667%',
+        'tour-progress-2-6': '33.333333%',
+        'tour-progress-3-6': '50%',
+        'tour-progress-4-6': '66.666667%',
+        'tour-progress-5-6': '83.333333%',
       },
       zIndex: {
         overlay: '2147483647',

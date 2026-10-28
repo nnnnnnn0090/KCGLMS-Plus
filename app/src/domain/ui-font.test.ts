@@ -32,13 +32,16 @@ describe('normalizeUiFont', () => {
 });
 
 describe('compactUiFont / expandUiFont', () => {
-  it('omits default and round-trips google fonts', () => {
-    expect(compactUiFont('default')).toBeUndefined();
+  it('syncs every font explicitly and round-trips them', () => {
+    // 既定は M PLUS になったので、以前の既定（default）も省略せずに送る。
+    expect(compactUiFont('default')).toBe('d');
+    expect(expandUiFont('d')).toBe('default');
+    expect(DEFAULT_UI_FONT).toBe('mplus-rounded-1c');
     expect(compactUiFont('zen-maru-gothic')).toBe('z');
     expect(compactUiFont('noto-sans-jp')).toBe('n');
     expect(expandUiFont('z')).toBe('zen-maru-gothic');
     expect(expandUiFont('n')).toBe('noto-sans-jp');
     expect(expandUiFont('noto-sans-jp')).toBe('noto-sans-jp');
-    expect(expandUiFont('nope')).toBe('default');
+    expect(expandUiFont('nope')).toBe(DEFAULT_UI_FONT);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { THEMES } from './definitions';
+import { DEFAULT_THEME, THEMES } from './definitions';
 import {
   createCustomTheme,
   customThemeRef,
@@ -48,7 +48,7 @@ describe('custom theme storage', () => {
   });
 
   it('存在しない参照と壊れたコレクションは標準テーマへ戻す', () => {
-    expect(resolveThemeTokens('custom:missing').bg).toBe(THEMES.dark.bg);
+    expect(resolveThemeTokens('custom:missing').bg).toBe(THEMES[DEFAULT_THEME].bg);
     expect(parseCustomThemeCollection({ schemaVersion: 2, themes: [] }).themes).toEqual([]);
   });
 

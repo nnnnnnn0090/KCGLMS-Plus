@@ -13,6 +13,22 @@ import {
 } from './custom-cal-events';
 
 describe('parseCustomCalEventCollection', () => {
+  it('keeps saved events beyond the limit so they are never deleted by a later save', () => {
+    const at = '2026-01-01T00:00:00.000Z';
+    const events = Array.from({ length: 101 }, (_, i) => ({
+      id: `event-${i}`,
+      title: `E${i}`,
+      kind: 'once',
+      date: '2026-11-01',
+      createdAt: at,
+      updatedAt: at,
+    }));
+    const result = parseCustomCalEventCollectionWithReport({ schemaVersion: 1, events });
+    expect(result.collection.events).toHaveLength(101);
+    // 読み込み（インポート）では上限超えとして扱う。
+    expect(result.truncated).toBe(true);
+  });
+
   it('rejects invalid schema', () => {
     expect(parseCustomCalEventCollection(null)).toEqual({ schemaVersion: 1, events: [] });
     expect(parseCustomCalEventCollection({ schemaVersion: 2, events: [] })).toEqual({

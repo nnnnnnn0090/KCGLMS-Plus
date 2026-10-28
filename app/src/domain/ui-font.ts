@@ -14,7 +14,8 @@ const UI_FONT_DEF_LIST = [
     id: 'default',
     label: 'Default',
     stack: `'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`,
-    compact: undefined,
+    // 既定のフォントではなくなったので、同期でも省略せず明示する（旧版は未知の値を default として読む）。
+    compact: 'd',
     googleFamily: undefined,
   },
   {
@@ -70,7 +71,11 @@ const UI_FONT_DEF_LIST = [
 export const UI_FONTS = UI_FONT_DEF_LIST.map((d) => d.id);
 export type UiFont = (typeof UI_FONT_DEF_LIST)[number]['id'];
 
-export const DEFAULT_UI_FONT: UiFont = 'default';
+/** 新規インストールの既定フォント */
+export const DEFAULT_UI_FONT: UiFont = 'mplus-rounded-1c';
+
+/** 既定が変わる前（〜7.1）の既定フォント。旧形式のデータや既存の利用者に使う */
+export const LEGACY_DEFAULT_UI_FONT: UiFont = 'default';
 
 const DEF_BY_ID = Object.fromEntries(UI_FONT_DEF_LIST.map((d) => [d.id, d])) as Record<
   UiFont,
@@ -94,7 +99,7 @@ export function normalizeUiFont(value: unknown): UiFont {
   return typeof value === 'string' && value in DEF_BY_ID ? (value as UiFont) : DEFAULT_UI_FONT;
 }
 
-/** マイリンク短縮値。default は undefined（省略） */
+/** マイリンク短縮値 */
 export function compactUiFont(value: unknown): string | undefined {
   const id = normalizeUiFont(value);
   return DEF_BY_ID[id].compact;
@@ -159,6 +164,27 @@ function ensureGoogleFontStylesheet(familyQuery: string | undefined): void {
   if (link.href !== href) {
     link.href = href;
   }
+}
+
+const PREVIEW_LINK_ID = 'portal-ui-font-preview';
+
+/**
+ * フォントを選ぶ画面で、すべての候補を見比べられるように読み込む。
+ * 戻り値を呼ぶと読み込みをやめる。
+ */
+export function loadUiFontPreviews(): () => void {
+  if (typeof document === 'undefined') return () => undefined;
+  const families = UI_FONT_DEF_LIST.flatMap((d) => (d.googleFamily ? [d.googleFamily] : []));
+  const head = document.head ?? document.documentElement;
+  if (!head || families.length === 0 || document.getElementById(PREVIEW_LINK_ID)) {
+    return () => undefined;
+  }
+  const link = document.createElement('link');
+  link.id = PREVIEW_LINK_ID;
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?${families.map((f) => `family=${f}`).join('&')}&display=swap`;
+  head.appendChild(link);
+  return () => link.remove();
 }
 
 /**

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { parseCalendarWeekStart, parseStorageBool, parseThemeId } from './parsers';
 import { SK } from '../../contract/storage-keys';
+import { DEFAULT_THEME } from '../../domain/themes/definitions';
 
 describe('storage parsers', () => {
   it('parses theme id with default', () => {
-    expect(parseThemeId(undefined)).toBe('dark');
+    expect(parseThemeId(undefined)).toBe(DEFAULT_THEME);
     expect(parseThemeId('  cherryBlossom ')).toBe('cherryBlossom');
   });
 

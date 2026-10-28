@@ -13,7 +13,7 @@ import {
   parseCustomThemeCollection,
   type StoredCustomThemeCollection,
 } from '../domain/themes/custom-themes';
-import { DEFAULT_UI_FONT, normalizeUiFont } from '../domain/ui-font';
+import { DEFAULT_UI_FONT, LEGACY_DEFAULT_UI_FONT, normalizeUiFont } from '../domain/ui-font';
 import { DEFAULT_LANGUAGE, normalizeLanguage, type AppLanguage } from '../i18n/messages';
 import { parseCalendarWeekStart, type CalendarWeekStart } from '../lib/date';
 import {
@@ -25,6 +25,7 @@ import {
   encryptPortalSyncPayload,
   isEncryptedPortalSyncWire,
 } from '../lib/portal-sync-crypto';
+import { DEFAULT_THEME } from '../domain/themes/definitions';
 
 const PORTAL_EXTENSION_PAYLOAD_VERSION = 3 as const;
 const PORTAL_SETTINGS_PAYLOAD_VERSION = 2 as const;
@@ -79,7 +80,7 @@ function fromBit(value: unknown, fallback: boolean): boolean {
 
 export function settingsFromPortalStorage(storageMap: Record<string, unknown>): Settings {
   return {
-    theme: String(storageMap[SK.theme] ?? 'dark'),
+    theme: String(storageMap[SK.theme] ?? DEFAULT_THEME),
     hideProfileName: Boolean(storageMap[SK.hideProfileName]),
     showKogiCalMascot: Boolean(storageMap[SK.showKogiCalMascot]),
     showHomeCornerCharacter: Boolean(storageMap[SK.showHomeCornerCharacter]),
@@ -118,7 +119,7 @@ export function defaultPortalSettingsStorage(): Record<string, unknown> {
   return settingsSnapshotToStorage({
     updatedAt: 0,
     settings: {
-      theme: 'dark',
+      theme: DEFAULT_THEME,
       hideProfileName: false,
       showKogiCalMascot: false,
       showHomeCornerCharacter: false,
@@ -150,7 +151,8 @@ function decodeLegacyV1(raw: PortalSettingsPayloadLegacyV1): PortalExtensionSnap
         cplanOverlay: fromBit(s.cp, true),
         calendarWeekStart: parseCalendarWeekStart(s.w),
         language: normalizeLanguage(s.l ?? DEFAULT_LANGUAGE),
-        font: DEFAULT_UI_FONT,
+        // 旧形式にフォントの項目はない（当時の既定）。
+        font: LEGACY_DEFAULT_UI_FONT,
       },
       customThemes: parseCustomThemeCollection(raw.ct ?? EMPTY_CUSTOM_THEMES),
     }),
@@ -175,14 +177,18 @@ function decodeSettingsPayloadV2(raw: PortalSettingsPayloadV2): PortalExtensionS
         cplanOverlay: s.cplanOverlay !== false,
         calendarWeekStart: parseCalendarWeekStart(s.calendarWeekStart),
         language: normalizeLanguage(s.language ?? DEFAULT_LANGUAGE),
-        font: normalizeUiFont((s as { font?: unknown }).font),
+        font:
+          (s as { font?: unknown }).font === undefined
+            ? LEGACY_DEFAULT_UI_FONT
+            : normalizeUiFont((s as { font?: unknown }).font),
       },
       customThemes: parseCustomThemeCollection(raw.customThemes ?? EMPTY_CUSTOM_THEMES),
     }),
   };
 }
 
-function decodePayload(json: string): PortalExtensionSnapshot | null {
+/** 復号済み JSON（旧形式を含む）をスナップショットとして読む。 */
+export function decodePortalSettingsPayloadJson(json: string): PortalExtensionSnapshot | null {
   const compact = decodePortalSyncCompactPayload(json);
   if (compact) {
     return {
@@ -235,7 +241,7 @@ export async function encodePortalSettingsPayloadWire(
 export async function decodePortalSettingsPayloadWire(
   wire: string,
 ): Promise<PortalExtensionSnapshot | null> {
-  if (!isEncryptedPortalSyncWire(wire)) return decodePayload(wire);
+  if (!isEncryptedPortalSyncWire(wire)) return decodePortalSettingsPayloadJson(wire);
   const json = await decryptPortalSyncPayload(wire);
-  return json ? decodePayload(json) : null;
+  return json ? decodePortalSettingsPayloadJson(json) : null;
 }

@@ -10,23 +10,20 @@ import {
   mascotIllustratorName,
   mascotIllustratorUrl,
 } from './constants';
-import { SpotlightTourCard } from './SpotlightTourCard';
+import { TourFontStep } from './TourFontStep';
+import { TourSyncStep } from './TourSyncStep';
+import { TourWelcome } from './TourWelcome';
 import { TourThemeOption } from './TourThemeOption';
-import type { Hole, TourStep } from './types';
+import type { TourStep } from './types';
 
 export interface GuidedTourStepsProps {
   currentStep: TourStep;
   steps: TourStep[];
   stepIndex: number;
-  hole: Hole | null;
   cardRef: RefObject<HTMLDivElement | null>;
-  cardSize: { w: number; h: number };
   dockExiting: boolean;
   celebrating: boolean;
   finishingFade: boolean;
-  maskId: string;
-  viewport: { w: number; h: number };
-  spotlightCardCss?: string;
   overlayRoot: HTMLElement;
   settings: Settings;
   language: AppLanguage;
@@ -43,14 +40,10 @@ export function GuidedTourSteps({
   currentStep,
   steps,
   stepIndex,
-  hole,
   cardRef,
   dockExiting,
   celebrating,
   finishingFade,
-  maskId,
-  viewport,
-  spotlightCardCss,
   overlayRoot,
   settings,
   language,
@@ -62,12 +55,10 @@ export function GuidedTourSteps({
   finishTour,
   celebrateAndFinishTour,
 }: GuidedTourStepsProps) {
-  const { w: vw, h: vh } = viewport;
   const findCopy = (id: string) =>
     t.guidedTour.steps.find((item: { id: string }) => item.id === id);
   const copy = findCopy(currentStep.id);
-  const isLast = stepIndex === steps.length - 1;
-  const showSpotlightSvg = currentStep.kind === 'spotlight' && vw > 0 && vh > 0 && hole !== null;
+  const isLast = currentStep.kind === 'done';
 
   const renderProgress = () => (
     <div className="p-tour-progress" aria-hidden>
@@ -200,6 +191,40 @@ export function GuidedTourSteps({
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (currentStep.kind === 'welcome') {
+    return <TourWelcome t={t} cardRef={cardRef} onStart={goNext} onLater={finishTour} />;
+  }
+
+  if (currentStep.kind === 'font') {
+    return (
+      <TourFontStep
+        stepId={currentStep.id}
+        t={t}
+        font={settings.font}
+        onSelect={(font) => updateSetting('font', font)}
+        cardRef={cardRef}
+        dockExiting={dockExiting}
+        previewGuard={renderPreviewScrollGuard()}
+        progress={renderProgress()}
+        actions={renderActions()}
+      />
+    );
+  }
+
+  if (currentStep.kind === 'sync') {
+    return (
+      <TourSyncStep
+        stepId={currentStep.id}
+        t={t}
+        cardRef={cardRef}
+        dockExiting={dockExiting}
+        previewGuard={renderPreviewScrollGuard()}
+        progress={renderProgress()}
+        actions={renderActions()}
+      />
     );
   }
 
@@ -351,80 +376,7 @@ export function GuidedTourSteps({
 
   return (
     <div className={`p-tour-root${finishingFade ? ' is-finishing' : ''}`}>
-      {currentStep.kind !== 'spotlight' ? (
-        <div key={stepIndex} className="p-tour-dim-full" aria-hidden />
-      ) : null}
-
-      {currentStep.kind === 'spotlight' && !showSpotlightSvg ? (
-        <div key={`${stepIndex}-spot-wait`} className="p-tour-dim-full" aria-hidden />
-      ) : null}
-
-      {showSpotlightSvg ? (
-        <svg
-          key={stepIndex}
-          className="p-tour-svg"
-          viewBox={`0 0 ${vw} ${vh}`}
-          width={vw}
-          height={vh}
-          aria-hidden
-        >
-          <defs>
-            <mask id={maskId}>
-              <rect width="100%" height="100%" fill="white" />
-              <rect
-                x={hole!.x}
-                y={hole!.y}
-                width={hole!.w}
-                height={hole!.h}
-                rx={16}
-                ry={16}
-                fill="black"
-              />
-            </mask>
-          </defs>
-          <rect width="100%" height="100%" fill="rgba(6,8,16,0.54)" mask={`url(#${maskId})`} />
-          <rect
-            className="p-tour-spot-ring"
-            x={hole!.x}
-            y={hole!.y}
-            width={hole!.w}
-            height={hole!.h}
-            rx={16}
-            ry={16}
-            fill="none"
-            stroke="var(--p-accent-light)"
-            strokeWidth={3}
-          />
-        </svg>
-      ) : null}
-
-      {currentStep.kind === 'welcome' ? (
-        <div
-          ref={cardRef}
-          className="p-tour-card p-tour-card--center p-tour-welcome-card"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="p-tour-h-welcome"
-        >
-          <div className="p-tour-card-inner">
-            <div className="p-tour-card-topline">
-              <span className="p-tour-eyebrow">{t.guidedTour.welcomeEyebrow}</span>
-              {renderProgress()}
-            </div>
-            <h2 id="p-tour-h-welcome">{copy?.title}</h2>
-            <p>{copy?.body}</p>
-            <div className="p-tour-feature-grid">
-              {t.guidedTour.welcomeFeatures.map((label: string, index: number) => (
-                <div className="p-tour-feature" key={label}>
-                  <span aria-hidden>{String(index + 1).padStart(2, '0')}</span>
-                  <strong>{label}</strong>
-                </div>
-              ))}
-            </div>
-            {renderActions()}
-          </div>
-        </div>
-      ) : null}
+      <div key={stepIndex} className="p-tour-dim-full" aria-hidden />
 
       {currentStep.kind === 'done' ? (
         <div
@@ -438,30 +390,39 @@ export function GuidedTourSteps({
             <div className="p-tour-done-mark" aria-hidden>
               ✓
             </div>
-            {renderProgress()}
             <h2 id="p-tour-h-done">{copy?.title}</h2>
-            <p>{copy?.body}</p>
-            {renderActions()}
+            <p className="p-tour-done-lead">{t.guidedTour.doneLead}</p>
+            <section className="p-tour-done-next" aria-labelledby="p-tour-done-next-title">
+              <h3 id="p-tour-done-next-title">{t.guidedTour.doneNextTitle}</h3>
+              <ol>
+                {t.guidedTour.doneNext.map((item: { title: string; body: string }, i: number) => (
+                  <li key={item.title}>
+                    <span className="p-tour-done-num" aria-hidden>
+                      {i + 1}
+                    </span>
+                    <span className="p-tour-done-text">
+                      <strong>{item.title}</strong>
+                      <span>{item.body}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+            <button
+              type="button"
+              className="p-tour-primary p-tour-done-start"
+              disabled={celebrating}
+              aria-busy={celebrating}
+              onClick={celebrateAndFinishTour}
+            >
+              {celebrating ? (
+                <span className="p-tour-finish-spinner" aria-hidden />
+              ) : (
+                t.guidedTour.primaryDone
+              )}
+            </button>
           </div>
         </div>
-      ) : null}
-
-      {currentStep.kind === 'spotlight' ? (
-        <SpotlightTourCard
-          cardRef={cardRef}
-          positionCss={spotlightCardCss}
-          labelledBy={`p-tour-h-${currentStep.id}`}
-        >
-          <div className="p-tour-card-inner" key={stepIndex}>
-            <div className="p-tour-card-topline">
-              <span className="p-tour-eyebrow">{t.guidedTour.guideEyebrow}</span>
-              {renderProgress()}
-            </div>
-            <h2 id={`p-tour-h-${currentStep.id}`}>{copy?.title}</h2>
-            <p>{copy?.body}</p>
-            {renderActions()}
-          </div>
-        </SpotlightTourCard>
       ) : null}
     </div>
   );
