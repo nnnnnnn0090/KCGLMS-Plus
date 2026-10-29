@@ -19,7 +19,7 @@ type LicensesTab = 'libraries' | 'fonts';
 const LIBRARY_LICENSES: ThirdPartyLicense[] = [
   {
     name: 'KCGLMS+',
-    license: 'MIT',
+    license: 'GPL-3.0',
     copyright: 'Copyright (c) 2026 nnnnnnn0090',
     url: 'https://github.com/nnnnnnn0090/kcg-portal-redesign-project/blob/main/LICENSE',
   },
