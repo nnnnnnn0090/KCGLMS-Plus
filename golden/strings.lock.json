@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T08:55:48.382Z",
+  "generatedAt": "2026-10-30T09:48:30.195Z",
   "files": {
     "src/contract/api-paths.ts": "ec731f6dcbabb68a2136ff9b319b89fa860bc098d087f826b5cab6257d262d99",
     "src/contract/cross-context-handoff-storage.ts": "e6b2ce692865f746344e810c583c277e347a58d9e4fd6a280178d4df734d76cf",
@@ -23,16 +23,16 @@
     "src/contract/timing.ts": "e4a100873b09ae723caafb6c70fb942c84719b89ddcb326313f1e53f0d848fcf",
     "src/contract/validation-core.ts": "d23dcb7abdb562f356d07b58015dfb65d7fb543cbac46b116a59e60f89e83df8",
     "src/contract/zindex.ts": "df3f8bdcf9c940ccf8fd75c153aec31cb063ccba6789dfcbc26a60a429e395a0",
-    "src/domain/i18n/locales/en.ts": "c21073eaa9c5f189c1e0db073c1dd4aec8e140cd146a500ccc270342a2d6965f",
-    "src/domain/i18n/locales/id.ts": "d95ba21b2051957b29b7a8ddeb5882d6e885732fe5e64faa1119704cd6f37983",
-    "src/domain/i18n/locales/ja.ts": "266209be2a0a890e6d2b3cb2c8808ad265057cc1728e8c75fe2b94b4a71c42d0",
-    "src/domain/i18n/locales/ko.ts": "eb9f639393bb930489e2e302e0edcbf752af7e7310419f5a32c0634ce74fdf6b",
-    "src/domain/i18n/locales/ne.ts": "0bc82aaf4171858c68387cf13eea5c8cdc396cba821bba65704fe50295c7e392",
-    "src/domain/i18n/locales/th.ts": "cee2c61431ace58f5b937de77af26c698fcd47cf51b9a4b9b2ee72444feb6861",
+    "src/domain/i18n/locales/en.ts": "8bf216bba53f90b6af8ada964f277c4cb7df1ea848bdb12dcf8d9cc9ad5322fd",
+    "src/domain/i18n/locales/id.ts": "cebe6381a2c7e5af03c9ad6b442d8e96baefe721034bad6d62f13bf5c2e754ce",
+    "src/domain/i18n/locales/ja.ts": "87785d26eb0ff9d73ed30cb3981a089566454a0305ec5719f0feb2c5f05fe9dd",
+    "src/domain/i18n/locales/ko.ts": "903d7a11b3a4a23be2a86ec6cb44a093cd83a2e63c55d4108f9c23c6b8024cfb",
+    "src/domain/i18n/locales/ne.ts": "4efce4ef6e1c78fcc10b8e4e6e991c747f9efabd095905874f83280ba7ac5159",
+    "src/domain/i18n/locales/th.ts": "91dfb4069b1141dce24d7359e954cc8d2e2e882816d8cf57ca2740285bfeb8f0",
     "src/domain/i18n/locales/theme-names.ts": "41031a3dafdf0dcb00ed56f1f6aa90c1f87016a4dbbad1433c4f3a7515e0cbe9",
-    "src/domain/i18n/locales/vi.ts": "d9a7ea84c0e389628b49cc8b618f2f66f6d25a0cfe73482e115651ac636d4a75",
-    "src/domain/i18n/locales/zh-TW.ts": "8373032e059cd52f3d532cd684cb166e1b4222cfa7cec4badcc5c55830efa0a8",
-    "src/domain/i18n/locales/zh.ts": "ae2836d52270b9d871c62ed83ddd5ce081de29343d3ab281e4600b7ef1f983fc",
+    "src/domain/i18n/locales/vi.ts": "320c4b3130ee5ff19770edff1e85a60729ba2a1f9b7fe705f0e0b73918d0c8ac",
+    "src/domain/i18n/locales/zh-TW.ts": "33990243c736fd5337b53a36070ecea002e8c0606bc68c989af142fa92ac560d",
+    "src/domain/i18n/locales/zh.ts": "5e370a46e26f22be1e805333add9ff52b9aa9c6ecdb81609e07d8afd4f2d706c",
     "src/domain/themes/definitions.ts": "35a9d07e11c21d8d34fdd4e5a4b142679f3a76e1e7b3c7804fce0c2be3853fdb",
     "src/domain/themes/additional-themes.ts": "8f530137b385e5e6a06a72e025a14cd0023665cc28b35d789be22b39ce43c04e",
     "src/domain/themes/custom-themes.ts": "0418dd96547955b91a1b2fc6c2664c5be63b2a0eb4dd8d9275e1ec75ccca28b4",
@@ -40,7 +40,7 @@
   },
   "groups": {
     "contract": "f1e3ccef0b663bcedf5cc40252ad9f396c0a443a7ba00a666cbda0dcacd8eb21",
-    "i18n": "478b8584616661b2d32f1242772978c13e7ef4bd907efdb53a2e6a786137a563",
+    "i18n": "b12d853c3e04adc0471a102581b4afd6feecdc89f4f4cb4ad12b0d2649cbb550",
     "themeSources": "de9e36c7ae6718e5239b28352be22297899e49713db053703d50d471aab7c8ce"
   },
   "themeTokensSha256": "9f87d49a5658f878aae27c8f3603f45373de04ddc5b9994ab411539bc64df776"

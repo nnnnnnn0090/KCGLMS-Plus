@@ -575,6 +575,13 @@ export const enMessages: typeof jaMessages = {
     syncDone: 'Done — everything matches.',
     syncLater: "Couldn't sync right now. It will try again automatically.",
     syncAskInSettings: 'Open Settings → Connections and choose which settings to keep.',
+    syncFoundTitle: 'Existing settings found',
+    syncFoundBody:
+      'Settings from KCGLMS+ on another device are saved in your portal My Links. Use them on this device too?',
+    syncFoundOn: 'Use these settings',
+    syncFoundOnHint: 'Apply the theme, events and more to this device and keep them in sync.',
+    syncFoundOff: "Don't use them",
+    syncFoundOffHint: 'Settings on this device stay on this device only.',
     fontTitle: 'Choose a font',
     fontBody:
       "This is the lettering used across the extension. Pick the one that's easiest to read.",

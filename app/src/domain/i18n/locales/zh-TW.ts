@@ -560,6 +560,13 @@ export const zhTWMessages: typeof jaMessages = {
     syncDone: '已一致。',
     syncLater: '暫時無法同步，之後會自動同步。',
     syncAskInSettings: '請在設定的「連結」中選擇以哪一邊為準。',
+    syncFoundTitle: '發現既有的設定',
+    syncFoundBody:
+      '其他裝置上 KCGLMS+ 的設定已儲存在入口網站的「我的連結」中。要讓這台裝置也使用這些設定嗎？',
+    syncFoundOn: '使用這些設定',
+    syncFoundOnHint: '將主題、行程等套用到這台裝置，並保持同步。',
+    syncFoundOff: '不使用',
+    syncFoundOffHint: '這台裝置的設定只在這台裝置上使用。',
     fontTitle: '請選擇字型',
     fontBody: '這是擴充功能畫面使用的字型。請選擇你覺得最易讀的。',
     fontSample: '課程日曆',

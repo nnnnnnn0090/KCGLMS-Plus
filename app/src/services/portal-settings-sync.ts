@@ -42,6 +42,7 @@ import {
   type PortalSyncIo,
   type PortalSyncMode,
 } from './portal-sync-engine';
+import { isPortalSettingsMarkerLink } from './portal-sync-markers';
 import {
   fetchPortalUserLinks,
   savePortalUserLinks,
@@ -261,6 +262,11 @@ export async function syncPortalSettingsNow(
   }
 }
 
+/** 実行中の同期があれば終わるまで待つ（結果は問わない） */
+export async function waitForPortalSyncIdle(): Promise<void> {
+  await running?.catch(() => undefined);
+}
+
 function scheduleLocalChangeSync(): void {
   localChangeTimer = clearTimer(localChangeTimer);
   localChangeTimer = setTimeout(() => {
@@ -337,6 +343,29 @@ export async function setPortalMyLinksSyncEnabled(enabled: boolean): Promise<voi
   }
   // 自分でオンにしたので、ポータル側が空ならこの端末の内容で始め直してよい。
   await syncPortalSettingsNow('resume');
+}
+
+/**
+ * マイリンクにほかの端末の同期データ（既存の設定）があるか。読むだけで書き換えない。
+ * 読めなかったときは「ない」として扱う（初回チュートリアルの最後で聞く）。
+ */
+export async function detectPortalSyncData(): Promise<boolean> {
+  if (!isOnPortalHost()) return false;
+  try {
+    const links = await fetchPortalUserLinks();
+    return links.some((link) => !link.delFlg && isPortalSettingsMarkerLink(link));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 既存の設定（ポータル上の同期データ）にこの端末を合わせて同期を始める。
+ * 「どちらに合わせるか」をもう一度聞かず、ポータル側を優先して統合する。
+ */
+export async function alignWithPortalSyncData(): Promise<PortalSyncStatus> {
+  await chromeStorageClient.set({ [SK.syncViaMyLinks]: true });
+  return syncPortalSettingsNow('use-remote');
 }
 
 /** ポータル上の同期データがないときに、この端末の内容で同期を再開する。 */

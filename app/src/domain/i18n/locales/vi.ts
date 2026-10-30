@@ -573,6 +573,13 @@ export const viMessages: typeof jaMessages = {
     syncDone: 'Xong, đã giống nhau.',
     syncLater: 'Chưa đồng bộ được lúc này. Sẽ tự thử lại sau.',
     syncAskInSettings: 'Mở Cài đặt → Liên kết và chọn giữ theo bên nào.',
+    syncFoundTitle: 'Đã tìm thấy cài đặt có sẵn',
+    syncFoundBody:
+      'Cài đặt KCGLMS+ từ thiết bị khác đang được lưu trong Liên kết của tôi trên cổng thông tin. Dùng chúng trên thiết bị này luôn?',
+    syncFoundOn: 'Dùng cài đặt này',
+    syncFoundOnHint: 'Áp dụng giao diện, sự kiện… cho thiết bị này và tiếp tục đồng bộ.',
+    syncFoundOff: 'Không dùng',
+    syncFoundOffHint: 'Cài đặt trên thiết bị này chỉ dùng trên thiết bị này.',
     fontTitle: 'Chọn phông chữ',
     fontBody: 'Đây là kiểu chữ dùng trong tiện ích. Hãy chọn kiểu dễ đọc nhất với bạn.',
     fontSample: 'Lịch học',

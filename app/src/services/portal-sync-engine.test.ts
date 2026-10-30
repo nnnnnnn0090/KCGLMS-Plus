@@ -353,6 +353,35 @@ describe('portal sync engine', () => {
     expect(pc.value(SK.language)).toBe('en');
   });
 
+  it('never overwrites or deletes the anonymous user ID already on the portal', async () => {
+    pc.edit(SK.clientUserId, '11111111-1111-4111-8111-111111111111');
+    pc.edit(SK.theme, 'ocean');
+    await pc.sync();
+
+    // この端末に別の ID がある・ID が無い、どちらで「この端末に合わせる」を選んでも残る。
+    for (const own of ['22222222-2222-4222-8222-222222222222', undefined]) {
+      const laptop = new FakeDevice('laptop', portal);
+      laptop.doc = {
+        [SK.theme]: { s: { t: 0, d: '' }, v: 'sakura' },
+        ...(own ? { [SK.clientUserId]: { s: { t: 0, d: '' }, v: own } } : {}),
+      };
+      await laptop.sync('use-local');
+      expect(laptop.value(SK.clientUserId)).toBe('11111111-1111-4111-8111-111111111111');
+      await pc.sync();
+      expect(pc.value(SK.clientUserId)).toBe('11111111-1111-4111-8111-111111111111');
+      expect(pc.value(SK.theme)).toBe('sakura');
+    }
+  });
+
+  it('sends this device’s ID when the portal has none', async () => {
+    pc.edit(SK.theme, 'ocean');
+    await pc.sync();
+    phone.edit(SK.clientUserId, '33333333-3333-4333-8333-333333333333');
+    await phone.sync();
+    await pc.sync();
+    expect(pc.value(SK.clientUserId)).toBe('33333333-3333-4333-8333-333333333333');
+  });
+
   it('does not ask a brand-new device anything', async () => {
     pc.edit(SK.theme, 'ocean');
     await pc.sync();

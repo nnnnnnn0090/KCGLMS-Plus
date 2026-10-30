@@ -570,6 +570,13 @@ export const jaMessages = {
     syncDone: 'そろいました。',
     syncLater: '今はそろえられませんでした。あとで自動でそろえます。',
     syncAskInSettings: '設定の「連携」で、どちらに合わせるか選んでください。',
+    syncFoundTitle: '既存の設定が見つかりました',
+    syncFoundBody:
+      'ほかの端末で使っていた KCGLMS+ の設定が、ポータルのマイリンクに保存されています。この端末もそれに合わせますか？',
+    syncFoundOn: 'この設定に合わせる',
+    syncFoundOnHint: 'テーマや予定などをこの端末に反映し、これからもそろえます。',
+    syncFoundOff: '合わせない',
+    syncFoundOffHint: 'この端末の設定は、この端末だけで使います。',
     fontTitle: 'フォントを選んでください',
     fontBody: '拡張機能の画面で使う文字の形です。読みやすいものを選んでください。',
     fontSample: '授業カレンダー',

@@ -575,6 +575,13 @@ export const idMessages: typeof jaMessages = {
     syncDone: 'Selesai, sudah sama.',
     syncLater: 'Belum bisa sinkron sekarang. Akan dicoba lagi otomatis.',
     syncAskInSettings: 'Buka Pengaturan → Integrasi dan pilih mana yang diikuti.',
+    syncFoundTitle: 'Pengaturan yang ada ditemukan',
+    syncFoundBody:
+      'Pengaturan KCGLMS+ dari perangkat lain tersimpan di Tautan Saya portal. Gunakan juga di perangkat ini?',
+    syncFoundOn: 'Gunakan pengaturan ini',
+    syncFoundOnHint: 'Terapkan tema, acara, dan lainnya ke perangkat ini dan tetap selaraskan.',
+    syncFoundOff: 'Jangan gunakan',
+    syncFoundOffHint: 'Pengaturan di perangkat ini hanya dipakai di perangkat ini.',
     fontTitle: 'Pilih font',
     fontBody: 'Ini huruf yang dipakai di seluruh ekstensi. Pilih yang paling mudah dibaca.',
     fontSample: 'Kalender kuliah',

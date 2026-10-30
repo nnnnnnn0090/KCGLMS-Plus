@@ -37,7 +37,10 @@ export async function acceptCommunityDisclaimer(): Promise<void> {
 
 /** 匿名 UUID で community-access を問い合わせる */
 export async function fetchCommunityAccess(signal?: AbortSignal): Promise<CommunityAccessResult> {
-  const headers = await buildClientTelemetryHeaders('GET', '/community-access');
+  // 入室の判定は ID ごとなので、まだ無ければここで作る。
+  const headers = await buildClientTelemetryHeaders('GET', '/community-access', {
+    requireUserId: true,
+  });
   const timeoutSignal = AbortSignal.timeout(COMMUNITY_BOUNDARY_TIMING.accessTimeoutMs);
   const mergedSignal = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
   const response = await fetch(COMMUNITY_ACCESS_URL, {

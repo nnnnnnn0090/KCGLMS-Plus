@@ -14,6 +14,20 @@ export const STEPS: TourStep[] = [
   { kind: 'sync', id: 'sync' },
 ];
 
+/** マイリンクに既存の設定があるときの「合わせるか」の手順 */
+export const EXISTING_SYNC_STEP_ID = 'sync-existing';
+
+/**
+ * 初期設定の手順。マイリンクにほかの端末の設定があるときだけ、同期をようこその直後に聞く
+ * （合わせると、そのあとのテーマ・フォントなどの手順にほかの端末の設定が出る）。
+ * ないときは今までどおり最後に聞く。
+ */
+export function tourSteps(existingSyncData: boolean): TourStep[] {
+  if (!existingSyncData) return STEPS;
+  const rest = STEPS.filter((step) => step.kind !== 'welcome' && step.kind !== 'sync');
+  return [STEPS[0], { kind: 'sync', id: EXISTING_SYNC_STEP_ID }, ...rest];
+}
+
 export const DONE_STEP: TourStep = { kind: 'done', id: 'done' };
 
 export const PROGRESS_WIDTH_CLASS: Record<string, string> = {

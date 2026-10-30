@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useI18n } from '../../../../i18n';
-import { getOrCreateClientUserId } from '../../../../services/client-identity';
+import { readClientUserIdForTelemetry } from '../../../../services/client-identity';
 import { copyToClipboard } from '../../../../services/toast';
 
 /** サポート連絡用の匿名ユーザー ID（フィードバックセクション内に埋め込む） */
@@ -10,7 +10,8 @@ export function SettingsClientUserIdBlock() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    void getOrCreateClientUserId().then(setUserId);
+    // 初回チュートリアル（同期の選択）が済むまでは ID を作らないので、そのあいだは出さない。
+    void readClientUserIdForTelemetry().then(setUserId);
   }, []);
 
   if (!userId) return null;

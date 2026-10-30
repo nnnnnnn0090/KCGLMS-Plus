@@ -560,6 +560,13 @@ export const zhMessages: typeof jaMessages = {
     syncDone: '已一致。',
     syncLater: '暂时无法同步，之后会自动同步。',
     syncAskInSettings: '请在设置的“连接”中选择以哪一边为准。',
+    syncFoundTitle: '发现已有的设置',
+    syncFoundBody:
+      '其他设备上 KCGLMS+ 的设置已保存在门户的“我的链接”中。要让这台设备也使用这些设置吗？',
+    syncFoundOn: '使用这些设置',
+    syncFoundOnHint: '将主题、日程等应用到这台设备，并保持同步。',
+    syncFoundOff: '不使用',
+    syncFoundOffHint: '这台设备的设置只在这台设备上使用。',
     fontTitle: '请选择字体',
     fontBody: '这是扩展程序界面使用的字体。请选择你觉得最易读的。',
     fontSample: '课程日历',

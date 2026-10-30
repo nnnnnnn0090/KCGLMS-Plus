@@ -11,6 +11,7 @@
  */
 
 import { PORTAL_SYNC_HOUSEKEEPING_KEYS } from '../contract/portal-synced-storage';
+import { SK } from '../contract/storage-keys';
 import type { PortalSyncChoiceKind, PortalSyncIssue } from '../contract/portal-sync-status';
 import {
   changedPortalSyncKeys,
@@ -189,6 +190,15 @@ function takeOverPortalSyncDoc(local: PortalSyncDoc, remote: PortalSyncDoc, devi
   return out;
 }
 
+/**
+ * 匿名ユーザー ID は人に付くもの。ポータルにすでにあれば、どの選び方（この端末に合わせる等）でも
+ * 上書き・削除しない。ポータルに無いときだけ、この端末の ID を送る。
+ */
+function keepRemoteClientUserId(target: PortalSyncDoc, remote: PortalSyncDoc): PortalSyncDoc {
+  const id = remote[SK.clientUserId];
+  return id && !id.del ? { ...target, [SK.clientUserId]: id } : target;
+}
+
 interface SyncPlan {
   target: PortalSyncDoc;
   space: string;
@@ -292,7 +302,7 @@ async function planSync(
   const decision = decideTarget(remote, local, localDoc, mode, () => io.newId());
   if ('choice' in decision) return { ok: false, issue: 'needs-choice', choice: decision.choice };
 
-  const target = prunePortalSyncTombstones(decision.target);
+  const target = prunePortalSyncTombstones(keepRemoteClientUserId(decision.target, remote.doc));
   const received = await applyToLocal(io, target, {
     replace: decision.replace,
     reason: decision.reason,

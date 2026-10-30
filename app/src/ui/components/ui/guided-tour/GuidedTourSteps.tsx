@@ -5,6 +5,7 @@ import type { Settings } from '../../../../context/settings';
 import { THEMES, type ThemeTokens } from '../../../../domain/themes';
 import homeCornerCharacterUrl from '../../../../assets/914_20260621035718-display.webp';
 import {
+  EXISTING_SYNC_STEP_ID,
   PROGRESS_WIDTH_CLASS,
   RECOMMENDED_THEME_KEYS,
   mascotIllustratorName,
@@ -218,6 +219,7 @@ export function GuidedTourSteps({
     return (
       <TourSyncStep
         stepId={currentStep.id}
+        existing={currentStep.id === EXISTING_SYNC_STEP_ID}
         t={t}
         cardRef={cardRef}
         dockExiting={dockExiting}

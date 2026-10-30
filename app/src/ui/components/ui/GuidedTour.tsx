@@ -19,11 +19,16 @@ import {
   FINISH_FADE_MS,
   FINISH_WAIT_MS,
   STEPS,
+  tourSteps,
 } from './guided-tour/constants';
+import {
+  detectPortalSyncData,
+  getPortalMyLinksSyncEnabled,
+} from '../../../services/portal-settings-sync';
 import { GuidedTourSteps } from './guided-tour/GuidedTourSteps';
 import { isSetupDockStep, scrollThemePreviewToCalendar } from './guided-tour/setup-scroll';
 import { SpotlightTour } from './guided-tour/SpotlightTour';
-import type { GuidedTourProps, TourPhase } from './guided-tour/types';
+import type { GuidedTourProps, TourPhase, TourStep } from './guided-tour/types';
 
 export type { GuidedTourProps } from './guided-tour/types';
 
@@ -35,9 +40,13 @@ export function GuidedTour({ route, settingsReady, guidedTourReplayToken = 0 }: 
   const { language, t } = useI18n();
   const { settings, updateSetting, updateTheme } = useSettings();
   const { overlayRoot } = usePortalDom();
-  const steps = STEPS;
+  const [steps, setSteps] = useState<TourStep[]>(STEPS);
   const [phase, setPhase] = useState<TourPhase>('loading');
   const [stepIndex, setStepIndex] = useState(0);
+  const stepIndexRef = useRef(0);
+  useEffect(() => {
+    stepIndexRef.current = stepIndex;
+  }, [stepIndex]);
   const [dockExiting, setDockExiting] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
   const [finishingFade, setFinishingFade] = useState(false);
@@ -58,6 +67,14 @@ export function GuidedTour({ route, settingsReady, guidedTourReplayToken = 0 }: 
         return;
       }
       setPhase(data[SK.portalLanguagePickerDone] ? 'tour' : 'language');
+      // マイリンクにほかの端末の設定があれば、同期をようこその直後に聞く。
+      // 確認は待たずに案内を出し、ようこそ（か言語の選択）にいるあいだに分かれば並べ替える。
+      void Promise.all([getPortalMyLinksSyncEnabled(), detectPortalSyncData()]).then(
+        ([syncEnabled, found]) => {
+          if (cancelled || syncEnabled || !found || stepIndexRef.current > 0) return;
+          setSteps(tourSteps(true));
+        },
+      );
     });
     return () => {
       cancelled = true;

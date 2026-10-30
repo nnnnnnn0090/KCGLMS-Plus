@@ -1,11 +1,14 @@
 /**
  * 初回チュートリアルの「ほかの端末と設定をそろえるか」を選ぶ手順。
  * 同期は既定でオフなので、ここで選んだ人だけオンになる。
+ * existing: マイリンクに既存の設定が見つかったとき（ようこその直後に出す）。
+ * 合わせると、どちらに合わせるかを改めて聞かずにポータル側を反映する。
  */
 
 import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 import type { I18nMessages } from '../../../../i18n/messages';
 import {
+  alignWithPortalSyncData,
   getPortalMyLinksSyncEnabled,
   readPortalSyncStatus,
   setPortalMyLinksSyncEnabled,
@@ -15,6 +18,7 @@ type SyncPhase = 'idle' | 'working' | 'done' | 'later' | 'choose';
 
 interface TourSyncStepProps {
   stepId: string;
+  existing?: boolean;
   t: I18nMessages;
   cardRef: RefObject<HTMLDivElement | null>;
   dockExiting: boolean;
@@ -25,6 +29,7 @@ interface TourSyncStepProps {
 
 export function TourSyncStep({
   stepId,
+  existing = false,
   t,
   cardRef,
   dockExiting,
@@ -55,7 +60,8 @@ export function TourSyncStep({
     }
     setPhase('working');
     try {
-      await setPortalMyLinksSyncEnabled(true);
+      if (existing) await alignWithPortalSyncData();
+      else await setPortalMyLinksSyncEnabled(true);
       const status = await readPortalSyncStatus();
       if (status.issue === 'needs-choice') setPhase('choose');
       else setPhase(status.issue ? 'later' : 'done');
@@ -63,6 +69,25 @@ export function TourSyncStep({
       setPhase('later');
     }
   };
+
+  const g = t.guidedTour;
+  const copy = existing
+    ? {
+        title: g.syncFoundTitle,
+        body: g.syncFoundBody,
+        on: g.syncFoundOn,
+        onHint: g.syncFoundOnHint,
+        off: g.syncFoundOff,
+        offHint: g.syncFoundOffHint,
+      }
+    : {
+        title: g.syncTitle,
+        body: g.syncBody,
+        on: g.syncOn,
+        onHint: g.syncOnHint,
+        off: g.syncOff,
+        offHint: g.syncOffHint,
+      };
 
   const message: Record<SyncPhase, string> = {
     idle: t.guidedTour.syncHint,
@@ -102,19 +127,15 @@ export function TourSyncStep({
           <div className="p-tour-theme-copy">
             <div>
               <span className="p-tour-eyebrow">{t.guidedTour.themeEyebrow}</span>
-              <h2 id="p-tour-sync-title">{t.guidedTour.syncTitle}</h2>
-              <p id="p-tour-sync-body">{t.guidedTour.syncBody}</p>
+              <h2 id="p-tour-sync-title">{copy.title}</h2>
+              <p id="p-tour-sync-body">{copy.body}</p>
             </div>
             {progress}
           </div>
 
-          <div
-            className="p-tour-week-start-options"
-            role="radiogroup"
-            aria-label={t.guidedTour.syncTitle}
-          >
-            {option(true, t.guidedTour.syncOn, t.guidedTour.syncOnHint)}
-            {option(false, t.guidedTour.syncOff, t.guidedTour.syncOffHint)}
+          <div className="p-tour-week-start-options" role="radiogroup" aria-label={copy.title}>
+            {option(true, copy.on, copy.onHint)}
+            {option(false, copy.off, copy.offHint)}
           </div>
 
           <div className="p-tour-theme-footer p-tour-week-start-footer">

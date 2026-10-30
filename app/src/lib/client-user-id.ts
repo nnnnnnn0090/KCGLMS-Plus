@@ -39,3 +39,21 @@ export async function getOrCreateClientUserId(): Promise<string> {
   await ensurePortalExtensionBootstrapped();
   return ensureClientUserIdInMemory();
 }
+
+/**
+ * お知らせ・アンケートなどに付ける ID。初回チュートリアル（ほかの端末と揃えるかの選択を含む）が
+ * 済むまでは作らず null を返す（その間は ID なしで送る）。ほかの端末の ID が同期で届く前に
+ * 使い捨ての ID を作り、別の利用者として数えさせないため。
+ */
+export async function readClientUserIdForTelemetry(): Promise<string | null> {
+  const { ensurePortalExtensionBootstrapped, waitForPortalSyncIdle } =
+    await import('../services/portal-settings-sync');
+  await ensurePortalExtensionBootstrapped();
+  const snap = await storage.get([SK.clientUserId, SK.portalGuidedTourDone]);
+  const cached = normalizeClientUserId(snap[SK.clientUserId]);
+  if (cached) return cached;
+  if (snap[SK.portalGuidedTourDone] !== true) return null;
+  // チュートリアルで「揃える」を選んだ直後なら、ほかの端末の ID が届くのを待ってから決める。
+  await waitForPortalSyncIdle();
+  return ensureClientUserIdInMemory();
+}

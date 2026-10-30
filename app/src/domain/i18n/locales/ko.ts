@@ -569,6 +569,13 @@ export const koMessages: typeof jaMessages = {
     syncDone: '맞췄습니다.',
     syncLater: '지금은 맞추지 못했습니다. 나중에 자동으로 맞춥니다.',
     syncAskInSettings: "설정의 '연동'에서 어느 쪽에 맞출지 골라 주세요.",
+    syncFoundTitle: '기존 설정을 찾았습니다',
+    syncFoundBody:
+      '다른 기기에서 사용하던 KCGLMS+ 설정이 포털의 마이링크에 저장되어 있습니다. 이 기기에도 맞출까요?',
+    syncFoundOn: '이 설정에 맞추기',
+    syncFoundOnHint: '테마와 일정 등을 이 기기에 반영하고 앞으로도 맞춥니다.',
+    syncFoundOff: '맞추지 않기',
+    syncFoundOffHint: '이 기기의 설정은 이 기기에서만 사용합니다.',
     fontTitle: '글꼴을 골라 주세요',
     fontBody: '확장 프로그램 화면에 쓰이는 글꼴입니다. 읽기 편한 것을 골라 주세요.',
     fontSample: '수업 캘린더',
