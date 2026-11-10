@@ -4,7 +4,7 @@
 
 import { HOME2_MAIL_CONTENT_SCRIPT_MATCHES } from '../../contract/origins';
 import {
-  isExtensionBlockedByRemoteKillSwitch,
+  isExtensionBlocked,
   startExtensionOperationalWatch,
 } from '../../services/extension-runtime';
 import { resolveHome2MailRoute, teardownHome2Overlay } from '../../services/home2-host';
@@ -16,7 +16,7 @@ export default defineContentScript({
 
   main() {
     startExtensionOperationalWatch();
-    if (isExtensionBlockedByRemoteKillSwitch()) {
+    if (isExtensionBlocked()) {
       teardownHome2Overlay();
       return;
     }

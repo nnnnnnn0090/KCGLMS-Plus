@@ -5,7 +5,7 @@
 
 import { PORTAL_CONTENT_SCRIPT_MATCHES } from '../../contract/origins';
 import {
-  isExtensionBlockedByRemoteKillSwitch,
+  isExtensionBlocked,
   startExtensionOperationalWatch,
 } from '../../services/extension-runtime';
 import { installFetchHook } from './portal-fetch-hook';
@@ -20,7 +20,7 @@ export default defineContentScript({
 
   main() {
     startExtensionOperationalWatch();
-    if (isExtensionBlockedByRemoteKillSwitch()) return;
+    if (isExtensionBlocked()) return;
     installFetchHook();
     installXhrHook();
     installFetchBridge();

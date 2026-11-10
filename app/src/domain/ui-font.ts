@@ -166,6 +166,12 @@ function ensureGoogleFontStylesheet(familyQuery: string | undefined): void {
   }
 }
 
+/** そのフォントの Google Fonts スタイルシート URL（読み込み不要なフォントは null）。拡張のページ用 */
+export function uiFontStylesheetHref(font: UiFont | unknown): string | null {
+  const family = DEF_BY_ID[normalizeUiFont(font)].googleFamily;
+  return family ? googleCssHref(family) : null;
+}
+
 const PREVIEW_LINK_ID = 'portal-ui-font-preview';
 
 /**

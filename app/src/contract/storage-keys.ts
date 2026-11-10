@@ -58,6 +58,11 @@ export const SK = {
   clientLastKnownVersion: 'portalThemeClientLastKnownVersion',
   /** 「みんなの活動」が学校公式サービスではないことへの初回同意 */
   communityDisclaimerAccepted: 'portalThemeCommunityDisclaimerAccepted',
+  /**
+   * ツールバーのメニューで拡張機能をオフにしたら true（端末ローカルのみ・マイリンク同期対象外）。
+   * 各ページは `localStorage` の写しで同期的に判定し、ここが変わったら写しを直して再読み込みする。
+   */
+  extensionUserDisabled: 'portalThemeExtensionUserDisabled',
 } as const;
 
 /** background: 初回インストール後のポータル自動オープン待ち */

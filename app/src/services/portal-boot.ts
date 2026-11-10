@@ -14,10 +14,7 @@ import {
 import { syncPortalFont } from '../domain/ui-font';
 import { resolveKingLmsMountToastMessage } from './sync-hash';
 import { ensurePortalExtensionBootstrapped } from './portal-settings-sync';
-import {
-  isExtensionBlockedByRemoteKillSwitch,
-  startExtensionOperationalWatch,
-} from './extension-runtime';
+import { isExtensionBlocked, startExtensionOperationalWatch } from './extension-runtime';
 import { storageRepo } from '../platform/storage/repo';
 
 function retainPortalBackdropAfterFrames(
@@ -37,7 +34,7 @@ function retainPortalBackdropAfterFrames(
 /** portal.content ブート（F-003） */
 export async function bootPortalContent(): Promise<void> {
   startExtensionOperationalWatch();
-  if (isExtensionBlockedByRemoteKillSwitch()) return;
+  if (isExtensionBlocked()) return;
 
   const route = matchPortalRoute();
   if (!route) {

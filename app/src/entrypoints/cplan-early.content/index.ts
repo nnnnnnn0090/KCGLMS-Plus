@@ -4,7 +4,7 @@ import { SK } from '../../contract/storage-keys';
 import { isCplanTargetPage } from '../../domain/home2/router';
 import { syncCplanSurfaceRuntime } from '../../domain/themes';
 import {
-  isExtensionBlockedByRemoteKillSwitch,
+  isExtensionBlocked,
   startExtensionOperationalWatch,
 } from '../../services/extension-runtime';
 import { storageRepo } from '../../platform/storage/repo';
@@ -16,7 +16,7 @@ export default defineContentScript({
     if (!isCplanTargetPage()) return;
 
     startExtensionOperationalWatch();
-    if (isExtensionBlockedByRemoteKillSwitch()) return;
+    if (isExtensionBlocked()) return;
 
     void (async () => {
       const enabled = await storageRepo.getCplanOverlay();

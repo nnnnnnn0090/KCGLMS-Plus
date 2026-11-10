@@ -5,7 +5,7 @@
 
 import { KING_LMS_ORIGIN } from '../../contract/origins';
 import {
-  isExtensionBlockedByRemoteKillSwitch,
+  isExtensionBlocked,
   startExtensionOperationalWatch,
 } from '../../services/extension-runtime';
 import { installKingLmsHook } from '../../services/king-lms-hooks';
@@ -17,7 +17,7 @@ export default defineContentScript({
 
   main() {
     startExtensionOperationalWatch();
-    if (isExtensionBlockedByRemoteKillSwitch()) return;
+    if (isExtensionBlocked()) return;
     installKingLmsHook();
   },
 });

@@ -5,7 +5,7 @@
 
 import { KING_LMS_ORIGIN } from '../../contract/origins';
 import {
-  isExtensionBlockedByRemoteKillSwitch,
+  isExtensionBlocked,
   startExtensionOperationalWatch,
 } from '../../services/extension-runtime';
 import { isLoginRedirectPage, isSamlLoginPage } from './bridge-urls';
@@ -18,7 +18,7 @@ export default defineContentScript({
 
   main() {
     startExtensionOperationalWatch();
-    if (isExtensionBlockedByRemoteKillSwitch()) return;
+    if (isExtensionBlocked()) return;
     scheduleInit();
     installMessageListener();
   },

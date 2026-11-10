@@ -5,7 +5,7 @@
 import { HOME2_MAIL_CONTENT_SCRIPT_MATCHES } from '../../contract/origins';
 import { applyHome2EarlyBootCover } from '../../services/home2-host';
 import {
-  isExtensionBlockedByRemoteKillSwitch,
+  isExtensionBlocked,
   startExtensionOperationalWatch,
 } from '../../services/extension-runtime';
 
@@ -15,7 +15,7 @@ export default defineContentScript({
 
   main() {
     startExtensionOperationalWatch();
-    if (isExtensionBlockedByRemoteKillSwitch()) return;
+    if (isExtensionBlocked()) return;
     void applyHome2EarlyBootCover();
   },
 });

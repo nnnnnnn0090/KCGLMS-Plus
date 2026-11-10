@@ -10,7 +10,7 @@ import {
   syncCplanSurfaceRuntime,
 } from '../../domain/themes';
 import {
-  isExtensionBlockedByRemoteKillSwitch,
+  isExtensionBlocked,
   startExtensionOperationalWatch,
 } from '../../services/extension-runtime';
 import { storageRepo } from '../../platform/storage/repo';
@@ -31,7 +31,7 @@ export default defineContentScript({
     void (async () => {
       try {
         startExtensionOperationalWatch();
-        if (isExtensionBlockedByRemoteKillSwitch()) {
+        if (isExtensionBlocked()) {
           removePortalBackdrop();
           return;
         }

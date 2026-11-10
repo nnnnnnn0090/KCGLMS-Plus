@@ -1,0 +1,365 @@
+/*
+ * ツールバーのメニュー。ポータル（#portal-overlay）のヘッダーと設定パネルの部品を、同じ値と同じ
+ * テーマ変数（--p-*）で写したもの。値を変えるときは styles/legacy/00-legacy-overlay.css と揃える。
+ * 読み込み前は既定テーマ（powder）の値を置いておく。
+ */
+:root {
+  --p-bg: #f0f9ff;
+  --p-bg2: rgba(255, 255, 255, 0.95);
+  --p-bg3: rgba(240, 249, 255, 0.98);
+  --p-bg-hover: rgba(224, 242, 254, 0.88);
+  --p-border: rgba(125, 211, 252, 0.75);
+  --p-border-light: rgba(125, 211, 252, 0.45);
+  --p-border-hover: rgba(14, 165, 233, 0.38);
+  --p-text: #0c4a6e;
+  --p-text-muted: #075985;
+  --p-text-dim: #0369a1;
+  --p-text-dimmer: #0284c7;
+  --p-text-bright: #082f49;
+  --p-accent: #0ea5e9;
+  --p-accent-light: #38bdf8;
+  --p-accent-bg: rgba(14, 165, 233, 0.07);
+  --p-accent-border: rgba(14, 165, 233, 0.38);
+  --p-on-accent: #000000;
+  --p-shadow: rgba(8, 47, 73, 0.04);
+  --p-font:
+    'M PLUS Rounded 1c', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', Meiryo,
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--p-bg);
+  color: var(--p-text);
+  font-family: var(--p-font);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+.pp {
+  width: 340px;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+.pp[data-ready='true'] {
+  opacity: 1;
+}
+
+/* ── ヘッダー（.p-header / .p-brand） ───────────────────────────── */
+.p-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.75rem 1.15rem;
+  background: color-mix(in srgb, var(--p-bg) 85%, transparent);
+  border-bottom: 1px solid var(--p-border);
+}
+
+.p-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--p-text-bright);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.p-brand img {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--p-shadow);
+}
+
+.pp-update {
+  min-width: 0;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--p-accent-border);
+  border-radius: 999px;
+  background: var(--p-accent-bg);
+  color: var(--p-accent-light);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.pp-update:hover {
+  background: color-mix(in srgb, var(--p-accent) 22%, transparent);
+  border-color: var(--p-accent);
+}
+
+/* ── 本体（設定パネル .p-settings-dialog の中身） ───────────────── */
+.pp-body {
+  padding: 1rem 1.15rem 0.9rem;
+}
+
+.p-settings-section {
+  margin: 0 0 1.1rem;
+  padding: 0 0 0.85rem;
+  border-bottom: 1px solid var(--p-border-light);
+}
+
+.p-settings-section:last-of-type {
+  margin-bottom: 0.55rem;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.p-settings-section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-text-dim);
+  margin: 0 0 0.55rem;
+  padding: 0 0.55rem;
+}
+
+.p-settings-hint {
+  display: block;
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--p-text-dimmer);
+  font-weight: 400;
+  text-wrap: pretty;
+}
+
+.p-settings-hint--tight {
+  margin: 0.4rem 0 0.1rem;
+  padding: 0 0.55rem;
+}
+
+/* スイッチの行（.p-settings-switch-row） */
+.p-settings-switch-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.48rem 0.55rem;
+  border-radius: 8px;
+  color: var(--p-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.p-settings-switch-row:hover {
+  background: var(--p-bg-hover);
+}
+
+.p-settings-switch-row.is-disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.p-settings-switch-row > span:first-child {
+  min-width: 0;
+}
+
+.pp-switch-label {
+  display: block;
+  color: var(--p-text);
+  font-weight: 600;
+}
+
+.p-settings-switch-row > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.p-settings-switch-track {
+  position: relative;
+  display: block;
+  width: 2.5rem;
+  height: 1.45rem;
+  border: 1px solid var(--p-border-hover);
+  border-radius: 999px;
+  background: var(--p-bg-hover);
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    box-shadow 0.18s;
+}
+
+.p-settings-switch-track::after {
+  content: '';
+  position: absolute;
+  top: 0.16rem;
+  left: 0.17rem;
+  width: 0.98rem;
+  height: 0.98rem;
+  border-radius: 50%;
+  background: var(--p-text-dim);
+  box-shadow: 0 1px 3px var(--p-shadow);
+  transition:
+    transform 0.18s,
+    background 0.18s;
+}
+
+.p-settings-switch-row > input:checked + .p-settings-switch-track {
+  border-color: var(--p-accent);
+  background: var(--p-accent);
+}
+
+.p-settings-switch-row > input:checked + .p-settings-switch-track::after {
+  background: var(--p-on-accent);
+  transform: translateX(1.02rem);
+}
+
+.p-settings-switch-row > input:focus-visible + .p-settings-switch-track {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-accent) 22%, transparent);
+}
+
+.pp-notice {
+  margin: 0.6rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--p-accent-border);
+  border-radius: 8px;
+  background: var(--p-accent-bg);
+  color: var(--p-text);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+/* ひらく（.p-btn） */
+.pp-open {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.p-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--p-accent-border);
+  background: var(--p-accent-bg);
+  color: var(--p-accent-light);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.p-btn:hover {
+  background: color-mix(in srgb, var(--p-accent) 22%, transparent);
+  border-color: var(--p-accent);
+}
+
+/* リンク（設定パネル「このアプリについて」のボタン） */
+.p-settings-action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.p-settings-tour-replay-btn {
+  width: 100%;
+  padding: 0.5rem 0.95rem;
+  border-radius: 8px;
+  border: 1px solid var(--p-border);
+  background: var(--p-bg3);
+  color: var(--p-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.p-settings-tour-replay-btn:hover {
+  background: var(--p-bg-hover);
+  border-color: var(--p-border-hover);
+  color: var(--p-text);
+}
+
+/* フッター（.p-settings-footer） */
+.p-settings-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.65rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--p-border-light);
+}
+
+.p-settings-credit,
+.p-settings-version {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--p-text-dimmer);
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.p-settings-version {
+  text-align: right;
+}
+
+.p-settings-credit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.p-settings-credit-link:hover {
+  color: var(--p-text-muted);
+}
+
+.p-btn:focus-visible,
+.p-settings-tour-replay-btn:focus-visible,
+.p-settings-credit-link:focus-visible,
+.pp-update:focus-visible {
+  outline: 2px solid var(--p-accent);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp,
+  .p-settings-switch-track,
+  .p-settings-switch-track::after {
+    transition: none;
+  }
+}

@@ -4,7 +4,7 @@
 
 import { PORTAL_CONTENT_SCRIPT_MATCHES } from '../../contract/origins';
 import {
-  isExtensionBlockedByRemoteKillSwitch,
+  isExtensionBlocked,
   startExtensionOperationalWatch,
 } from '../../services/extension-runtime';
 import { applyPortalEarlyBootCover } from '../../services/boot-cover';
@@ -15,7 +15,7 @@ export default defineContentScript({
 
   main() {
     startExtensionOperationalWatch();
-    if (isExtensionBlockedByRemoteKillSwitch()) return;
+    if (isExtensionBlocked()) return;
     applyPortalEarlyBootCover();
   },
 });
