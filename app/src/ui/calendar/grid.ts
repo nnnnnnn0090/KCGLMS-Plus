@@ -19,6 +19,7 @@ import {
   findKingLmsUrl,
   syllabusUrl,
 } from './kogi';
+import { lookupKogiSession } from './kogi-session';
 import type { CalEvent, ViewMeta } from './types';
 import { assignmentStatusLabel, resolveAssignmentDisplayStatus } from './assignment';
 import { messagesForLanguage, normalizeLanguage, type AppLanguage } from '../../i18n/messages';
@@ -53,7 +54,10 @@ function customEventsAsCalEvents(
 
 function buildDayEventsHtml(
   dayItems: CalEvent[],
-  opts: Pick<ViewMeta, 'calKind' | 'mode' | 'kingLmsCourses' | 'language' | 'nowMs'>,
+  opts: Pick<
+    ViewMeta,
+    'calKind' | 'mode' | 'kingLmsCourses' | 'language' | 'nowMs' | 'kogiSessionIndex'
+  >,
 ): string {
   const { calKind, mode, kingLmsCourses, language: rawLanguage } = opts;
   const language = normalizeLanguage(rawLanguage);
@@ -82,7 +86,14 @@ function buildDayEventsHtml(
     const { firstNum } = parseLeadingPeriodTitle(ev.title ?? '');
     const period = periodFromTip || firstNum;
     const pNum = calKind === 'kogi' ? kogiPeriodNum(ev) : null;
-    const kogiMeta = [period && t.periodValue(String(period)), room].filter(Boolean).join(' · ');
+    const session = calKind === 'kogi' ? lookupKogiSession(opts.kogiSessionIndex, ev) : null;
+    const kogiMeta = [
+      period && t.periodValue(String(period)),
+      room,
+      session !== null && t.sessionValue(session),
+    ]
+      .filter(Boolean)
+      .join(' · ');
     const meta = String(ev.calMeta ?? '').trim() || kogiMeta;
 
     // kogi カレンダーでは時限の空きを視覚的に表すギャップ要素を挿入する
@@ -118,6 +129,8 @@ function buildDayEventsHtml(
         : '';
     const kogiRoomAttr =
       calKind === 'kogi' && room ? ` data-cal-kogi-room="${escAttr(String(room).trim())}"` : '';
+    const kogiSessionAttr =
+      session !== null ? ` data-cal-kogi-session="${escAttr(t.sessionValue(session))}"` : '';
     const sub = ev.assignmentSubmitted;
     const dueIso = calKind === 'assignment' ? String(ev.start ?? '').trim() : '';
     const assignmentStatus =
@@ -140,7 +153,7 @@ function buildDayEventsHtml(
       `data-cal-title="${escAttr(ev.title ?? '')}" ` +
       `data-cal-meta="${escAttr(meta)}" ` +
       `data-cal-tip="${escAttr(tipPlain)}" ` +
-      `data-cal-time="${escAttr(timeRange)}"${kindAttr}${dueIsoAttr}${subAttr}${statusAttr}${kogiPeriodAttr}${kogiRoomAttr}`;
+      `data-cal-time="${escAttr(timeRange)}"${kindAttr}${dueIsoAttr}${subAttr}${statusAttr}${kogiPeriodAttr}${kogiRoomAttr}${kogiSessionAttr}`;
     const titleSpan = `<span class="p-cal-ev-title">${esc(ev.title || common.untitled)}</span>`;
     const inner =
       assignmentStatus !== 'unknown'
@@ -194,6 +207,7 @@ export function buildCalendarGridHtml(
   const language = normalizeLanguage(viewMeta?.language);
   const todayIso = viewMeta?.todayIso ?? toIsoLocal(new Date());
   const calendarMessages = messagesForLanguage(language).calendar;
+  const kogiSessionIndex = viewMeta?.kogiSessionIndex;
 
   // イベントを日付でグループ化
   const byDay = new Map<string, CalEvent[]>();
@@ -244,6 +258,7 @@ export function buildCalendarGridHtml(
         kingLmsCourses,
         language,
         nowMs: viewMeta?.nowMs,
+        kogiSessionIndex,
       });
       const cls = ['p-cal-cell', isMuted && 'is-muted', isToday && 'is-today']
         .filter(Boolean)

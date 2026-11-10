@@ -455,6 +455,8 @@ export const jaMessages = {
     time: '時間',
     period: '時限',
     periodValue: (period: string) => `時限 ${period}`,
+    session: '回数',
+    sessionValue: (n: number) => `第${n}回`,
     room: '教室',
     info: '情報',
     code: 'コード',

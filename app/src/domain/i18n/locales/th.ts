@@ -455,6 +455,8 @@ export const thMessages: typeof jaMessages = {
     time: 'เวลา',
     period: 'คาบ',
     periodValue: (period: string) => `คาบ ${period}`,
+    session: 'ครั้งที่',
+    sessionValue: (n: number) => `ครั้งที่ ${n}`,
     room: 'ห้อง',
     info: 'ข้อมูล',
     code: 'รหัส',

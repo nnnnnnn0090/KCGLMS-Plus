@@ -459,6 +459,8 @@ export const viMessages: typeof jaMessages = {
     time: 'Giờ',
     period: 'Tiết',
     periodValue: (period: string) => `Tiết ${period}`,
+    session: 'Buổi',
+    sessionValue: (n: number) => `Buổi ${n}`,
     room: 'Phòng',
     info: 'Thông tin',
     code: 'Mã',

@@ -459,6 +459,8 @@ export const idMessages: typeof jaMessages = {
     time: 'Waktu',
     period: 'Periode',
     periodValue: (period: string) => `Periode ${period}`,
+    session: 'Pertemuan',
+    sessionValue: (n: number) => `Pertemuan ${n}`,
     room: 'Ruang',
     info: 'Info',
     code: 'Kode',

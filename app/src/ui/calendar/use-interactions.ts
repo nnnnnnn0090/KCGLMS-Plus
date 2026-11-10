@@ -174,7 +174,9 @@ function attachCalendarTooltipAndContextMenu(
 
     const kogiPeriod = (anchor.dataset.calKogiPeriod || '').trim();
     const kogiRoom = (anchor.dataset.calKogiRoom || '').trim();
-    const useKogiSplit = kind === 'kogi' && (kogiPeriod !== '' || kogiRoom !== '');
+    const kogiSession = (anchor.dataset.calKogiSession || '').trim();
+    const useKogiSplit =
+      kind === 'kogi' && (kogiPeriod !== '' || kogiRoom !== '' || kogiSession !== '');
 
     const hasRailBody = Boolean(time || thirdLine || meta || useKogiSplit);
 
@@ -217,6 +219,14 @@ function attachCalendarTooltipAndContextMenu(
             '<p class="p-cal-pop-rail-kv">' +
               `<span class="p-cal-pop-rail-k">${esc(t.calendar.room)}</span>` +
               `<span class="p-cal-pop-rail-v">${esc(kogiRoom)}</span>` +
+              '</p>',
+          );
+        }
+        if (kogiSession !== '') {
+          blocks.push(
+            '<p class="p-cal-pop-rail-kv">' +
+              `<span class="p-cal-pop-rail-k">${esc(t.calendar.session)}</span>` +
+              `<span class="p-cal-pop-rail-v">${esc(kogiSession)}</span>` +
               '</p>',
           );
         }

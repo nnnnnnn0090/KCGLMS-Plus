@@ -459,6 +459,8 @@ export const enMessages: typeof jaMessages = {
     time: 'Time',
     period: 'Period',
     periodValue: (period: string) => `Period ${period}`,
+    session: 'Session',
+    sessionValue: (n: number) => `Session ${n}`,
     room: 'Room',
     info: 'Info',
     code: 'Code',

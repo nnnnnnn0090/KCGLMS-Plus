@@ -457,6 +457,8 @@ export const koMessages: typeof jaMessages = {
     time: '시간',
     period: '교시',
     periodValue: (period: string) => `${period}교시`,
+    session: '회차',
+    sessionValue: (n: number) => `${n}회차`,
     room: '강의실',
     info: '정보',
     code: '코드',

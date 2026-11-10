@@ -450,6 +450,8 @@ export const zhTWMessages: typeof jaMessages = {
     time: '時間',
     period: '節次',
     periodValue: (period: string) => `第 ${period} 節`,
+    session: '課次',
+    sessionValue: (n: number) => `第 ${n} 次課`,
     room: '教室',
     info: '資訊',
     code: '代碼',

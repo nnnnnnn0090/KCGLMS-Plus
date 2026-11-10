@@ -456,6 +456,8 @@ export const neMessages: typeof jaMessages = {
     time: 'समय',
     period: 'अवधि',
     periodValue: (period: string) => `अवधि ${period}`,
+    session: 'सत्र',
+    sessionValue: (n: number) => `सत्र ${n}`,
     room: 'कोठा',
     info: 'जानकारी',
     code: 'कोड',

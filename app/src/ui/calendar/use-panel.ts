@@ -15,6 +15,8 @@
  * - `clientDataMode` + `bulkItems` + `bulkParsed` … バルク済み。週送りは `navigateClientSide` + `applyCalSwipe`。
  * - `pendingExtend` … 境界で `queueBulkExtend` したあと、バルク応答で週／月 state を確定させるための保留。
  * - `lastItems` / `lastParsed` … 直近の描画入力（コース一覧更新時の再描画など）。
+ * - `sessionItemsByYear` / `sessionIndex` … 授業カレンダーの「第 n 回」用に、学年度（4/1〜翌 4/1）単位で
+ *   別途取得したデータとその集計。応答は区間の形で見分け、上の照合キーの流れには乗せない。
  *
  * ざっくりした遷移（正常系）:
  *   初回メッセージ → inbound [3] で描画 → `queueBulkYearFetch` → `bulkPendingKey` でバルク
@@ -38,7 +40,7 @@ import {
   calParamsAfterWeekStartChange,
   type CalendarWeekStart,
 } from '../../lib/date';
-import { pageFetch } from '../../lib/api';
+import { pageFetch, parseCalendarRequest } from '../../lib/api';
 import { clearRuntimeElementCss, setRuntimeElementCss } from '../../lib/runtime-element-style';
 import { useSettings } from '../../context/settings';
 import { buildCalendarGridHtml } from './grid';
@@ -47,6 +49,12 @@ import { rangeKey } from './merge';
 import { formatWeekTitle, formatMonthTitle } from './view-params';
 import { clearCalBodyLoadingAttrs, applyCalSwipe, setCalBodyHtmlSmooth } from './anim';
 import { runCalendarPanelInboundMessage } from './calendar-panel-process-inbound';
+import {
+  academicYearFromRange,
+  academicYearRange,
+  academicYearsForRange,
+  buildKogiSessionIndex,
+} from './kogi-session';
 import type { CalParams, CalEvent, ViewMeta } from './types';
 import { useI18n } from '../../i18n';
 
@@ -152,6 +160,9 @@ export function useCalendarPanel({
     lastItems: [] as CalEvent[],
     lastParsed: null as CalParams | null,
     storedUKbn: '1',
+    sessionItemsByYear: new Map<number, CalEvent[]>(),
+    sessionRequestedYears: new Set<number>(),
+    sessionIndex: undefined as Map<string, number> | undefined,
   });
 
   const weekParamsRef = useRef(weekParams);
@@ -193,6 +204,7 @@ export function useCalendarPanel({
       todayIso: propsRef.current.demoTodayIso,
       // 月表示の日セル用。週は帯のみなので mode 側で無視される
       customEvents: propsRef.current.customCalEvents,
+      kogiSessionIndex: calRef.current.sessionIndex,
     }),
     [weekStart, language],
   );
@@ -224,6 +236,20 @@ export function useCalendarPanel({
     [],
   );
 
+  // ── 授業カレンダー「第 n 回」用の学年度データ取得 ─────────────────────
+  const ensureKogiSessionData = useCallback((range: { start: string; end: string }) => {
+    const p = propsRef.current;
+    if (p.calKind !== 'kogi' || p.demoItems) return;
+    const m = calRef.current;
+    const uK = m.storedUKbn || weekParamsRef.current?.uKbn;
+    if (!uK || !range.start || !range.end) return;
+    for (const year of academicYearsForRange(range.start, range.end)) {
+      if (m.sessionRequestedYears.has(year)) continue;
+      m.sessionRequestedYears.add(year);
+      pageFetch(p.calUrl({ uKbn: uK, ...academicYearRange(year) }));
+    }
+  }, []);
+
   // ── クライアントサイド再描画（バルクデータ使用） ──────────────────────
   const redrawFromClient = useCallback(
     (opts?: { enterAnim?: boolean }) => {
@@ -232,6 +258,7 @@ export function useCalendarPanel({
       const vp = visibleParsed();
       if (!vp?.start || !vp?.end) return;
 
+      ensureKogiSessionData(vp);
       const filtered = filterCalItemsByRange(m.bulkItems, vp.start, vp.end);
       m.lastItems = filtered;
       m.lastParsed = vp;
@@ -245,7 +272,7 @@ export function useCalendarPanel({
         opts,
       );
     },
-    [applyPanelVisibility, viewMetaForRender, visibleParsed, language],
+    [applyPanelVisibility, ensureKogiSessionData, viewMetaForRender, visibleParsed, language],
   );
 
   // ── 通常の再描画（fetch レスポンス後） ───────────────────────────────
@@ -257,6 +284,7 @@ export function useCalendarPanel({
         return;
       }
 
+      ensureKogiSessionData(parsed);
       if (viewModeRef.current === 'week')
         setTitle(formatWeekTitle(parsed.start, parsed.end, language));
       else if (monthRefRef.current) setTitle(formatMonthTitle(monthRefRef.current, language));
@@ -267,7 +295,7 @@ export function useCalendarPanel({
         opts,
       );
     },
-    [applyPanelVisibility, redrawFromClient, viewMetaForRender, language],
+    [applyPanelVisibility, ensureKogiSessionData, redrawFromClient, viewMetaForRender, language],
   );
 
   // ── バルク年取得の開始 ────────────────────────────────────────────────
@@ -368,9 +396,38 @@ export function useCalendarPanel({
   );
 
   // ── postMessage ハンドラ（usePortalMessage と信頼条件を共有） ───────────
+  /** 学年度 1 年分の応答なら「第 n 回」の集計に回して true を返す（グリッドの照合には流さない） */
+  const consumeKogiSessionMessage = useCallback(
+    (msg: PortalCapturedMessage): boolean => {
+      if (propsRef.current.calKind !== 'kogi') return false;
+      const d = msg as unknown as Record<string, unknown>;
+      if (!Array.isArray(d.items) || !d.requestUrl) return false;
+      const parsed = parseCalendarRequest(String(d.requestUrl));
+      const year = parsed ? academicYearFromRange(parsed.start, parsed.end) : null;
+      if (year === null) return false;
+
+      const m = calRef.current;
+      m.sessionRequestedYears.add(year);
+      m.sessionItemsByYear.set(year, d.items as CalEvent[]);
+      const index = new Map<string, number>();
+      for (const items of m.sessionItemsByYear.values()) {
+        for (const [k, v] of buildKogiSessionIndex(items)) index.set(k, v);
+      }
+      m.sessionIndex = index;
+
+      // 週／月の取得待ち中は、その応答の描画で回数も載るので触らない（読み込み表示を上書きしない）
+      if (m.loading) return true;
+      if (m.clientDataMode && m.bulkParsed) redrawFromClient({ enterAnim: false });
+      else if (m.lastParsed) redraw(m.lastItems, m.lastParsed, { enterAnim: false });
+      return true;
+    },
+    [redraw, redrawFromClient],
+  );
+
   const handleCapturedMessage = useCallback(
     (msg: PortalCapturedMessage) => {
       if (propsRef.current.demoItems) return;
+      if (consumeKogiSessionMessage(msg)) return;
       runCalendarPanelInboundMessage(msg as unknown as Record<string, unknown>, {
         msgType: propsRef.current.msgType,
         calRef,
@@ -386,7 +443,14 @@ export function useCalendarPanel({
         syncToolbarLocked: syncToolbarLockedFromRef,
       });
     },
-    [queueBulkYearFetch, redraw, redrawFromClient, weekStart, syncToolbarLockedFromRef],
+    [
+      consumeKogiSessionMessage,
+      queueBulkYearFetch,
+      redraw,
+      redrawFromClient,
+      weekStart,
+      syncToolbarLockedFromRef,
+    ],
   );
 
   usePortalMessage(handleCapturedMessage, { msgTypes: [msgType] });

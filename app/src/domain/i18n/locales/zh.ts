@@ -450,6 +450,8 @@ export const zhMessages: typeof jaMessages = {
     time: '时间',
     period: '节次',
     periodValue: (period: string) => `第 ${period} 节`,
+    session: '课次',
+    sessionValue: (n: number) => `第 ${n} 次课`,
     room: '教室',
     info: '信息',
     code: '代码',

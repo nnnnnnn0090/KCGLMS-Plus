@@ -48,7 +48,8 @@ export function kogiPeriodNum(ev: { tooltip?: string; title?: string }): number 
 
 // ─── シラバス URL ────────────────────────────────────────────────────────
 
-function parseKozaCode(tooltip: string, tipPlain: string): string {
+/** ツールチップから講義コードを読む（無ければ 3 行目をフォールバック） */
+export function kogiLectureCode(tooltip: string, tipPlain: string): string {
   const re = /(?:講義コード|コード)\s*[：:]\s*([^\s<\r\n]+)/;
   const fromHtml = String(tooltip ?? '').match(re);
   if (fromHtml) return fromHtml[1].trim();
@@ -67,7 +68,7 @@ function parseKozaCode(tooltip: string, tipPlain: string): string {
 }
 
 export function syllabusUrl(tooltip: string, tipPlain: string): string {
-  const code = parseKozaCode(tooltip, tipPlain);
+  const code = kogiLectureCode(tooltip, tipPlain);
   if (!code) return '';
   const u = new URL(SYLLABUS_BASE);
   u.searchParams.set('P1', code);

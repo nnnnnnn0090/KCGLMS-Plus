@@ -48,4 +48,6 @@ export interface ViewMeta {
    * 週表示は帯 UI のみ（ここではマージしない）。
    */
   customEvents?: readonly CustomCalEvent[];
+  /** 授業カレンダーの「講義キー + 日付 → 第 n 回」（`buildKogiSessionIndex` の結果） */
+  kogiSessionIndex?: ReadonlyMap<string, number>;
 }

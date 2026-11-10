@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { buildCalendarGridHtml } from './grid';
 import type { ViewMeta } from './types';
+import { buildKogiSessionIndex } from './kogi-session';
 import { KING_LMS_ORIGIN, KING_LMS_SAML_LOGIN_PATH } from '../../shared/king-lms-url';
 
 const baseMeta: ViewMeta = {
@@ -162,5 +163,20 @@ describe('buildCalendarGridHtml King LMS links', () => {
       },
     );
     expect(html).not.toContain('data-cal-kind="custom"');
+  });
+
+  it('授業カレンダーに第 n 回をメタ行とポップアップ用属性で載せる', () => {
+    const items = [
+      { start: '2026-06-25', title: '1 プログラミング' },
+      { start: '2026-07-02', title: '1 プログラミング' },
+    ];
+    const html = buildCalendarGridHtml(
+      [items[1]],
+      { start: '2026-06-29', end: '2026-07-06' },
+      { ...baseMeta, calKind: 'kogi', kogiSessionIndex: buildKogiSessionIndex(items) },
+    );
+
+    expect(html).toContain('第2回');
+    expect(html).toContain('data-cal-kogi-session="第2回"');
   });
 });
