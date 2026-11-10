@@ -721,6 +721,9 @@ export const neMessages: typeof jaMessages = {
     copyFailed: 'प्रतिलिपि असफल। हातले प्रतिलिपि गर्नुहोस्।',
     coursesSaving: 'पाठ्यक्रम सूची बचत हुँदैछ…',
     assignmentFetching: 'असाइनमेन्ट ल्याइँदैछ…',
+    assignmentStepCalendar: 'म्याद ल्याउँदै…',
+    assignmentStepStatus: (done: number, total: number) =>
+      `बुझाएको अवस्था जाँच गर्दै… (${done}/${total})`,
     loginPlease: 'कृपया लगइन गर्नुहोस्',
     loginAfterAssignment: 'लगइन पछि असाइनमेन्ट ल्याइ पोर्टलमा फर्किनेछ।',
     loginAfterCourses: 'लगइन पछि पाठ्यक्रम सूची बचत भई पोर्टलमा फर्किनेछ।',

@@ -722,6 +722,9 @@ export const enMessages: typeof jaMessages = {
     copyFailed: 'Copy failed. Please copy it manually.',
     coursesSaving: 'Saving course list...',
     assignmentFetching: 'Fetching assignments...',
+    assignmentStepCalendar: 'Fetching due dates…',
+    assignmentStepStatus: (done: number, total: number) =>
+      `Checking submission status… (${done}/${total})`,
     loginPlease: 'Please log in',
     loginAfterAssignment:
       'After login, assignments will be fetched and you will return to the portal.',

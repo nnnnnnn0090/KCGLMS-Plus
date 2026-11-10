@@ -61,6 +61,15 @@ export type KingLmsAssignmentDueMessage = {
   assignmentSyncNoOp?: boolean;
 };
 
+/** King LMS hooks → bridge（課題取得の進み具合。取得中オーバーレイの段階表示に使う） */
+export type KingLmsAssignmentProgressMessage = {
+  type: typeof KING_LMS_HOOK.assignmentProgressType;
+  source: typeof KING_LMS_HOOK.source;
+  step: 'calendar' | 'status';
+  done?: number;
+  total?: number;
+};
+
 /** King LMS hooks → bridge（同期中断） */
 export type KingLmsSyncAbortMessage = {
   type: typeof KING_LMS_HOOK.syncAbortType;
@@ -76,6 +85,7 @@ export type PageMessage =
   | LogoffTriggerMessage
   | KingLmsCoursesMessage
   | KingLmsAssignmentDueMessage
+  | KingLmsAssignmentProgressMessage
   | KingLmsSyncAbortMessage;
 
 const MSG_TYPES = new Set<string>(Object.values(MSG));
@@ -88,6 +98,7 @@ const FETCH_TO_HOOK = new Set<string>([
 const KING_LMS_TYPES = new Set<string>([
   KING_LMS_HOOK.coursesPostType,
   KING_LMS_HOOK.assignmentDuePostType,
+  KING_LMS_HOOK.assignmentProgressType,
   KING_LMS_HOOK.syncAbortType,
 ]);
 
@@ -107,11 +118,16 @@ export function isPageMessage(data: unknown): data is PageMessage {
     }
     return true;
   }
-  if (KING_LMS_TYPES.has(type)) {
-    if (msg.source !== KING_LMS_HOOK.source) return false;
-    if (type === KING_LMS_HOOK.coursesPostType) return Array.isArray(msg.courses);
-    if (type === KING_LMS_HOOK.assignmentDuePostType) return Array.isArray(msg.items);
-    return true;
-  }
+  if (KING_LMS_TYPES.has(type)) return isKingLmsMessageBody(type, msg);
   return false;
+}
+
+function isKingLmsMessageBody(type: string, msg: Record<string, unknown>): boolean {
+  if (msg.source !== KING_LMS_HOOK.source) return false;
+  if (type === KING_LMS_HOOK.coursesPostType) return Array.isArray(msg.courses);
+  if (type === KING_LMS_HOOK.assignmentDuePostType) return Array.isArray(msg.items);
+  if (type === KING_LMS_HOOK.assignmentProgressType) {
+    return msg.step === 'calendar' || msg.step === 'status';
+  }
+  return true;
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { DueItem } from '../ui/calendar/assignment';
 import {
   enrichDueItemsWithSubmissionStatus,
   submissionFromGradebookAttemptsResponse,
@@ -140,5 +141,33 @@ describe('gradebook-submission-status', () => {
       fetchFn,
     );
     expect(out[0]?.submitted).toBe(false);
+  });
+});
+
+describe('enrichDueItemsWithSubmissionStatus progress', () => {
+  it('開始時と 1 件ごとに確認済み件数を知らせる（同じ課題の重複は 1 件）', async () => {
+    const items = [
+      { courseId: 'c1', sourceId: 's1', title: 'a', dueDate: '2026-11-10T23:59:00Z' },
+      { courseId: 'c1', sourceId: 's1', title: 'a', dueDate: '2026-11-10T23:59:00Z' },
+      { courseId: 'c2', sourceId: 's2', title: 'b', dueDate: '2026-11-11T23:59:00Z' },
+      { courseId: 'c3', sourceId: 's3', title: 'c', dueDate: '2026-11-12T23:59:00Z' },
+    ] as DueItem[];
+    const fetchFn = (async () =>
+      new Response(JSON.stringify({ results: [{ status: 'Graded' }] }), {
+        status: 200,
+      })) as typeof fetch;
+    const calls: Array<[number, number]> = [];
+
+    const out = await enrichDueItemsWithSubmissionStatus(items, fetchFn, 2, (done, total) =>
+      calls.push([done, total]),
+    );
+
+    expect(calls).toEqual([
+      [0, 3],
+      [1, 3],
+      [2, 3],
+      [3, 3],
+    ]);
+    expect(out.every((item) => item.submitted)).toBe(true);
   });
 });

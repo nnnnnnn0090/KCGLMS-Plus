@@ -703,6 +703,9 @@ export const thMessages: typeof jaMessages = {
     copyFailed: 'คัดลอกไม่สำเร็จ กรุณาคัดลอกเอง',
     coursesSaving: 'กำลังบันทึกรายการคอร์ส…',
     assignmentFetching: 'กำลังดึงงาน…',
+    assignmentStepCalendar: 'กำลังดึงกำหนดส่ง…',
+    assignmentStepStatus: (done: number, total: number) =>
+      `กำลังตรวจสอบสถานะการส่ง… (${done}/${total})`,
     loginPlease: 'กรุณาเข้าสู่ระบบ',
     loginAfterAssignment: 'หลังเข้าสู่ระบบจะดึงงานและกลับพอร์ทัล',
     loginAfterCourses: 'หลังเข้าสู่ระบบจะบันทึกรายการคอร์สและกลับพอร์ทัล',

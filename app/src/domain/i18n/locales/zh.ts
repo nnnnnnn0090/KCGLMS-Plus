@@ -685,6 +685,8 @@ export const zhMessages: typeof jaMessages = {
     copyFailed: '复制失败，请手动复制。',
     coursesSaving: '正在保存课程列表…',
     assignmentFetching: '正在获取作业…',
+    assignmentStepCalendar: '正在获取截止日期…',
+    assignmentStepStatus: (done: number, total: number) => `正在确认提交状态…（${done}/${total}）`,
     loginPlease: '请登录',
     loginAfterAssignment: '登录后将获取作业并返回门户。',
     loginAfterCourses: '登录后将保存课程列表并返回门户。',

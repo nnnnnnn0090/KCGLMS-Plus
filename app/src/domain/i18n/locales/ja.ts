@@ -711,6 +711,9 @@ export const jaMessages = {
     copyFailed: 'コピーに失敗しました（手動でコピーしてください）',
     coursesSaving: 'コース一覧を保存しています…',
     assignmentFetching: '課題を取得しています…',
+    assignmentStepCalendar: '締切を取得しています…',
+    assignmentStepStatus: (done: number, total: number) =>
+      `提出状況を確認しています…（${done}/${total}）`,
     loginPlease: 'ログインしてください',
     loginAfterAssignment: 'ログイン後、課題を取得してポータルに戻ります。',
     loginAfterCourses: 'ログイン後、コース一覧を保存してポータルに戻ります。',

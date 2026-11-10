@@ -718,6 +718,9 @@ export const idMessages: typeof jaMessages = {
     copyFailed: 'Gagal menyalin. Salin secara manual.',
     coursesSaving: 'Menyimpan daftar kursus…',
     assignmentFetching: 'Mengambil tugas…',
+    assignmentStepCalendar: 'Mengambil tenggat waktu…',
+    assignmentStepStatus: (done: number, total: number) =>
+      `Memeriksa status pengumpulan… (${done}/${total})`,
     loginPlease: 'Silakan masuk',
     loginAfterAssignment: 'Setelah masuk, tugas akan diambil dan Anda kembali ke portal.',
     loginAfterCourses: 'Setelah masuk, daftar kursus akan disimpan dan Anda kembali ke portal.',

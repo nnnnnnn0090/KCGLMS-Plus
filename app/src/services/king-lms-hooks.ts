@@ -83,6 +83,7 @@ async function flushAssignmentDue(): Promise<void> {
 function startWideCalendarFetch(origFetch: typeof fetch): void {
   if (!isKingLmsCalendarPage() || wideFetchStarted) return;
   wideFetchStarted = true;
+  postAssignmentProgress('calendar');
   const { since, until } = assignmentSyncCalendarRange();
   const url = `${KING_LMS_ORIGIN}${KING_LMS_CALENDAR_ITEMS_PATH}?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}`;
   void origFetch(url)
@@ -142,12 +143,35 @@ function postAssignmentDue(
   }
 }
 
+/** 取得中オーバーレイの段階表示用。同期中でなければ bridge 側が無視する */
+function postAssignmentProgress(step: 'calendar' | 'status', done?: number, total?: number): void {
+  try {
+    window.postMessage(
+      {
+        type: KING_LMS_HOOK.assignmentProgressType,
+        source: KING_LMS_HOOK.source,
+        step,
+        done,
+        total,
+      },
+      '*',
+    );
+  } catch (error) {
+    void error;
+  }
+}
+
 function notifyAssignmentFailure(): void {
   postAssignmentDue([], Date.now(), { captureState: 'error' });
 }
 
 async function enrichAndPostAssignmentDue(items: DueItem[]): Promise<void> {
-  const enriched = await enrichDueItemsWithSubmissionStatus(items, kingLmsOrigFetch);
+  const enriched = await enrichDueItemsWithSubmissionStatus(
+    items,
+    kingLmsOrigFetch,
+    undefined,
+    (done, total) => postAssignmentProgress('status', done, total),
+  );
   postAssignmentDue(enriched, Date.now());
 }
 

@@ -719,6 +719,9 @@ export const viMessages: typeof jaMessages = {
     copyFailed: 'Sao chép thất bại. Vui lòng sao chép thủ công.',
     coursesSaving: 'Đang lưu danh sách khóa học…',
     assignmentFetching: 'Đang lấy bài tập…',
+    assignmentStepCalendar: 'Đang lấy hạn nộp…',
+    assignmentStepStatus: (done: number, total: number) =>
+      `Đang kiểm tra trạng thái nộp… (${done}/${total})`,
     loginPlease: 'Vui lòng đăng nhập',
     loginAfterAssignment: 'Sau khi đăng nhập, bài tập sẽ được lấy và bạn quay lại cổng thông tin.',
     loginAfterCourses:

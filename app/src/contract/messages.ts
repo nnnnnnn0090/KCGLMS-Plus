@@ -39,6 +39,7 @@ export const KING_LMS_HOOK = {
   syncAbortType: 'portalThemeKingLmsSyncAbort',
   coursesPostType: 'portalThemeKingLmsCourses',
   assignmentDuePostType: 'portalThemeKingLmsAssignmentDue',
+  assignmentProgressType: 'portalThemeKingLmsAssignmentProgress',
 } as const;
 
 /** `window` で発火。`X-CPAuthorize` がキャプチャされたあと pageFetch ブリッジが待機解除する */

@@ -8,6 +8,7 @@ import {
   cancelPendingForLoginRedirect,
   saveAssignmentDue,
   saveCourses,
+  showAssignmentProgress,
 } from './bridge-storage-sync';
 
 /** `message` リスナーを登録し、hooks からの通知をストレージ更新とリダイレクトへ集約します。 */
@@ -28,6 +29,11 @@ export function installMessageListener(): void {
         void saveAssignmentDue(msg.items, capturedAt, undefined, {
           assignmentSyncNoOp: msg.assignmentSyncNoOp === true,
         });
+        return;
+      }
+
+      if (msg.type === KING_LMS_HOOK.assignmentProgressType) {
+        void showAssignmentProgress(msg.step, msg.done, msg.total);
         return;
       }
 

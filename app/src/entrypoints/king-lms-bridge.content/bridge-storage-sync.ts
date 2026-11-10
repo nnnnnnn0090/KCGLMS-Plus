@@ -6,7 +6,14 @@
 import { SK, SYNC_HASH } from '../../shared/constants';
 import storage from '../../lib/storage';
 import { isCoursePage, isLoginRedirectPage, isAssignmentSyncPage } from './bridge-urls';
-import { mountLoginHint, mountSyncOverlay, removeSyncOverlay } from './bridge-overlay-ui';
+import {
+  SYNC_OVERLAY_THEME_KEYS,
+  mountLoginHint,
+  mountSyncOverlay,
+  removeSyncOverlay,
+  syncOverlayThemeFrom,
+  updateSyncOverlayMessage,
+} from './bridge-overlay-ui';
 import { messagesForLanguage, normalizeLanguage } from '../../i18n/messages';
 import {
   clearAssignmentTimer,
@@ -24,20 +31,37 @@ export async function maybeShowOverlayFromStorage(): Promise<void> {
     SK.kingLmsAssignmentSyncAwaitCalendar,
     SK.kingLmsAssignmentSyncReturnUrl,
     SK.language,
+    ...SYNC_OVERLAY_THEME_KEYS,
   ]);
   const language = normalizeLanguage(data[SK.language]);
   const text = messagesForLanguage(language).sync;
+  const theme = syncOverlayThemeFrom(data);
   const assignmentWaiting =
     !!data[SK.kingLmsAssignmentSyncPending] ||
     (!!data[SK.kingLmsAssignmentSyncAwaitCalendar] &&
       !!data[SK.kingLmsAssignmentSyncReturnUrl] &&
       isAssignmentSyncPage());
   if (assignmentWaiting) {
-    mountSyncOverlay(language, text.assignmentFetching);
+    mountSyncOverlay(language, text.assignmentFetching, theme);
     startAssignmentTimer();
   } else if (data[SK.kingLmsSyncPending]) {
-    mountSyncOverlay(language);
+    mountSyncOverlay(language, undefined, theme);
     startCourseTimer();
+  }
+}
+
+/** hooks から届いた課題取得の進み具合を、表示中のオーバーレイへ反映する */
+export async function showAssignmentProgress(
+  step: 'calendar' | 'status',
+  done?: number,
+  total?: number,
+): Promise<void> {
+  const data = await storage.get(SK.language);
+  const text = messagesForLanguage(normalizeLanguage(data[SK.language])).sync;
+  if (step === 'calendar') {
+    updateSyncOverlayMessage(text.assignmentStepCalendar);
+  } else if (typeof done === 'number' && typeof total === 'number' && total > 0) {
+    updateSyncOverlayMessage(text.assignmentStepStatus(Math.min(done, total), total));
   }
 }
 
@@ -77,6 +101,7 @@ export async function saveCourses(courses: unknown[]): Promise<void> {
     SK.kingLmsSyncAwaitCourse,
     SK.kingLmsSyncReturnUrl,
     SK.language,
+    ...SYNC_OVERLAY_THEME_KEYS,
   ]);
   const language = normalizeLanguage(data[SK.language]);
   let syncPending = !!data[SK.kingLmsSyncPending];
@@ -84,7 +109,7 @@ export async function saveCourses(courses: unknown[]): Promise<void> {
   // AwaitCourse フラグ（ログイン後に戻ったケース）でも同期を継続する
   if (!syncPending && hadAwait && data[SK.kingLmsSyncReturnUrl] && isCoursePage())
     syncPending = true;
-  if (syncPending) mountSyncOverlay(language);
+  if (syncPending) mountSyncOverlay(language, undefined, syncOverlayThemeFrom(data));
   const toSet: Record<string, unknown> = { [SK.kingLmsCourses]: courses };
   if (hadAwait && isCoursePage()) {
     toSet[SK.kingLmsSyncAwaitCourse] = false;
@@ -141,6 +166,7 @@ export async function saveAssignmentDue(
     SK.kingLmsAssignmentSyncAwaitCalendar,
     SK.kingLmsAssignmentSyncReturnUrl,
     SK.language,
+    ...SYNC_OVERLAY_THEME_KEYS,
   ]);
   const language = normalizeLanguage(data[SK.language]);
   let syncPending = !!data[SK.kingLmsAssignmentSyncPending];
@@ -148,7 +174,11 @@ export async function saveAssignmentDue(
   if (!syncPending && hadAwait && data[SK.kingLmsAssignmentSyncReturnUrl] && isAssignmentSyncPage())
     syncPending = true;
   if (syncPending)
-    mountSyncOverlay(language, messagesForLanguage(language).sync.assignmentFetching);
+    mountSyncOverlay(
+      language,
+      messagesForLanguage(language).sync.assignmentFetching,
+      syncOverlayThemeFrom(data),
+    );
 
   if (captureState === 'error') {
     if (syncPending) {
@@ -166,8 +196,7 @@ export async function saveAssignmentDue(
   // 空配列で既存有りを潰さない（hooks 以外のレースの保険）
   if (items.length === 0) {
     const existing = (await storage.get(SK.kingLmsAssignmentDue)) as
-      | { items?: unknown[] }
-      | undefined;
+      { items?: unknown[] } | undefined;
     const prevItems = existing?.items;
     if (Array.isArray(prevItems) && prevItems.length > 0) {
       await completeAssignmentSyncKeepStoredDue(syncPending, hadAwait);

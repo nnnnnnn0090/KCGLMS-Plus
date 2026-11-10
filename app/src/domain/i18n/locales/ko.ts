@@ -709,6 +709,9 @@ export const koMessages: typeof jaMessages = {
     copyFailed: '복사 실패. 수동으로 복사하세요.',
     coursesSaving: '코스 목록 저장 중…',
     assignmentFetching: '과제 가져오는 중…',
+    assignmentStepCalendar: '마감일을 가져오는 중…',
+    assignmentStepStatus: (done: number, total: number) =>
+      `제출 상태를 확인하는 중… (${done}/${total})`,
     loginPlease: '로그인하세요',
     loginAfterAssignment: '로그인 후 과제를 가져오고 포털로 돌아갑니다.',
     loginAfterCourses: '로그인 후 코스 목록을 저장하고 포털로 돌아갑니다.',

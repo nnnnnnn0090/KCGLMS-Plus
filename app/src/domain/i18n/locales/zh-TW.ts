@@ -685,6 +685,8 @@ export const zhTWMessages: typeof jaMessages = {
     copyFailed: '複製失敗，請手動複製。',
     coursesSaving: '正在儲存課程列表…',
     assignmentFetching: '正在取得作業…',
+    assignmentStepCalendar: '正在取得截止日期…',
+    assignmentStepStatus: (done: number, total: number) => `正在確認繳交狀態…（${done}/${total}）`,
     loginPlease: '請登入',
     loginAfterAssignment: '登入後將取得作業並返回入口網站。',
     loginAfterCourses: '登入後將儲存課程列表並返回入口網站。',

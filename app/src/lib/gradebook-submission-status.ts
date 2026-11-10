@@ -137,29 +137,39 @@ async function resolveSubmissionForColumn(
   return false;
 }
 
-/** calendarItems 由来 DueItem に gradebook 提出状態を付与する（常に boolean） */
+/**
+ * calendarItems 由来 DueItem に gradebook 提出状態を付与する（常に boolean）。
+ * `onProgress` には確認し終えた件数と全件数を、開始時（0 件）と 1 件終わるごとに渡す。
+ */
 export async function enrichDueItemsWithSubmissionStatus(
   items: DueItem[],
   fetchFn: typeof fetch,
   concurrency = 8,
+  onProgress?: (done: number, total: number) => void,
 ): Promise<DueItem[]> {
   const statusByKey = new Map<string, boolean>();
   const pairs: Array<{ courseId: string; sourceId: string; key: string }> = [];
+  const seenKeys = new Set<string>();
 
   for (const item of items) {
     const courseId = String(item.courseId ?? '').trim();
     const sourceId = String(item.sourceId ?? '').trim();
     if (!courseId || !sourceId) continue;
     const key = `${courseId}\0${sourceId}`;
-    if (statusByKey.has(key)) continue;
+    // 同じ課題が複数行あっても問い合わせ・件数は 1 回分にする
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
     pairs.push({ courseId, sourceId, key });
   }
 
+  let done = 0;
+  onProgress?.(0, pairs.length);
   for (let i = 0; i < pairs.length; i += concurrency) {
     const batch = pairs.slice(i, i + concurrency);
     await Promise.all(
       batch.map(async ({ courseId, sourceId, key }) => {
         statusByKey.set(key, await resolveSubmissionForColumn(fetchFn, courseId, sourceId));
+        onProgress?.(++done, pairs.length);
       }),
     );
   }
